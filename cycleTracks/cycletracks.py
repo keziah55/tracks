@@ -45,7 +45,18 @@ class CycleTracks(QMainWindow):
         self.mainWidget.setLayout(self.layout)
         self.setCentralWidget(self.mainWidget)
         
+        self.setWindowTitle('CycleTrack')
+        self.resize(700,700)
+        self._centre()
         self.show()
+        
+        
+    def _centre(self):
+        """ Centre window on screen. """
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
         
         
     def _backup(self):
@@ -58,3 +69,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = CycleTracks()
     sys.exit(app.exec_())
+    
