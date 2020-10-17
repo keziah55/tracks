@@ -7,15 +7,14 @@ Main window for cycleTracks.
 import sys
 import os
 
-from datetime import datetime
-from pyqtgraph import PlotWidget, DateAxisItem
-
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import (QAction, QDesktopWidget, QMainWindow, QMessageBox, 
                              QApplication, QHBoxLayout, QWidget)
 from PyQt5.QtCore import pyqtSlot as Slot
 
 import pandas as pd
+
+from cycleplotwidget import CyclePlotWidget
 
 home = os.path.expanduser('~')
     
@@ -38,9 +37,7 @@ class CycleTracks(QMainWindow):
 
         self.layout = QHBoxLayout()
         
-        date = [datetime.strptime(d, "%Y-%m-%d").timestamp() for d in self.df['Date']]
-        self.plot = PlotWidget(axisItems = {'bottom': DateAxisItem()})
-        self.plot.plotItem.plot(date, self.df['Distance (km)'])
+        self.plot = CyclePlotWidget(self.df)
         
         self.layout.addWidget(self.plot)
         
