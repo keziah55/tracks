@@ -6,10 +6,9 @@ Subclass of pyqtgraph.PlotWidget.
 
 from datetime import datetime
 from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen, 
-                       mkBrush)
+                       mkBrush, InfiniteLine)
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
-
 
 class CycleData:
     
@@ -60,6 +59,18 @@ class CycleData:
     
     @property
     def time(self):
+        return list(self.df['Time'])
+    
+    @property
+    def date(self):
+        return list(self.df['Date'])
+    
+    @property
+    def calories(self):
+        return np.array(self.df['Calories'])
+    
+    @property
+    def timeSecs(self):
         """ Return numpy array of 'Time' column, where each value is converted
             to seconds.
         """
@@ -69,12 +80,12 @@ class CycleData:
     
     @property
     def dateTimestamps(self):
-        """ Return 'Date' column, converted to list of timestamps (time since 
+        """ Return 'Date' column, converted to array of timestamps (time since 
             epoch).
     
             See also: :py:meth:`datetimes`.
         """
-        return [dt.timestamp() for dt in self.datetimes]
+        return np.array([dt.timestamp() for dt in self.datetimes])
 
     @property
     def datetimes(self):
@@ -83,21 +94,24 @@ class CycleData:
     
 
 class CyclePlotWidget(PlotWidget):
-    def __init__(self, df):
+    def __init__(self, df, label):
         super().__init__(axisItems={'bottom': DateAxisItem()})
         
         self.data = CycleData(df)
         
         self.style = {'speed':{'colour':"#024aeb",
                                'symbol':'x'},
-                      'odometer':{'colour':"#36cc18"}}
+                      'odometer':{'colour':"#36cc18"},
+                      'distance':{'colour':"#cf0202"},
+                      'time':{'colour':"#19b536"},
+                      'calories':{'colour':"#ff9100"}}
         
         self._initRightAxis()
         
         # plot avg speed
         style = self._makeScatterStyle(**self.style['speed'])
-        speed = self.data.distance/self.data.time
-        self.plotItem.plot(self.data.dateTimestamps, speed, **style)
+        self.speed = self.data.distance/self.data.timeSecs
+        self.plotItem.plot(self.data.dateTimestamps, self.speed, **style)
         
         # plot monthly total distance        
         style = self._makeFillStyle(self.style['odometer']['colour'])
@@ -119,6 +133,16 @@ class CyclePlotWidget(PlotWidget):
         # this has been fixed in the pyqtgraph source, so won't be necessary
         # once this makes its way into the deb packages
         self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
+        
+        # cross hairs
+        self.label = label
+        self.vLine = InfiniteLine(angle=90, movable=False)
+        self.hLine = InfiniteLine(angle=0, movable=False)
+        self.plotItem.addItem(self.vLine, ignoreBounds=True)
+        self.plotItem.addItem(self.hLine, ignoreBounds=True)
+        
+        # SignalProxy(self.plotItem.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+        self.plotItem.scene().sigMouseMoved.connect(self.mouseMoved)
         
         # update second view box
         self.updateViews()
@@ -181,4 +205,39 @@ class CyclePlotWidget(PlotWidget):
             odo.append(prev + self.data.distance[i-1])
         
         return dts, odo
+    
+    @Slot(object)
+    def mouseMoved(self, pos):
+        if self.plotItem.sceneBoundingRect().contains(pos):
+            mousePoint = self.plotItem.vb.mapSceneToView(pos)
+            idx = int(mousePoint.x())
+            if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
+                text = self._makeLabel(idx)
+                self.label.setHtml(text)
+            self.vLine.setPos(mousePoint.x())
+            self.hLine.setPos(mousePoint.y())
+            
+    def _makeLabel(self, ts):
+        # given timestamp in seconds, find nearest date and speed
+        idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
+        
+        d = {}
+        d['date'] = self.data.date[idx]
+        d['speed'] = f"Avg. speed: {self.speed[idx]:.3f} km/h"
+        d['distance'] = f"Distance: {self.data.distance[idx]} km"
+        d['calories'] = f"Calories: {self.data.calories[idx]}"
+        d['time'] = f"Time: {self.data.time[idx]}"
+        
+        fontSize = "font-size: 12pt"
+        
+        html = ""
+        for key, value in d.items():
+            if key in self.style.keys():
+                colour = self.style[key]['colour']
+                style = f"'{fontSize}; color: {colour}'"
+            else:
+                style = f"'{fontSize}'"
+            html += f"<div style={style}>{value}</div>"
+        
+        return html
     
