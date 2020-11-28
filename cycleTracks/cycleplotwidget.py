@@ -8,7 +8,7 @@ from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen,
                        mkBrush, InfiniteLine)
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
-from .cycledata import CycleData
+from cycledata import CycleData
     
 
 class CyclePlotWidget(PlotWidget):
@@ -33,7 +33,7 @@ class CyclePlotWidget(PlotWidget):
         
         # plot monthly total distance        
         style = self._makeFillStyle(self.style['odometer']['colour'])
-        dts, odo = self._getMonthlyOdometer()
+        dts, odo = self.data.getMonthlyOdometer()
         dts = [dt.timestamp() for dt in dts]
         curve = PlotCurveItem(dts, odo, **style)
         self.vb2.addItem(curve)
