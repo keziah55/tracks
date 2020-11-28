@@ -9,6 +9,8 @@ from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen,
                        mkBrush)
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QBrush, QColor
 
 
 class CycleData:
@@ -75,12 +77,14 @@ class CyclePlotWidget(PlotWidget):
         
         self.data = CycleData(df)
         
-        self.style = {'speed':{'colour':"#024aeb"},
-                      'odometer':{'colour':"#178a00"}}
+        self.style = {'speed':{'colour':"#024aeb",
+                               'symbol':'x'},
+                      'odometer':{'colour':"#36cc18"}}
         
-        self._initRightAxis('Total distance', self.style['odometer']['colour'])
+        self._initRightAxis('Total monthly distance', 
+                            self.style['odometer']['colour'])
         
-        style = self._makeScatterStyle(self.style['speed']['colour'])
+        style = self._makeScatterStyle(**self.style['speed'])
         speed = self.data.distance/self.data.time
         self.plotItem.plot(self.data.dateTimestamps, speed, **style)
         
@@ -89,16 +93,10 @@ class CyclePlotWidget(PlotWidget):
         self.plotItem.setLabels(left='Avg. speed, (km/h)', bottom='Date')
         
         style = self._makeFillStyle(self.style['odometer']['colour'])
-        odo = self._getMonthlyOdometer()
-        curve = PlotCurveItem(self.data.dateTimestamps, odo, **style)
+        dts, odo = self._getMonthlyOdometer()
+        dts = [dt.timestamp() for dt in dts]
+        curve = PlotCurveItem(dts, odo, **style)
         self.vb2.addItem(curve)
-        
-        # style = self._makeStyle("#cf0202")
-        # self.plotItem.plot(date, self.df['Distance (km)'], **style)
-        # # style = self._makeStyle("#19b536")
-        # # self.plotItem.plot(date, self.df['Time'], **style)
-        # style = self._makeStyle("#ff9100")
-        # self.plotItem.plot(date, self.df['Calories'], **style)
         
         self.plotItem.getAxis('left').setGrid(255)
         self.plotItem.getAxis('bottom').setGrid(255)
@@ -133,14 +131,16 @@ class CyclePlotWidget(PlotWidget):
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
     
     @staticmethod
-    def _makeScatterStyle(colour):
+    def _makeScatterStyle(colour, symbol):
+        """ Make style for series with no line but with symbols. """
         pen = mkPen(colour)
         brush = mkBrush(colour)
-        d = {'pen':None, 'symbol':'x', 'symbolPen':pen, 'symbolBrush':brush}
+        d = {'pen':None, 'symbol':symbol, 'symbolPen':pen, 'symbolBrush':brush}
         return d
 
     @staticmethod
     def _makeFillStyle(colour):
+        """ Make style for PlotCurveItem with fill underneath. """
         pen = mkPen(colour)
         brush = mkBrush(colour)
         d = {'pen':pen, 'brush':brush, 'fillLevel':0}
@@ -148,16 +148,25 @@ class CyclePlotWidget(PlotWidget):
 
 
     def _getMonthlyOdometer(self):
-        
-        months = [dt.month for dt in self.data.datetimes]
-        
-        odo = np.zeros(len(self.data.distance))
-        prev = 0
-        for i in range(len(self.data.distance)):
-            if i == 0 or months[i] != months[i-1]:
-                prev = 0
-            else:
-                prev = odo[i-1]
-            odo[i] = prev + self.data.distance[i]
+        """ Return list of datetime objects and list of floats.
             
-        return odo
+            The datetime objects are required, as they add dummy 1st of the 
+            month data points to reset the total to 0km.
+        """
+        
+        odo = []
+        dts = []
+            
+        for i, dt in enumerate(self.data.datetimes):
+            if i == 0 or self.data.datetimes[i-1].month != dt.month:
+                tmp = datetime(self.data.datetimes[i].year, self.data.datetimes[i].month, 1)
+                dts.append(tmp)
+                prev = 0
+                odo.append(prev)
+            else:
+                prev = odo[-1]
+            dts.append(dt)
+            odo.append(prev + self.data.distance[i-1])
+        
+        return dts, odo
+    
