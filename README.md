@@ -11,7 +11,7 @@ plots of my cycling stats.
 
 - Highlights value under mouse and shows stats of that point in label under plot
 
-## To do
+### To do
 
 - Add/edit stats dialogues
 
