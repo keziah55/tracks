@@ -15,6 +15,8 @@ class CyclePlotWidget(PlotWidget):
     def __init__(self, df, label):
         super().__init__(axisItems={'bottom': DateAxisItem()})
         
+        self.hgltPnt = None
+        
         self.data = CycleData(df)
         
         self.style = {'speed':{'colour':"#024aeb",
@@ -22,14 +24,15 @@ class CyclePlotWidget(PlotWidget):
                       'odometer':{'colour':"#36cc18"},
                       'distance':{'colour':"#cf0202"},
                       'time':{'colour':"#19b536"},
-                      'calories':{'colour':"#ff9100"}}
+                      'calories':{'colour':"#ff9100"},
+                      'highlightPoint':{'colour':"#fff700"}}
         
         self._initRightAxis()
         
         # plot avg speed
         style = self._makeScatterStyle(**self.style['speed'])
         self.speed = self.data.distance/self.data.timeSecs
-        self.plotItem.plot(self.data.dateTimestamps, self.speed, **style)
+        self.plotItem.scatterPlot(self.data.dateTimestamps, self.speed, **style)
         
         # plot monthly total distance        
         style = self._makeFillStyle(self.style['odometer']['colour'])
@@ -89,7 +92,7 @@ class CyclePlotWidget(PlotWidget):
         """ Make style for series with no line but with symbols. """
         pen = mkPen(colour)
         brush = mkBrush(colour)
-        d = {'pen':None, 'symbol':symbol, 'symbolPen':pen, 'symbolBrush':brush}
+        d = {'symbol':symbol, 'symbolPen':pen, 'symbolBrush':brush}
         return d
 
     @staticmethod
@@ -99,22 +102,39 @@ class CyclePlotWidget(PlotWidget):
         brush = mkBrush(colour)
         d = {'pen':pen, 'brush':brush, 'fillLevel':0}
         return d
-
+    
+    
+    def _highlightPoint(self, point):
+        
+        pen = mkPen(self.style['highlightPoint']['colour'])
+        
+        if self.hgltPnt is not None:
+            self.hgltPnt.resetPen()
+            
+        self.hgltPnt = point
+        self.hgltPnt.setPen(pen)
 
     @Slot(object)
     def mouseMoved(self, pos):
+        
         if self.plotItem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotItem.vb.mapSceneToView(pos)
+            
             idx = int(mousePoint.x())
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
                 text = self._makeLabel(idx)
                 self.label.setHtml(text)
+                pts = self.plotItem.listDataItems()[0].scatter.pointsAt(mousePoint)
+                if len(pts) != 0:
+                    self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
             
     def _makeLabel(self, ts):
         # given timestamp in seconds, find nearest date and speed
         idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
+        
+        # print(self.plotItem.listDataItems()[0].scatter.points())
         
         d = {}
         d['date'] = self.data.date[idx]
