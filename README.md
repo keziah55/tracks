@@ -20,6 +20,10 @@ plots of my cycling stats.
 
 - Personal bests
 
+- Zoom in on month (double click? or tools menu/list?)
+
+- Panel to allow user to set plot parameters?
+
 
 ## Requirements
 
