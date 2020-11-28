@@ -9,13 +9,14 @@ from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen,
                        mkBrush)
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush, QColor
 
 
 class CycleData:
     
     def __init__(self, df):
+        """ Object providing convenience functions for accessing data from 
+            a given DataFrame of cycling data.
+        """
         self.df = df
         
     @staticmethod
@@ -54,20 +55,30 @@ class CycleData:
         
     @property
     def distance(self):
+        """ Return 'Distance (km)' column as numpy array. """
         return np.array(self.df['Distance (km)'])
     
     @property
     def time(self):
+        """ Return numpy array of 'Time' column, where each value is converted
+            to seconds.
+        """
         time = [self._timeToSecs(t) for t in self.df['Time']]
         time = np.array([self._convertSecs(s) for s in time])
         return time
     
     @property
     def dateTimestamps(self):
+        """ Return 'Date' column, converted to list of timestamps (time since 
+            epoch).
+    
+            See also: :py:meth:`datetimes`.
+        """
         return [dt.timestamp() for dt in self.datetimes]
 
     @property
     def datetimes(self):
+        """ Return 'Date' column, converted to list of datetime objects. """
         return [datetime.strptime(d, "%Y-%m-%d") for d in self.df['Date']]
     
 
@@ -81,23 +92,26 @@ class CyclePlotWidget(PlotWidget):
                                'symbol':'x'},
                       'odometer':{'colour':"#36cc18"}}
         
-        self._initRightAxis('Total monthly distance', 
-                            self.style['odometer']['colour'])
+        self._initRightAxis()
         
+        # plot avg speed
         style = self._makeScatterStyle(**self.style['speed'])
         speed = self.data.distance/self.data.time
         self.plotItem.plot(self.data.dateTimestamps, speed, **style)
         
-        
-        # self.plotItem.showGrid(x=True, y=True)
-        self.plotItem.setLabels(left='Avg. speed, (km/h)', bottom='Date')
-        
+        # plot monthly total distance        
         style = self._makeFillStyle(self.style['odometer']['colour'])
         dts, odo = self._getMonthlyOdometer()
         dts = [dt.timestamp() for dt in dts]
         curve = PlotCurveItem(dts, odo, **style)
         self.vb2.addItem(curve)
         
+        # axis labels
+        self.plotItem.setLabels(left='Avg. speed, (km/h)', bottom='Date')
+        self.plotItem.getAxis('right').setLabel('Total monthly distance', 
+            color=self.style['odometer']['colour'])
+        
+        # show grid on left and bottom axes
         self.plotItem.getAxis('left').setGrid(255)
         self.plotItem.getAxis('bottom').setGrid(255)
         
@@ -106,19 +120,17 @@ class CyclePlotWidget(PlotWidget):
         # once this makes its way into the deb packages
         self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
         
+        # update second view box
         self.updateViews()
         self.plotItem.vb.sigResized.connect(self.updateViews)
         
         
-    def _initRightAxis(self, label, colour):
-        
+    def _initRightAxis(self):
         self.vb2 = ViewBox()
         self.plotItem.showAxis('right')
         self.plotItem.scene().addItem(self.vb2)
         self.plotItem.getAxis('right').linkToView(self.vb2)
         self.vb2.setXLink(self.plotItem)
-        self.plotItem.getAxis('right').setLabel(label, color=colour)
-        
         
     @Slot()
     def updateViews(self):
