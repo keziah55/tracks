@@ -14,3 +14,10 @@ plots of my cycling stats.
 ## To do
 
 - Add/edit stats dialogues
+
+## Requirements
+
+- [NumPy](https://numpy.org/)
+- [Pandas](https://pandas.pydata.org/)
+- [PyQt5](https://pypi.org/project/PyQt5/)
+- [PyQtGraph](https://pypi.org/project/pyqtgraph/) >= 0.11.0
