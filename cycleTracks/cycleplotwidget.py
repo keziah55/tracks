@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Subclass of pyqtgraph.PlotWidget.
+Subclass of PyQtGraph.PlotWidget to plot cycling data. 
 """
 
 from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen, 
@@ -9,11 +9,16 @@ from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen,
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
 from cycledata import CycleData
-    
+from plotitems import CycleTracksPlotItem
+
 
 class CyclePlotWidget(PlotWidget):
     def __init__(self, df, label):
-        super().__init__(axisItems={'bottom': DateAxisItem()})
+        
+        # custom PlotItem to add pointsAtX method
+        plotItem = CycleTracksPlotItem()
+        super().__init__(axisItems={'bottom': DateAxisItem()},
+                         plotItem=plotItem)
         
         self.hgltPnt = None
         
@@ -62,7 +67,6 @@ class CyclePlotWidget(PlotWidget):
         self.plotItem.addItem(self.vLine, ignoreBounds=True)
         self.plotItem.addItem(self.hLine, ignoreBounds=True)
         
-        # SignalProxy(self.plotItem.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
         self.plotItem.scene().sigMouseMoved.connect(self.mouseMoved)
         
         # update second view box
@@ -105,6 +109,9 @@ class CyclePlotWidget(PlotWidget):
     
     
     def _highlightPoint(self, point):
+        """ Change pen of given point (and reset any previously highlighted
+            points). 
+        """
         
         pen = mkPen(self.style['highlightPoint']['colour'])
         
@@ -124,7 +131,7 @@ class CyclePlotWidget(PlotWidget):
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
                 text = self._makeLabel(idx)
                 self.label.setHtml(text)
-                pts = self.plotItem.listDataItems()[0].scatter.pointsAt(mousePoint)
+                pts = self.plotItem.listDataItems()[0].scatter.pointsAtX(mousePoint)
                 if len(pts) != 0:
                     self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
@@ -133,8 +140,6 @@ class CyclePlotWidget(PlotWidget):
     def _makeLabel(self, ts):
         # given timestamp in seconds, find nearest date and speed
         idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
-        
-        # print(self.plotItem.listDataItems()[0].scatter.points())
         
         d = {}
         d['date'] = self.data.dateFmt[idx]
