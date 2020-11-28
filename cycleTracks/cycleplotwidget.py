@@ -21,11 +21,11 @@ class CyclePlotWidget(PlotWidget):
         
         self.style = {'speed':{'colour':"#024aeb",
                                'symbol':'x'},
-                      'odometer':{'colour':"#36cc18"},
+                      'odometer':{'colour':"#4d4d4d"},# "#ff9100"},
                       'distance':{'colour':"#cf0202"},
                       'time':{'colour':"#19b536"},
-                      'calories':{'colour':"#ff9100"},
-                      'highlightPoint':{'colour':"#fff700"}}
+                      'calories':{'colour':"#36cc18"},
+                      'highlightPoint':{'colour':"#faed00"}}
         
         self._initRightAxis()
         
@@ -137,7 +137,7 @@ class CyclePlotWidget(PlotWidget):
         # print(self.plotItem.listDataItems()[0].scatter.points())
         
         d = {}
-        d['date'] = self.data.date[idx]
+        d['date'] = self.data.dateFmt[idx]
         d['speed'] = f"Avg. speed: {self.speed[idx]:.3f} km/h"
         d['distance'] = f"Distance: {self.data.distance[idx]} km"
         d['calories'] = f"Calories: {self.data.calories[idx]}"

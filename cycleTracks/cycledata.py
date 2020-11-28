@@ -92,6 +92,10 @@ class CycleData:
         """ Return 'Date' column, converted to list of datetime objects. """
         return [datetime.strptime(d, "%Y-%m-%d") for d in self.df['Date']]
     
+    @property
+    def dateFmt(self, fmt="%a %w %b %Y"):
+        return [dt.strftime(fmt) for dt in self.datetimes]
+    
     def getMonthlyOdometer(self):
         """ Return list of datetime objects and list of floats.
             

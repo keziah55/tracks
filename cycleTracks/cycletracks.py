@@ -51,7 +51,7 @@ class CycleTracks(QMainWindow):
         self.setCentralWidget(self.mainWidget)
         
         self.setWindowTitle('CycleTrack')
-        self.resize(700,700)
+        self.resize(1000, 800)
         self._centre()
         self.show()
         
