@@ -5,6 +5,7 @@
 This GUI centres on the plotting, and uses PyQtGraph to create interactive
 plots of my cycling stats.
 
+
 ## Features
 
 - Interactive plot
@@ -14,6 +15,11 @@ plots of my cycling stats.
 ### To do
 
 - Add/edit stats dialogues
+
+- Compare multiple points
+
+- Personal bests
+
 
 ## Requirements
 
