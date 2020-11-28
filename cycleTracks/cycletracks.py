@@ -9,7 +9,8 @@ import os
 
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import (QAction, QDesktopWidget, QMainWindow, QMessageBox, 
-                             QApplication, QVBoxLayout, QWidget, QTextEdit)
+                             QApplication, QVBoxLayout, QWidget, QTextEdit,
+                             QSizePolicy)
 from PyQt5.QtCore import pyqtSlot as Slot
 
 import pandas as pd
@@ -39,6 +40,7 @@ class CycleTracks(QMainWindow):
         
         self.label = QTextEdit()
         self.label.setReadOnly(True)
+        self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
         self.plot = CyclePlotWidget(self.df, self.label)
         
         self.layout.addWidget(self.plot)
