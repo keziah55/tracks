@@ -9,16 +9,12 @@ from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen,
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
 from cycledata import CycleData
-from plotitems import CycleTracksPlotItem
 
 
 class CyclePlotWidget(PlotWidget):
+    
     def __init__(self, df, label):
-        
-        # custom PlotItem to add pointsAtX method
-        plotItem = CycleTracksPlotItem()
-        super().__init__(axisItems={'bottom': DateAxisItem()},
-                         plotItem=plotItem)
+        super().__init__(axisItems={'bottom': DateAxisItem()})
         
         self.hgltPnt = None
         
@@ -26,10 +22,10 @@ class CyclePlotWidget(PlotWidget):
         
         self.style = {'speed':{'colour':"#024aeb",
                                'symbol':'x'},
-                      'odometer':{'colour':"#4d4d4d"},# "#ff9100"},
+                      'odometer':{'colour':"#4d4d4d"},# "#"},
                       'distance':{'colour':"#cf0202"},
                       'time':{'colour':"#19b536"},
-                      'calories':{'colour':"#36cc18"},
+                      'calories':{'colour':"#ff9100"},
                       'highlightPoint':{'colour':"#faed00"}}
         
         self._initRightAxis()
@@ -131,7 +127,7 @@ class CyclePlotWidget(PlotWidget):
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
                 text = self._makeLabel(idx)
                 self.label.setHtml(text)
-                pts = self.plotItem.listDataItems()[0].scatter.pointsAtX(mousePoint)
+                pts = self.scatterPointsAtX(mousePoint, self.plotItem.listDataItems()[0].scatter)
                 if len(pts) != 0:
                     self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
@@ -161,3 +157,22 @@ class CyclePlotWidget(PlotWidget):
         
         return html
     
+    def scatterPointsAtX(self, pos, scatter):
+        """ Return a list of points on `scatter` under the x-coordinate of the 
+            given position `pos`, ignoring the y-coord.
+        """
+        # Tried to subclass ScatterPlotItem and add this method there, but it
+        # messed up the DateAxis
+        x = pos.x()
+        pw = scatter.pixelWidth()
+        pts = []
+        for s in scatter.points():
+            sp = s.pos()
+            ss = s.size()
+            sx = sp.x()
+            s2x = ss * 0.5
+            if scatter.opts['pxMode']:
+                s2x *= pw
+            if x > sx-s2x and x < sx+s2x:
+                pts.append(s)
+        return pts[::-1]
