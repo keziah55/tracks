@@ -23,6 +23,11 @@ class CycleDataViewer(QTreeWidget):
     def splitMonths(self):
         grouped = self.df.groupby(pd.Grouper(key='Date', freq='M'))
         return [group for _,group in grouped]
+    
+    def resizeToContents(self):
+        for n in range(self.columnCount()):
+            self.resizeColumnToContents(n)
+                
         
     def makeTree(self):
         
@@ -34,11 +39,12 @@ class CycleDataViewer(QTreeWidget):
             rootItem = QTreeWidgetItem(self)
             rootItem.setText(0, label)
         
-            for idx, row in df.iterrows():
+            for _, row in df.iterrows():
                 item = QTreeWidgetItem(rootItem)
-                for n, col in enumerate(self.header):
+                for idx, col in enumerate(self.header):
                     data = row[col]
                     if col == 'Date':
                         data = data.strftime("%d %b %Y")
-                    item.setText(n, str(data))
-                
+                    item.setText(idx, str(data))
+                    
+        self.resizeToContents()

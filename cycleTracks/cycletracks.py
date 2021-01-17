@@ -6,8 +6,8 @@ Main window for cycleTracks.
 
 import sys
 import os
-from PyQt5.QtWidgets import (QDesktopWidget, QMainWindow, QApplication, 
-                             QHBoxLayout, QWidget)
+from PyQt5.QtWidgets import QDesktopWidget, QMainWindow, QApplication, QDockWidget
+from PyQt5.QtCore import Qt
 import pandas as pd
 from cycleplotwidget import CyclePlotWidget
 from cycledataviewer import CycleDataViewer
@@ -31,32 +31,18 @@ class CycleTracks(QMainWindow):
         self.df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
         self._backup() # TODO call this after every save (or change?)
 
-        self.layout = QHBoxLayout()
-        
-        self.data = CycleDataViewer(self.df)
+        self.viewer = CycleDataViewer(self.df)
         self.plot = CyclePlotWidget(self.df)
         
-        self.layout.addWidget(self.data)
-        self.layout.addWidget(self.plot)
-        
-        self.mainWidget = QWidget()
-        self.mainWidget.setLayout(self.layout)
-        self.setCentralWidget(self.mainWidget)
+        self.dock = QDockWidget()
+        self.dock.setWidget(self.viewer)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dock)
+        self.setCentralWidget(self.plot)
         
         self.setWindowTitle('CycleTrack')
-        # self.resize(1000, 800)
-        # self._centre()
         self.showMaximized()
         self.show()
-        
-        
-    def _centre(self):
-        """ Centre window on screen. """
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-        
+               
         
     def _backup(self):
         bak = self.file + '.bak'
