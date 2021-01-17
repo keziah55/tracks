@@ -4,7 +4,8 @@
 QTreeWidget showing data from cycling DataFrame.
 """
 
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QHeaderView
+from PyQt5.QtCore import QSize, Qt
 import pandas as pd
 import calendar
 
@@ -15,19 +16,23 @@ class CycleDataViewer(QTreeWidget):
         
         self.df = df
         
-        self.header = ['Date', 'Time', 'Distance (km)', 'Calories']
-        self.setHeaderLabels(self.header)
+        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories']
+        self.setHeaderLabels(self.headerLabels)
+        self.header().setStretchLastSection(False)
         
         self.makeTree()
+        
+    def sizeHint(self):
+        width = self.header().length() #self.header().width()
+        height = super().sizeHint().height()
+        # print(f"width: {width}, length: {self.header().length()}")
+        return QSize(width, height)
+        
         
     def splitMonths(self):
         grouped = self.df.groupby(pd.Grouper(key='Date', freq='M'))
         return [group for _,group in grouped]
     
-    def resizeToContents(self):
-        for n in range(self.columnCount()):
-            self.resizeColumnToContents(n)
-                
         
     def makeTree(self):
         
@@ -41,10 +46,11 @@ class CycleDataViewer(QTreeWidget):
         
             for _, row in df.iterrows():
                 item = QTreeWidgetItem(rootItem)
-                for idx, col in enumerate(self.header):
+                for idx, col in enumerate(self.headerLabels):
                     data = row[col]
                     if col == 'Date':
                         data = data.strftime("%d %b %Y")
                     item.setText(idx, str(data))
+                    item.setTextAlignment(idx, Qt.AlignCenter)
                     
-        self.resizeToContents()
+        self.header().resizeSections(QHeaderView.ResizeToContents)
