@@ -93,7 +93,7 @@ class CycleData:
         return [datetime.strptime(d, "%Y-%m-%d") for d in self.df['Date']]
     
     @property
-    def dateFmt(self, fmt="%a %w %b %Y"):
+    def dateFmt(self, fmt="%a %d %b %Y"):
         return [dt.strftime(fmt) for dt in self.datetimes]
     
     def getMonthlyOdometer(self):
