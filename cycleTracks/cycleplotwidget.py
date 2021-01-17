@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Subclass of PyQtGraph.PlotWidget to plot cycling data. 
+Widget containing plot and labels.
 """
 
 from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen, 
@@ -16,6 +16,14 @@ from cycleplotlabel import CyclePlotLabel
 
 
 class CyclePlotWidget(QWidget):
+    """ Widget to display cycling data and labels showing data at the point
+        under the mouse.
+    
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Dataframe of csv data.
+    """
     
     def __init__(self, df):
         
@@ -24,7 +32,7 @@ class CyclePlotWidget(QWidget):
         self.layout = QVBoxLayout()
         self.plotWidget = _CyclePlotWidget(df)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
-        self.plotWidget.currentPoint.connect(self.plotLabel.setLabels)
+        self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
         
         self.layout.addWidget(self.plotWidget)
         self.layout.addWidget(self.plotLabel)
@@ -41,8 +49,8 @@ class _CyclePlotWidget(PlotWidget):
             Dataframe of csv data.
     """
     
-    currentPoint = Signal(dict)
-    """ **signal**  currentPoint(dict `values`)
+    currentPointChanged = Signal(dict)
+    """ **signal**  currentPointChanged(dict `values`)
         
         Emitted when a point in the plot is hovered over. The dict provides
         the date, speed, distance, calories and time data for the chosen point.
@@ -103,6 +111,8 @@ class _CyclePlotWidget(PlotWidget):
         self.updateViews()
         self.plotItem.vb.sigResized.connect(self.updateViews)
         
+        self.currentPoint = {}
+        
         
     def _initRightAxis(self):
         self.vb2 = ViewBox()
@@ -137,6 +147,25 @@ class _CyclePlotWidget(PlotWidget):
         d = {'pen':pen, 'brush':brush, 'fillLevel':0}
         return d
     
+    @property
+    def currentPoint(self):
+        return self._point
+    
+    @currentPoint.setter
+    def currentPoint(self, value):
+        self._point = value
+    
+    def setCurrentPoint(self, idx):
+        """ Set the `currentPoint` dict from index `idx` in the `data` DataFrame
+            and emit `currentPointChanged` signal.
+        """
+        self.currentPoint['date'] = self.data.dateFmt[idx]
+        self.currentPoint['speed'] = self.speed[idx]
+        self.currentPoint['distance'] = self.data.distance[idx]
+        self.currentPoint['calories'] = self.data.calories[idx]
+        self.currentPoint['time'] = self.data.time[idx]
+        
+        self.currentPointChanged.emit(self.currentPoint)
     
     def _highlightPoint(self, point):
         """ Change pen of given point (and reset any previously highlighted
@@ -159,25 +188,17 @@ class _CyclePlotWidget(PlotWidget):
             
             idx = int(mousePoint.x())
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
-                self._makeLabels(idx)
+                self._makePointDict(idx)
                 pts = self.scatterPointsAtX(mousePoint, self.plotItem.listDataItems()[0].scatter)
                 if len(pts) != 0:
                     self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
             
-    def _makeLabels(self, ts):
+    def _makePointDict(self, ts):
         # given timestamp in seconds, find nearest date and speed
         idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
-        
-        d = {}
-        d['date'] = self.data.dateFmt[idx]
-        d['speed'] = self.speed[idx]
-        d['distance'] = self.data.distance[idx]
-        d['calories'] = self.data.calories[idx]
-        d['time'] = self.data.time[idx]
-        
-        self.currentPoint.emit(d)
+        self.setCurrentPoint(idx)
         
     def scatterPointsAtX(self, pos, scatter):
         """ Return a list of points on `scatter` under the x-coordinate of the 

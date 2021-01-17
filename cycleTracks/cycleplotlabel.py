@@ -4,8 +4,7 @@
 QWidget containing QLabels for each data series in the CyclePlotWidget.
 """
 
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget
-from PyQt5.QtCore import pyqtSlot as Slot
+from PyQt5.QtWidgets import QLabel, QHBoxLayout, QWidget
 from PyQt5.QtCore import Qt
 
 class CyclePlotLabel(QWidget):

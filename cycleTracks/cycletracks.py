@@ -6,24 +6,18 @@ Main window for cycleTracks.
 
 import sys
 import os
-
-from PyQt5.QtGui import QIcon, QKeySequence
-from PyQt5.QtWidgets import (QAction, QDesktopWidget, QMainWindow, QMessageBox, 
-                             QApplication, QVBoxLayout, QWidget, QTextEdit,
-                             QSizePolicy)
-from PyQt5.QtCore import pyqtSlot as Slot
-
+from PyQt5.QtWidgets import (QDesktopWidget, QMainWindow, QApplication, 
+                             QHBoxLayout, QWidget)
 import pandas as pd
-
 from cycleplotwidget import CyclePlotWidget
-# from cycleplotlabel import CyclePlotLabel
+from cycledataviewer import CycleDataViewer
 
-home = os.path.expanduser('~')
     
 class CycleTracks(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        home = os.path.expanduser('~')
         path = os.path.join(home, '.cycletracks')
         os.makedirs(path, exist_ok=True)
         self.file = os.path.join(path, 'cycletracks.csv')
@@ -37,23 +31,22 @@ class CycleTracks(QMainWindow):
         self.df = pd.read_csv(self.file, sep=self.sep)
         self._backup() # TODO call this after every save (or change?)
 
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
         
-        # self.label = CyclePlotLabel()
-        # self.label.setReadOnly(True)
-        # self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-        self.plot = CyclePlotWidget(self.df)#, self.label)
+        self.data = CycleDataViewer(self.df)
+        self.plot = CyclePlotWidget(self.df)
         
+        self.layout.addWidget(self.data)
         self.layout.addWidget(self.plot)
-        # self.layout.addWidget(self.label)
         
         self.mainWidget = QWidget()
         self.mainWidget.setLayout(self.layout)
         self.setCentralWidget(self.mainWidget)
         
         self.setWindowTitle('CycleTrack')
-        self.resize(1000, 800)
-        self._centre()
+        # self.resize(1000, 800)
+        # self._centre()
+        self.showMaximized()
         self.show()
         
         
@@ -69,7 +62,6 @@ class CycleTracks(QMainWindow):
         bak = self.file + '.bak'
         self.df.to_csv(bak, sep=self.sep)
             
-        
     
 if __name__ == '__main__':
     app = QApplication(sys.argv)
