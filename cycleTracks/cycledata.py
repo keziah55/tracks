@@ -90,7 +90,12 @@ class CycleData:
     @property
     def datetimes(self):
         """ Return 'Date' column, converted to list of datetime objects. """
-        return [datetime.strptime(d, "%Y-%m-%d") for d in self.df['Date']]
+        fmt = "%Y-%m-%d"
+        # 'strptime(d.strftime(fmt), fmt)' this is ugly and is required 
+        # because the Date column is a pandas datetime object, but it adds an
+        # empty time to the date, which we need to get rid of here, before
+        # calling datetime.strptime
+        return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
     
     @property
     def dateFmt(self, fmt="%a %d %b %Y"):

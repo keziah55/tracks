@@ -28,7 +28,7 @@ class CycleTracks(QMainWindow):
             with open(self.file, 'w') as fileobj:
                 fileobj.write(s+'\n')
                 
-        self.df = pd.read_csv(self.file, sep=self.sep)
+        self.df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
         self._backup() # TODO call this after every save (or change?)
 
         self.layout = QHBoxLayout()
