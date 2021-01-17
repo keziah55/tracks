@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jan 17 13:05:00 2021
-
-@author: keziah
+QWidget containing QLabels for each data series in the CyclePlotWidget.
 """
 
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget
@@ -39,11 +37,11 @@ class CyclePlotLabel(QWidget):
             
     def setLabels(self, dct):
         # TODO iterate through kwargs, not data
-        for key, value in self.data.items():
-            data = dct[key]
-            text = value['string'].format(data)
-            label = value['widget']
-            # for key, value in d.items():
+        for key, data in dct.items():
+            
+            text = self.data[key]['string'].format(data)
+            label = self.data[key]['widget']
+                
             if key in self.style.keys():
                 colour = self.style[key]['colour']
                 style = f"'{self.fontSize}; color: {colour}'"

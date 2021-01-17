@@ -24,7 +24,7 @@ class CyclePlotWidget(QWidget):
         self.layout = QVBoxLayout()
         self.plotWidget = _CyclePlotWidget(df)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
-        self.plotWidget.setLabels.connect(self.plotLabel.setLabels)
+        self.plotWidget.currentPoint.connect(self.plotLabel.setLabels)
         
         self.layout.addWidget(self.plotWidget)
         self.layout.addWidget(self.plotLabel)
@@ -33,10 +33,22 @@ class CyclePlotWidget(QWidget):
         
 
 class _CyclePlotWidget(PlotWidget):
+    """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
     
-    setLabels = Signal(dict)
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Dataframe of csv data.
+    """
     
-    def __init__(self, df):#, label):
+    currentPoint = Signal(dict)
+    """ **signal**  currentPoint(dict `values`)
+        
+        Emitted when a point in the plot is hovered over. The dict provides
+        the date, speed, distance, calories and time data for the chosen point.
+    """
+    
+    def __init__(self, df):
         super().__init__(axisItems={'bottom': DateAxisItem()})
         
         self.hgltPnt = None
@@ -165,7 +177,7 @@ class _CyclePlotWidget(PlotWidget):
         d['calories'] = self.data.calories[idx]
         d['time'] = self.data.time[idx]
         
-        self.setLabels.emit(d)
+        self.currentPoint.emit(d)
         
     def scatterPointsAtX(self, pos, scatter):
         """ Return a list of points on `scatter` under the x-coordinate of the 
