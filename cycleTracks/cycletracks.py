@@ -16,6 +16,7 @@ from PyQt5.QtCore import pyqtSlot as Slot
 import pandas as pd
 
 from cycleplotwidget import CyclePlotWidget
+# from cycleplotlabel import CyclePlotLabel
 
 home = os.path.expanduser('~')
     
@@ -38,13 +39,13 @@ class CycleTracks(QMainWindow):
 
         self.layout = QVBoxLayout()
         
-        self.label = QTextEdit()
-        self.label.setReadOnly(True)
-        self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-        self.plot = CyclePlotWidget(self.df, self.label)
+        # self.label = CyclePlotLabel()
+        # self.label.setReadOnly(True)
+        # self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.plot = CyclePlotWidget(self.df)#, self.label)
         
         self.layout.addWidget(self.plot)
-        self.layout.addWidget(self.label)
+        # self.layout.addWidget(self.label)
         
         self.mainWidget = QWidget()
         self.mainWidget.setLayout(self.layout)

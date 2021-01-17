@@ -8,12 +8,35 @@ from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen,
                        mkBrush, InfiniteLine)
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
+from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtWidgets import QVBoxLayout, QWidget
+
 from cycledata import CycleData
+from cycleplotlabel import CyclePlotLabel
 
 
-class CyclePlotWidget(PlotWidget):
+class CyclePlotWidget(QWidget):
     
-    def __init__(self, df, label):
+    def __init__(self, df):
+        
+        super().__init__()
+        
+        self.layout = QVBoxLayout()
+        self.plotWidget = _CyclePlotWidget(df)
+        self.plotLabel = CyclePlotLabel(self.plotWidget.style)
+        self.plotWidget.setLabels.connect(self.plotLabel.setLabels)
+        
+        self.layout.addWidget(self.plotWidget)
+        self.layout.addWidget(self.plotLabel)
+        
+        self.setLayout(self.layout)
+        
+
+class _CyclePlotWidget(PlotWidget):
+    
+    setLabels = Signal(dict)
+    
+    def __init__(self, df):#, label):
         super().__init__(axisItems={'bottom': DateAxisItem()})
         
         self.hgltPnt = None
@@ -57,7 +80,6 @@ class CyclePlotWidget(PlotWidget):
         self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
         
         # cross hairs
-        self.label = label
         self.vLine = InfiniteLine(angle=90, movable=False)
         self.hLine = InfiniteLine(angle=0, movable=False)
         self.plotItem.addItem(self.vLine, ignoreBounds=True)
@@ -125,38 +147,26 @@ class CyclePlotWidget(PlotWidget):
             
             idx = int(mousePoint.x())
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
-                text = self._makeLabel(idx)
-                self.label.setHtml(text)
+                self._makeLabels(idx)
                 pts = self.scatterPointsAtX(mousePoint, self.plotItem.listDataItems()[0].scatter)
                 if len(pts) != 0:
                     self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
             
-    def _makeLabel(self, ts):
+    def _makeLabels(self, ts):
         # given timestamp in seconds, find nearest date and speed
         idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
         
         d = {}
         d['date'] = self.data.dateFmt[idx]
-        d['speed'] = f"Avg. speed: {self.speed[idx]:.3f} km/h"
-        d['distance'] = f"Distance: {self.data.distance[idx]} km"
-        d['calories'] = f"Calories: {self.data.calories[idx]}"
-        d['time'] = f"Time: {self.data.time[idx]}"
+        d['speed'] = self.speed[idx]
+        d['distance'] = self.data.distance[idx]
+        d['calories'] = self.data.calories[idx]
+        d['time'] = self.data.time[idx]
         
-        fontSize = "font-size: 12pt"
+        self.setLabels.emit(d)
         
-        html = ""
-        for key, value in d.items():
-            if key in self.style.keys():
-                colour = self.style[key]['colour']
-                style = f"'{fontSize}; color: {colour}'"
-            else:
-                style = f"'{fontSize}'"
-            html += f"<div style={style}>{value}</div>"
-        
-        return html
-    
     def scatterPointsAtX(self, pos, scatter):
         """ Return a list of points on `scatter` under the x-coordinate of the 
             given position `pos`, ignoring the y-coord.
