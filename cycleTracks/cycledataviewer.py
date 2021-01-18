@@ -176,7 +176,7 @@ class CycleDataViewer(QTreeWidget):
                 rootItem.setFont(idx, font)
                 
             # make rows of data for tree
-            for _, row in df.iterrows():
+            for _, row in reversed(list(df.iterrows())):
                 item = QTreeWidgetItem(rootItem)
                 for idx, col in enumerate(self.headerLabels):
                     data = row[col]
