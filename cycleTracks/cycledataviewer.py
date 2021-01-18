@@ -140,14 +140,6 @@ class CycleDataViewer(QTreeWidget):
         self.sortItems(idx, order)
         
     @property 
-    def sortAscending(self):
-        return self._sortAscending
-    
-    @sortAscending.setter 
-    def sortAscending(self, value):
-        self._sortAscending = value
-        
-    @property 
     def topLevelItems(self):
         """ List of top level QTreeWidgetItems. """
         items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
