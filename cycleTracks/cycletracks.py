@@ -36,6 +36,7 @@ class CycleTracks(QMainWindow):
         
         self.dock = QDockWidget()
         self.dock.setWidget(self.viewer)
+        self.dock.setWindowTitle("Monthly Data")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dock)
         self.setCentralWidget(self.plot)
         
