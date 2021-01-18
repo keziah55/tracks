@@ -70,9 +70,9 @@ class CycleData:
         return np.array(self.df['Calories'])
     
     @property
-    def timeSecs(self):
+    def timeHours(self):
         """ Return numpy array of 'Time' column, where each value is converted
-            to seconds.
+            to hours.
         """
         time = [self._timeToSecs(t) for t in self.df['Time']]
         time = np.array([self._convertSecs(s) for s in time])

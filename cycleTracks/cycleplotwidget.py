@@ -75,7 +75,7 @@ class _CyclePlotWidget(PlotWidget):
         
         # plot avg speed
         style = self._makeScatterStyle(**self.style['speed'])
-        self.speed = self.data.distance/self.data.timeSecs
+        self.speed = self.data.distance/self.data.timeHours
         self.plotItem.scatterPlot(self.data.dateTimestamps, self.speed, **style)
         
         # plot monthly total distance        
