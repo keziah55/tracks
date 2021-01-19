@@ -109,14 +109,15 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
 
 class CycleDataViewer(QTreeWidget):
     
-    def __init__(self, df, widthSpace=5):
+    def __init__(self, data, widthSpace=5):
         super().__init__()
         
-        self.df = df
+        self.data = data
         
         self.widthSpace = widthSpace
         
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories']
+        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed (km/hr)', 
+                             'Calories']
         self.setHeaderLabels(self.headerLabels)
         self.header().setStretchLastSection(False)
         
@@ -145,16 +146,10 @@ class CycleDataViewer(QTreeWidget):
         items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
         return items
         
-    @staticmethod
-    def splitMonths(df):
-        """ Split `df` into list of DataFrames, split by month. """
-        grouped = df.groupby(pd.Grouper(key='Date', freq='M'))
-        return [group for _,group in grouped]
-    
     def makeTree(self):
         """ Populate tree with data from DataFrame. """
         
-        dfs = self.splitMonths(self.df)
+        dfs = self.data.splitMonths()
         
         for df in reversed(dfs):
             
@@ -165,6 +160,7 @@ class CycleDataViewer(QTreeWidget):
             rootText = [f"{calendar.month_name[date.month]} {date.year}"]
             rootText.append(self._getHMS(sum(data.timeHours)))
             rootText.append(f"{sum(data.distance):.2f}")
+            rootText.append(f"{max(data.avgSpeed):.2f}")
             rootText.append(f"{sum(data.calories):.2f}")
             
             rootItem = CycleTreeWidgetItem(self)
@@ -176,25 +172,26 @@ class CycleDataViewer(QTreeWidget):
                 rootItem.setFont(idx, font)
                 
             # make rows of data for tree
-            for _, row in reversed(list(df.iterrows())):
+            for rowIdx in reversed(range(len(data))):
                 item = QTreeWidgetItem(rootItem)
                 for idx, col in enumerate(self.headerLabels):
-                    data = row[col]
+                    value = data[col][rowIdx]
                     if col == 'Date':
-                        data = data.strftime("%d %b %Y")
-                    item.setText(idx, str(data))
+                        value = value.strftime("%d %b %Y")
+                    elif col != 'Time':
+                        value = f"{value:.2f}"
+                    item.setText(idx, value)
                     item.setTextAlignment(idx, Qt.AlignCenter)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
         
         
-    def _getHMS(self, totalHours):
+    @staticmethod
+    def _getHMS(totalHours):
         """ Convert `totalHours` float to HH:MM.ss string. """
-        
         hours, mins = divmod(totalHours, 1)
         mins *= 60
         mins, secs = divmod(mins, 1)
         secs *= 60
         s = f"{hours:02.0f}:{mins:02.0f}.{secs:02.0f}"
-        
         return s

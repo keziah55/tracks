@@ -8,6 +8,7 @@ Created on Sat Nov 28 19:25:42 2020
 
 from datetime import datetime
 import numpy as np
+import pandas as pd
 
 
 class CycleData:
@@ -17,6 +18,21 @@ class CycleData:
             a given DataFrame of cycling data.
         """
         self.df = df
+        self.propertyNames = {'Distance (km)':self.distance, 
+                              'Date':self.date,
+                              'Time':self.time,
+                              'Calories':self.calories,
+                              'Avg speed (km/hr)':self.avgSpeed,
+                              'Avg. speed (km/hr)':self.avgSpeed}
+        
+    def __len__(self):
+        return len(self.df)
+    
+    def __getitem__(self, key):
+        if key in self.propertyNames.keys():
+            return self.propertyNames[key]
+        else:
+            raise NameError(f"{key} not a valid property name.")
         
     @staticmethod
     def _timeToSecs(t):
@@ -59,14 +75,17 @@ class CycleData:
     
     @property
     def time(self):
+        """ Return 'Time' column as list. """
         return list(self.df['Time'])
     
     @property
     def date(self):
+        """ Return 'Date' column as list. """
         return list(self.df['Date'])
     
     @property
     def calories(self):
+        """ Return 'Calories' column as numpy array. """
         return np.array(self.df['Calories'])
     
     @property
@@ -100,6 +119,16 @@ class CycleData:
     @property
     def dateFmt(self, fmt="%a %d %b %Y"):
         return [dt.strftime(fmt) for dt in self.datetimes]
+    
+    @property 
+    def avgSpeed(self):
+        """ Return average speeds as numpy array. """
+        return self.distance/self.timeHours
+    
+    def splitMonths(self):
+        """ Split `df` into list of DataFrames, split by month. """
+        grouped = self.df.groupby(pd.Grouper(key='Date', freq='M'))
+        return [group for _,group in grouped]
     
     def getMonthlyOdometer(self):
         """ Return list of datetime objects and list of floats.

@@ -11,7 +11,6 @@ from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
-from cycledata import CycleData
 from cycleplotlabel import CyclePlotLabel
 
 
@@ -21,16 +20,16 @@ class CyclePlotWidget(QWidget):
     
         Parameters
         ----------
-        df : pandas.DataFrame
-            Dataframe of csv data.
+        data : CycleData
+            CycleData object.
     """
     
-    def __init__(self, df):
+    def __init__(self, data):
         
         super().__init__()
         
         self.layout = QVBoxLayout()
-        self.plotWidget = _CyclePlotWidget(df)
+        self.plotWidget = _CyclePlotWidget(data)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
         
@@ -45,8 +44,8 @@ class _CyclePlotWidget(PlotWidget):
     
         Parameters
         ----------
-        df : pandas.DataFrame
-            Dataframe of csv data.
+        data : CycleData
+            CycleData object.
     """
     
     currentPointChanged = Signal(dict)
@@ -56,12 +55,12 @@ class _CyclePlotWidget(PlotWidget):
         the date, speed, distance, calories and time data for the chosen point.
     """
     
-    def __init__(self, df):
+    def __init__(self, data):
         super().__init__(axisItems={'bottom': DateAxisItem()})
         
         self.hgltPnt = None
         
-        self.data = CycleData(df)
+        self.data = data
         
         self.style = {'speed':{'colour':"#024aeb",
                                'symbol':'x'},

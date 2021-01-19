@@ -11,6 +11,7 @@ from PyQt5.QtCore import Qt
 import pandas as pd
 from cycleplotwidget import CyclePlotWidget
 from cycledataviewer import CycleDataViewer
+from cycledata import CycleData
 
     
 class CycleTracks(QMainWindow):
@@ -31,8 +32,10 @@ class CycleTracks(QMainWindow):
         self.df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
         self._backup() # TODO call this after every save (or change?)
 
-        self.viewer = CycleDataViewer(self.df)
-        self.plot = CyclePlotWidget(self.df)
+        self.data = CycleData(self.df)
+
+        self.viewer = CycleDataViewer(self.data)
+        self.plot = CyclePlotWidget(self.data)
         
         self.dock = QDockWidget()
         self.dock.setWidget(self.viewer)
