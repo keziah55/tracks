@@ -54,7 +54,7 @@ class CycleTracks(QMainWindow):
         self.viewer.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         self.plot.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         
-        self.setWindowTitle('CycleTrack')
+        self.setWindowTitle('Cycle Tracks')
         self.showMaximized()
         self.show()
                
