@@ -110,6 +110,20 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
         
 
 class CycleDataViewer(QTreeWidget):
+    """ QTreeWidget showing cycling data, split by month.
+    
+        Each item in the tree shows a summary: month, total time, total distance,
+        max. avg. speed and total calories.
+        
+        The tree can be sorted by double clicking on the header.
+    
+        Parameters
+        ----------
+        data : CycleData
+            CycleData object
+        widthSpace : int
+            Spacing to add to width in `sizeHint`. Default is 5.
+    """
     
     def __init__(self, data, widthSpace=5):
         super().__init__()
@@ -170,7 +184,7 @@ class CycleDataViewer(QTreeWidget):
         return items
         
     def makeTree(self):
-        """ Populate tree with data from DataFrame. """
+        """ Populate tree with data from CycleData object. """
         
         dfs = self.data.splitMonths()
         
@@ -178,7 +192,7 @@ class CycleDataViewer(QTreeWidget):
             
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            data = CycleData(df) # make CycleData object for the month, so we can access `timeHours`
+            data = CycleData(df) # make CycleData object for the month
             date = df['Date'].iloc[0]
             rootText = [f"{calendar.month_name[date.month]} {date.year}"]
             rootText.append(self._getHMS(sum(data.timeHours)))
@@ -198,7 +212,7 @@ class CycleDataViewer(QTreeWidget):
             for rowIdx in reversed(range(len(data))):
                 item = QTreeWidgetItem(rootItem)
                 for idx, col in enumerate(self.headerLabels):
-                    col = re.sub(r"\s", " ", col)
+                    col = re.sub(r"\s", " ", col) # remove \n from avg speed
                     value = data[col][rowIdx]
                     if col == 'Date':
                         value = value.strftime("%d %b %Y")
