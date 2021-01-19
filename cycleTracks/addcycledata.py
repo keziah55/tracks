@@ -21,8 +21,10 @@ class AddCycleData(QWidget):
     
     newData = Signal(list)
     
-    def __init__(self):
+    def __init__(self, widthSpace=5):
         super().__init__()
+        
+        self.widthSpace = widthSpace
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
         self.table = QTableWidget(0, len(self.headerLabels))
@@ -51,6 +53,12 @@ class AddCycleData(QWidget):
         self.layout.addLayout(self.buttonLayout)
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
+        
+        
+    def sizeHint(self):
+        width = self.table.verticalHeader().length() + self.widthSpace
+        height = super().sizeHint().height()
+        return QSize(width, height)
         
         
     @Slot()

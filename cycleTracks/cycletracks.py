@@ -48,8 +48,10 @@ class CycleTracks(QMainWindow):
             
         self.setCentralWidget(self.plot)
         
-        self.viewer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        # self.plot.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        policy = QSizePolicy.Minimum
+        # self.viewer.setSizePolicy(policy, QSizePolicy.Preferred)
+        self.addData.setSizePolicy(policy, QSizePolicy.Preferred)
+        self.plot.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         
         self.createActions()
         self.createMenus()
