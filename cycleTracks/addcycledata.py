@@ -8,11 +8,10 @@ Created on Tue Jan 19 19:29:46 2021
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
                              QVBoxLayout, QHBoxLayout, QHeaderView)
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
-from PyQt5.QtGui import QFontMetrics
-from cycledata import CycleData
+from PyQt5.QtGui import QBrush, QColor
 
 from datetime import datetime
 import calendar
@@ -21,7 +20,7 @@ class AddCycleData(QWidget):
     
     newData = Signal(list)
     
-    invalid = Signal(str)
+    invalid = Signal(int, int)
     
     def __init__(self, widthSpace=5):
         super().__init__()
@@ -38,7 +37,17 @@ class AddCycleData(QWidget):
         # self.table.horizontalHeader().setStretchLastSection(False)
         self.table.verticalHeader().setVisible(False)
         self._makeEmptyRow()
+        self.defaultBrush = self.table.item(0,0).background()
+        self.invalidBrush = QBrush(QColor("#910404"))
         self.table.verticalHeader().resizeSections(QHeaderView.ResizeToContents)
+        
+        self.validateTimer = QTimer()
+        self.validateTimer.setInterval(100)
+        self.validateTimer.setSingleShot(True)
+        self.validateTimer.timeout.connect(self._validate)
+        self.table.cellChanged.connect(self.validateTimer.start)
+        
+        self.invalid.connect(self._invalid)
         
         self.addLineButton = QPushButton("New line")
         self.rmvLineButton = QPushButton("Remove line")
@@ -93,18 +102,28 @@ class AddCycleData(QWidget):
         row = self.table.currentRow()
         self.table.removeRow(row)
         
+        
+    @Slot(int, int)
+    def _invalid(self, row, col):
+        self.table.item(row, col).setBackground(self.invalidBrush)
+        self.okButton.setEnabled(False)
+        
     @Slot()
     def _validate(self):
+        allValid = True
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
                 value = item.text()
                 mthd = self.validateMethods[name]
-                if not mthd(value):
-                    msg = f"{repr(name)} row {row} invalid"
-                    self.invalid.emit(msg)
-                    return False
-        return True
+                valid = mthd(value)
+                if not valid:
+                    self.invalid.emit(row, col)
+                    allValid = False
+                elif valid and self.table.item(row, col).background() == self.invalidBrush:
+                    self.table.item(row, col).setBackground(self.defaultBrush) 
+        if allValid:
+            self.okButton.setEnabled(True)
                 
     @staticmethod
     def _validateInt(value):
@@ -143,6 +162,5 @@ class AddCycleData(QWidget):
             values.append(dct)
                 
         if values:
-            print(values)
             self.newData.emit(values)
                 
