@@ -6,7 +6,8 @@ Main window for cycleTracks.
 
 import sys
 import os
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDockWidget, QSizePolicy
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QDockWidget, QSizePolicy, 
+                             QAction)
 from PyQt5.QtCore import Qt
 import pandas as pd
 from cycleplotwidget import CyclePlotWidget
@@ -39,33 +40,49 @@ class CycleTracks(QMainWindow):
         self.addData = AddCycleData()
         self.plot = CyclePlotWidget(self.data)
         
-        self.dock = QDockWidget()
-        self.dock.setWidget(self.viewer)
-        self.dock.setWindowTitle("Monthly Data")
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.dock)
+        dockWidgets = [(self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
+                       (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
         
-        self.dock = QDockWidget()
-        self.dock.setWidget(self.addData)
-        self.dock.setWindowTitle("Add Data")
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.dock)
-        
+        for widget, area, title in dockWidgets:
+            self.createDockWidget(widget, area, title=title)
+            
         self.setCentralWidget(self.plot)
         
         self.viewer.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
-        self.plot.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        # self.plot.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        
+        self.createActions()
+        self.createMenus()
         
         self.setWindowTitle('Cycle Tracks')
         self.showMaximized()
-        self.show()
                
         
     def _backup(self):
         bak = self.file + '.bak'
         self.df.to_csv(bak, sep=self.sep)
+        
+    def createDockWidget(self, widget, area, title=None):
+        self.dock = QDockWidget()
+        self.dock.setWidget(widget)
+        if title is not None:
+            self.dock.setWindowTitle(title)
+        self.addDockWidget(area, self.dock)
+        
+    def createActions(self):
+        
+        self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q",
+                               statusTip="Exit the application", 
+                               triggered=self.close)
             
+    def createMenus(self):
+        self.fileMenu = self.menuBar().addMenu("&File")
+        self.fileMenu.addAction(self.exitAct)
+    
     
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = CycleTracks()
+    window.show()
     sys.exit(app.exec_())
     
