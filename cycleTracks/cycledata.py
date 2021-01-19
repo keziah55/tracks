@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Nov 28 19:25:42 2020
-
-@author: keziah
+Object providing convenient access to the contents of a DataFrame of cycling
+data.
 """
 
 from datetime import datetime
@@ -22,8 +21,9 @@ class CycleData:
                               'Date':self.date,
                               'Time':self.time,
                               'Calories':self.calories,
-                              'Avg speed (km/hr)':self.avgSpeed,
-                              'Avg. speed (km/hr)':self.avgSpeed}
+                              'Avg speed (km/h)':self.avgSpeed,
+                              'Avg. speed (km/h)':self.avgSpeed,
+                              'Gear':self.gear}
         
     def __len__(self):
         return len(self.df)
@@ -87,6 +87,11 @@ class CycleData:
     def calories(self):
         """ Return 'Calories' column as numpy array. """
         return np.array(self.df['Calories'])
+    
+    @property
+    def gear(self):
+        """ Return 'Gear' column as numpy array. """
+        return np.array(self.df['Gear'])
     
     @property
     def timeHours(self):

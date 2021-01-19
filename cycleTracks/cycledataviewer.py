@@ -127,7 +127,7 @@ class CycleDataViewer(QTreeWidget):
         
         self.widthSpace = widthSpace
         
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/hr)', 
+        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
                              'Calories']
         self.setHeaderLabels(self.headerLabels)
         self.header().setStretchLastSection(False)
