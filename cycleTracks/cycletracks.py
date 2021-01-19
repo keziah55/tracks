@@ -12,6 +12,7 @@ import pandas as pd
 from cycleplotwidget import CyclePlotWidget
 from cycledataviewer import CycleDataViewer
 from cycledata import CycleData
+from addcycledata import AddCycleData
 
     
 class CycleTracks(QMainWindow):
@@ -35,12 +36,19 @@ class CycleTracks(QMainWindow):
         self.data = CycleData(self.df)
 
         self.viewer = CycleDataViewer(self.data)
+        self.addData = AddCycleData()
         self.plot = CyclePlotWidget(self.data)
         
         self.dock = QDockWidget()
         self.dock.setWidget(self.viewer)
         self.dock.setWindowTitle("Monthly Data")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dock)
+        
+        self.dock = QDockWidget()
+        self.dock.setWidget(self.addData)
+        self.dock.setWindowTitle("Add Data")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dock)
+        
         self.setCentralWidget(self.plot)
         
         self.viewer.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
