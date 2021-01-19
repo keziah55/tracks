@@ -7,8 +7,10 @@ QTreeWidget showing data from cycling DataFrame.
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QHeaderView
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtCore import pyqtSlot as Slot
-import pandas as pd
+from PyQt5.QtGui import QFontMetrics
+import re
 import calendar
+import itertools
 from cycledata import CycleData
 
 
@@ -116,14 +118,23 @@ class CycleDataViewer(QTreeWidget):
         
         self.widthSpace = widthSpace
         
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed (km/hr)', 
+        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/hr)', 
                              'Calories']
         self.setHeaderLabels(self.headerLabels)
         self.header().setStretchLastSection(False)
+        # make header tall enough for two rows of text (avg speed has line break)
+        font = self.header().font()
+        metrics = QFontMetrics(font)
+        height = metrics.height()
+        self.header().setMinimumHeight(height*2)
+        # align header text centrally
+        for idx in range(len(self.headerLabels)):
+            self.headerItem().setTextAlignment(idx, Qt.AlignCenter)
         
         self.makeTree()
         
-        self.sortAscending = False
+        self.sortOrder = [itertools.cycle([Qt.DescendingOrder, Qt.AscendingOrder])
+                          for _ in range(len(self.headerLabels))]
         self.header().sectionDoubleClicked.connect(self.sortTree)
         
     def sizeHint(self):
@@ -134,10 +145,22 @@ class CycleDataViewer(QTreeWidget):
     @Slot(int)
     def sortTree(self, idx):
         """ Sort the tree based on column `idx`. """
-        self.sortAscending = not self.sortAscending
-        order = Qt.AscendingOrder if self.sortAscending else Qt.DescendingOrder
+        # switch sort order
+        order = next(self.sortOrder[idx])
+        
+        # set sort column index
         for rootItem in self.topLevelItems:
             rootItem.sortColumn = idx
+            
+        # make header label for sort column italic
+        for i in range(self.header().count()):
+            font = self.headerItem().font(i)
+            if i == idx:
+                font.setItalic(True)
+            else:
+                font.setItalic(False)
+            self.headerItem().setFont(i, font)
+                
         self.sortItems(idx, order)
         
     @property 
@@ -175,6 +198,7 @@ class CycleDataViewer(QTreeWidget):
             for rowIdx in reversed(range(len(data))):
                 item = QTreeWidgetItem(rootItem)
                 for idx, col in enumerate(self.headerLabels):
+                    col = re.sub(r"\s", " ", col)
                     value = data[col][rowIdx]
                     if col == 'Date':
                         value = value.strftime("%d %b %Y")
