@@ -21,12 +21,18 @@ class AddCycleData(QWidget):
     
     newData = Signal(list)
     
+    invalid = Signal(str)
+    
     def __init__(self, widthSpace=5):
         super().__init__()
         
         self.widthSpace = widthSpace
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        validateMethods = [self._validateDate, self._validateTime, self._validateFloat, 
+                           self._validateFloat, self._validateInt]
+        self.validateMethods = dict(zip(self.headerLabels, validateMethods))
+        
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
         # self.table.horizontalHeader().setStretchLastSection(False)
@@ -38,6 +44,8 @@ class AddCycleData(QWidget):
         self.rmvLineButton = QPushButton("Remove line")
         self.rmvLineButton.setToolTip("Remove currently selected line")
         self.okButton = QPushButton("Ok")
+        
+        # TODO disable ok button when data is not valid
         
         self.addLineButton.clicked.connect(self._makeEmptyRow)
         self.rmvLineButton.clicked.connect(self._removeSelectedRow)
@@ -86,9 +94,55 @@ class AddCycleData(QWidget):
         self.table.removeRow(row)
         
     @Slot()
+    def _validate(self):
+        for row in range(self.table.rowCount()):
+            for col, name in enumerate(self.headerLabels):
+                item = self.table.item(row, col)
+                value = item.text()
+                mthd = self.validateMethods[name]
+                if not mthd(value):
+                    msg = f"{repr(name)} row {row} invalid"
+                    self.invalid.emit(msg)
+                    return False
+        return True
+                
+    @staticmethod
+    def _validateInt(value):
+        return value.isdigit()
+    
+    @staticmethod
+    def _validateFloat(value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+        
+    @staticmethod
+    def _validateDate(value):
+        return True
+    
+    @staticmethod
+    def _validateTime(value):
+        return True
+        
+        
+    @Slot()
     def _addData(self):
         # get data from table, as list of dicts
         # emit `newData`
         # clear table
-        pass
-        
+
+        values = []
+
+        for row in range(self.table.rowCount()):
+            dct = {}
+            for col, name in enumerate(self.headerLabels):
+                item = self.table.item(row, col)
+                dct[name] = item.text()
+            values.append(dct)
+                
+        if values:
+            print(values)
+            self.newData.emit(values)
+                
