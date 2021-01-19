@@ -54,8 +54,6 @@ class AddCycleData(QWidget):
         self.rmvLineButton.setToolTip("Remove currently selected line")
         self.okButton = QPushButton("Ok")
         
-        # TODO disable ok button when data is not valid
-        
         self.addLineButton.clicked.connect(self._makeEmptyRow)
         self.rmvLineButton.clicked.connect(self._removeSelectedRow)
         self.okButton.clicked.connect(self._addData)
