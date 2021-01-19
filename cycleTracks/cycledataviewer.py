@@ -35,21 +35,13 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
         if self._isNumeric(item0) and self._isNumeric(item1):
             return float(item0) < float(item1)
         elif self._isMonthYear(item0) and self._isMonthYear(item1):
-            m0, y0 = self._getMonthYear(item0)
-            m1, y1 = self._getMonthYear(item1)
-            if y0 != y1:
-                return y0 < y1
-            else:
-                return m0 < m1
+            value0 = self._getMonthYear(item0)
+            value1 = self._getMonthYear(item1)
+            return value0 < value1
         elif self._isHourMinSec(item0) and self._isHourMinSec(item1):
-            h0, m0, s0 = self._getHourMinSec(item0)
-            h1, m1, s1 = self._getHourMinSec(item1)
-            if h0 != h1:
-                return h0 < h1
-            elif m0 != m1:
-                return m0 < m1
-            else:
-                return s0 < s1
+            value0 = self._getHourMinSec(item0)
+            value1 = self._getHourMinSec(item1)
+            return value0 < value1
         else:
             return item0 < item1
         
@@ -89,9 +81,11 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
                 idx = list(calendar.month_abbr).index(month)
             except ValueError:
                 raise ValueError(f"{month} is not valid month")
-        year = int(year)
+        year = float(year)
         
-        return idx, year
+        value = year + (idx/12)
+        
+        return value
     
     @classmethod
     def _isHourMinSec(cls, value):
@@ -106,7 +100,8 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     def _getHourMinSec(value):
         hours, minssec = value.split(':')
         mins, secs = minssec.split('.')
-        return int(hours), int(mins), int(secs)
+        value = float(hours) + (float(mins)/60) + (float(secs)/3600)
+        return value
         
 
 class CycleDataViewer(QTreeWidget):
