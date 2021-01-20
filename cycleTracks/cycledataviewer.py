@@ -157,7 +157,11 @@ class CycleDataViewer(QTreeWidget):
     
     @Slot()
     def newData(self):
+        print("tree newData")
         self.clear()
+        print("cleared")
+        print("making new tree")
+        print(self.data)
         self.makeTree()
     
     @Slot(int)

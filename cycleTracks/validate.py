@@ -52,7 +52,7 @@ def parseTime(value):
     return s
 
             
-def parseDate(value, pd_timestamp=False):
+def parseDate(value, pd_timestamp=True):
     """ Convert string to datetime.date object (or pandas.Timestamp, if 
     `pd_timestamp` is True).
     

@@ -24,12 +24,12 @@ class CyclePlotWidget(QWidget):
             CycleData object.
     """
     
-    def __init__(self, data):
+    def __init__(self, parent):
         
         super().__init__()
         
         self.layout = QVBoxLayout()
-        self.plotWidget = _CyclePlotWidget(data)
+        self.plotWidget = _CyclePlotWidget(parent)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
         
@@ -37,6 +37,10 @@ class CyclePlotWidget(QWidget):
         self.layout.addWidget(self.plotLabel)
         
         self.setLayout(self.layout)
+        
+    @Slot()
+    def newData(self):
+        self.plotWidget.defaultPlot()
         
 
 class _CyclePlotWidget(PlotWidget):
@@ -55,12 +59,12 @@ class _CyclePlotWidget(PlotWidget):
         the date, speed, distance, calories and time data for the chosen point.
     """
     
-    def __init__(self, data):
+    def __init__(self, parent):
         super().__init__(axisItems={'bottom': DateAxisItem()})
         
         self.hgltPnt = None
         
-        self.data = data
+        self.parent = parent
         
         self.style = {'speed':{'colour':"#024aeb",
                                'symbol':'x'},
@@ -72,17 +76,7 @@ class _CyclePlotWidget(PlotWidget):
         
         self._initRightAxis()
         
-        # plot avg speed
-        style = self._makeScatterStyle(**self.style['speed'])
-        self.speed = self.data.distance/self.data.timeHours
-        self.plotItem.scatterPlot(self.data.dateTimestamps, self.speed, **style)
-        
-        # plot monthly total distance        
-        style = self._makeFillStyle(self.style['odometer']['colour'])
-        dts, odo = self.data.getMonthlyOdometer()
-        dts = [dt.timestamp() for dt in dts]
-        curve = PlotCurveItem(dts, odo, **style)
-        self.vb2.addItem(curve)
+        self.defaultPlot()
         
         # axis labels
         self.plotItem.setLabels(left='Avg. speed, (km/h)', bottom='Date')
@@ -112,6 +106,9 @@ class _CyclePlotWidget(PlotWidget):
         
         self.currentPoint = {}
         
+    @property
+    def data(self):
+        return self.parent.data
         
     def _initRightAxis(self):
         self.vb2 = ViewBox()
@@ -129,6 +126,26 @@ class _CyclePlotWidget(PlotWidget):
         # incorrectly while views had different shapes.
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
+    
+    @Slot()
+    def defaultPlot(self):
+        self.plotItem.clear()
+        self.plotSpeed()
+        self.plotTotalDistance()
+    
+    def plotSpeed(self):
+        # plot avg speed
+        style = self._makeScatterStyle(**self.style['speed'])
+        self.speed = self.data.distance/self.data.timeHours
+        self.plotItem.scatterPlot(self.data.dateTimestamps, self.speed, **style)
+        
+    def plotTotalDistance(self):
+        # plot monthly total distance        
+        style = self._makeFillStyle(self.style['odometer']['colour'])
+        dts, odo = self.data.getMonthlyOdometer()
+        dts = [dt.timestamp() for dt in dts]
+        curve = PlotCurveItem(dts, odo, **style)
+        self.vb2.addItem(curve)
     
     @staticmethod
     def _makeScatterStyle(colour, symbol):

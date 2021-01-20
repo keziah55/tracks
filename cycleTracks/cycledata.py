@@ -43,14 +43,17 @@ class CycleData(QObject):
         else:
             raise NameError(f"{key} not a valid property name.")
          
+    def __repr__(self):
+        return repr(self.df)
+         
     @Slot(dict)
-    def append(self, data):
+    def append(self, dct):
         """ Append values in dict to DataFrame. """
-        if not isinstance(data, dict):
-            msg = f"Can only append dict to CycleData, not {type(data).__name__}"
+        if not isinstance(dct, dict):
+            msg = f"Can only append dict to CycleData, not {type(dct).__name__}"
             raise TypeError(msg)
         
-        tmpDf = pd.DataFrame.from_dict(data)
+        tmpDf = pd.DataFrame.from_dict(dct)
         tmpDf = self.df.append(tmpDf, ignore_index=True)
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf

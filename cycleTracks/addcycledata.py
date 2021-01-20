@@ -44,6 +44,11 @@ class AddCycleData(QWidget):
                            validateFloat, validateInt]
         self.validateMethods = dict(zip(self.headerLabels, validateMethods))
         
+        # TODO combine these into one dict
+        # TODO make partial of parseDate with pd_timestamp=True
+        castMethods = [parseDate, parseTime, float, float, int]
+        self.castMethods = dict(zip(self.headerLabels, castMethods))
+        
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
         # self.table.horizontalHeader().setStretchLastSection(False)
@@ -156,12 +161,14 @@ class AddCycleData(QWidget):
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
                 value = item.text()
-                if name == 'Date':
-                    value = parseDate(value, pd_timestamp=True)
-                elif name == 'Time':
-                    value = parseTime(value)
+                mthd = self.castMethods[name]
+                value = mthd(value)
+                # if name == 'Date':
+                #     value = parseDate(value, pd_timestamp=True)
+                # elif name == 'Time':
+                #     value = parseTime(value)
                 values[name].append(value)
                 
         self.newData.emit(values)
             
-        self.table.clear()
+        self.table.clearContents()
