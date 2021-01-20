@@ -1,6 +1,7 @@
-import datetime
+from datetime import date
 import calendar
 import re
+import pandas as pd
 
 
 def validateInt(value):
@@ -51,8 +52,9 @@ def parseTime(value):
     return s
 
             
-def parseDate(value):
-    """ Convert string to datetime.date object.
+def parseDate(value, pd_timestamp=False):
+    """ Convert string to datetime.date object (or pandas.Timestamp, if 
+    `pd_timestamp` is True).
     
     Will take any reasonable date string (in Day-Month-Year order) and convert
     it to a datetime.date object (in Year-Month-Day order). 
@@ -115,7 +117,7 @@ def parseDate(value):
     del months['']
     
     # get current date and use as default output
-    today = datetime.date.today()
+    today = date.today()
     d = [today.year, today.month, today.day]
     
     # if input is empty string, return current date
@@ -159,4 +161,10 @@ def parseDate(value):
     if len(str(d[0])) == 2:
         d[0] += today.year - (today.year % 100)
         
-    return datetime.date(*d)
+    # return value
+    ret = date(*d)
+    if pd_timestamp:
+        # cast to pandas.Timestamp, if requested
+        ret = pd.Timestamp(ret)
+        
+    return ret

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 19 19:29:46 2021
+QWidget containing a QTableWidget, where users can add new cycling data. 
 
-@author: keziah
+User input will be validated live; if data is invalid, the 'Ok' button cannot
+be clicked.
 """
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
@@ -22,8 +23,16 @@ import calendar
 class AddCycleData(QWidget):
     
     newData = Signal(list)
+    """ **signal** newData(list `data`)
+    
+        Emitted with a list of dicts to be appended to the DataFrame.
+    """
     
     invalid = Signal(int, int)
+    """ **signal** invalid(int `row`, int `col`)
+    
+        Emitted if the data in cell `row`,`col` is invalid.
+    """
     
     def __init__(self, widthSpace=5):
         super().__init__()
@@ -81,6 +90,9 @@ class AddCycleData(QWidget):
         
     @Slot()
     def _makeEmptyRow(self):
+        """ Add a new row to the end of the table, with today's date in the 
+            'Date' field and the rest blank. 
+        """
         
         today = datetime.today()
         month = calendar.month_abbr[today.month]
@@ -100,17 +112,24 @@ class AddCycleData(QWidget):
             
     @Slot()
     def _removeSelectedRow(self):
+        """ Remove the currently selected row from the table. """
         row = self.table.currentRow()
         self.table.removeRow(row)
         
-        
     @Slot(int, int)
     def _invalid(self, row, col):
+        """ Set the background of cell `row`,`col` to the `invalidBrush` and 
+            disable the 'Ok' button.
+        """
         self.table.item(row, col).setBackground(self.invalidBrush)
         self.okButton.setEnabled(False)
         
     @Slot()
     def _validate(self):
+        """ Validate all data in the table. """
+        # it would be more efficient to only validate a single cell, after its
+        # text has been changed, but this table is unlikely to ever be more 
+        # than a few rows long, so this isn't too inefficient
         allValid = True
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):
@@ -128,10 +147,9 @@ class AddCycleData(QWidget):
                 
     @Slot()
     def _addData(self):
-        # get data from table, as list of dicts
-        # emit `newData`
-        # clear table
-
+        """ Take all data from the table and emit it as a list of dicts with 
+            the `newData` signal, then clear the table.
+        """
         values = []
 
         for row in range(self.table.rowCount()):
@@ -140,7 +158,7 @@ class AddCycleData(QWidget):
                 item = self.table.item(row, col)
                 value = item.text()
                 if name == 'Date':
-                    value = parseDate(value)
+                    value = parseDate(value, pd_timestamp=True)
                 elif name == 'Time':
                     value = parseTime(value)
                 dct[name] = value
@@ -149,3 +167,4 @@ class AddCycleData(QWidget):
         if values:
             self.newData.emit(values)
             
+        # TODO clear table
