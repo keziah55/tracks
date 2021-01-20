@@ -22,10 +22,10 @@ import calendar
 
 class AddCycleData(QWidget):
     
-    newData = Signal(list)
-    """ **signal** newData(list `data`)
+    newData = Signal(dict)
+    """ **signal** newData(dict `data`)
     
-        Emitted with a list of dicts to be appended to the DataFrame.
+        Emitted with a dict to be appended to the DataFrame.
     """
     
     invalid = Signal(int, int)
@@ -150,10 +150,9 @@ class AddCycleData(QWidget):
         """ Take all data from the table and emit it as a list of dicts with 
             the `newData` signal, then clear the table.
         """
-        values = []
+        values = {name:[] for name in self.headerLabels}
 
         for row in range(self.table.rowCount()):
-            dct = {}
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
                 value = item.text()
@@ -161,10 +160,8 @@ class AddCycleData(QWidget):
                     value = parseDate(value, pd_timestamp=True)
                 elif name == 'Time':
                     value = parseTime(value)
-                dct[name] = value
-            values.append(dct)
+                values[name].append(value)
                 
-        if values:
-            self.newData.emit(values)
+        self.newData.emit(values)
             
-        # TODO clear table
+        self.table.clear()

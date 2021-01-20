@@ -4,18 +4,27 @@
 Object providing convenient access to the contents of a DataFrame of cycling
 data.
 """
-
+from PyQt5.QtCore import QObject
+from PyQt5.QtCore import pyqtSlot as Slot
+from PyQt5.QtCore import pyqtSignal as Signal
 from datetime import datetime
 import numpy as np
 import pandas as pd
 
-
-class CycleData:
+class CycleData(QObject):
+    
+    dataChanged = Signal(object)
+    """ **signal** dataChanged(object `index`)
+    
+        Emitted when the data in the object is changed, with the pandas index
+        of the new rows.
+    """
     
     def __init__(self, df):
         """ Object providing convenience functions for accessing data from 
             a given DataFrame of cycling data.
         """
+        super().__init__()
         self.df = df
         self.propertyNames = {'Distance (km)':self.distance, 
                               'Date':self.date,
@@ -33,7 +42,20 @@ class CycleData:
             return self.propertyNames[key]
         else:
             raise NameError(f"{key} not a valid property name.")
+         
+    @Slot(dict)
+    def append(self, data):
+        """ Append values in dict to DataFrame. """
+        if not isinstance(data, dict):
+            msg = f"Can only append dict to CycleData, not {type(data).__name__}"
+            raise TypeError(msg)
         
+        tmpDf = pd.DataFrame.from_dict(data)
+        tmpDf = self.df.append(tmpDf, ignore_index=True)
+        index = tmpDf[~tmpDf.isin(self.df)].dropna().index
+        self.df = tmpDf
+        self.dataChanged.emit(index)
+            
     @staticmethod
     def _timeToSecs(t):
         msg = ''
@@ -141,7 +163,6 @@ class CycleData:
             The datetime objects are required, as they add dummy 1st of the 
             month data points to reset the total to 0km.
         """
-        
         odo = []
         dts = []
             
