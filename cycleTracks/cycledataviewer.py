@@ -221,10 +221,10 @@ class CycleDataViewer(QTreeWidget):
         
     @staticmethod
     def _getHMS(totalHours):
-        """ Convert `totalHours` float to HH:MM.ss string. """
+        """ Convert `totalHours` float to hh:mm:ss string. """
         hours, mins = divmod(totalHours, 1)
         mins *= 60
         mins, secs = divmod(mins, 1)
         secs *= 60
-        s = f"{hours:02.0f}:{mins:02.0f}.{secs:02.0f}"
+        s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
         return s
