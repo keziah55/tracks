@@ -13,6 +13,9 @@ from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtGui import QBrush, QColor
 
+from validate import (validateDate, validateFloat, validateInt, validateTime,
+                      parseDate, parseTime)
+
 from datetime import datetime
 import calendar
 
@@ -28,8 +31,8 @@ class AddCycleData(QWidget):
         self.widthSpace = widthSpace
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
-        validateMethods = [self._validateDate, self._validateTime, self._validateFloat, 
-                           self._validateFloat, self._validateInt]
+        validateMethods = [validateDate, validateTime, validateFloat, 
+                           validateFloat, validateInt]
         self.validateMethods = dict(zip(self.headerLabels, validateMethods))
         
         self.table = QTableWidget(0, len(self.headerLabels))
@@ -123,27 +126,6 @@ class AddCycleData(QWidget):
         if allValid:
             self.okButton.setEnabled(True)
                 
-    @staticmethod
-    def _validateInt(value):
-        return value.isdigit()
-    
-    @staticmethod
-    def _validateFloat(value):
-        try:
-            float(value)
-            return True
-        except ValueError:
-            return False
-        
-    @staticmethod
-    def _validateDate(value):
-        return True
-    
-    @staticmethod
-    def _validateTime(value):
-        return True
-        
-        
     @Slot()
     def _addData(self):
         # get data from table, as list of dicts
@@ -156,9 +138,14 @@ class AddCycleData(QWidget):
             dct = {}
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
-                dct[name] = item.text()
+                value = item.text()
+                if name == 'Date':
+                    value = parseDate(value)
+                elif name == 'Time':
+                    value = parseTime(value)
+                dct[name] = value
             values.append(dct)
                 
         if values:
             self.newData.emit(values)
-                
+            
