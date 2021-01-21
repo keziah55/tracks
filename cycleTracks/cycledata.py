@@ -171,8 +171,10 @@ class CycleData(QObject):
         odo = []
         dts = []
         for i, df in enumerate(dfs):
-            # if df.empty or i == 0:# or df['Date'].iloc[0].day > 1:
+            # at the start of every month, insert 0km entry
             if df.empty:
+                # if there's no data in the df, need to get month and year from
+                # previous df
                 prevDate = dfs[-1]['Date'].iloc[0]
                 month = prevDate.month - 1
                 if month == 0:
