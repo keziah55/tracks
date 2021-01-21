@@ -168,7 +168,7 @@ class AddCycleData(QWidget):
         """
         values = {name:[] for name in self.headerLabels}
         
-        self.table.sortItems(0, Qt.DescendingOrder)
+        self.table.sortItems(0, Qt.AscendingOrder)
 
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):

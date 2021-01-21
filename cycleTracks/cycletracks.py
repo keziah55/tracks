@@ -9,6 +9,7 @@ import os
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QDockWidget, QSizePolicy, 
                              QAction)
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSlot as Slot
 import pandas as pd
 from cycleplotwidget import CyclePlotWidget
 from cycledataviewer import CycleDataViewer
@@ -32,7 +33,7 @@ class CycleTracks(QMainWindow):
                 fileobj.write(s+'\n')
                 
         self.df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
-        self._backup() # TODO call this after every save (or change?)
+        self.backup() # TODO call this after every save (or change?)
 
         self.data = CycleData(self.df)
 
@@ -43,6 +44,8 @@ class CycleTracks(QMainWindow):
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self.viewer.newData)
         # self.data.dataChanged.connect(self.plot.newData)
+        self.addData.newData.connect(self.backup)
+        self.data.dataChanged.connect(self.save)
         
         dockWidgets = [(self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
@@ -59,14 +62,19 @@ class CycleTracks(QMainWindow):
         
         self.createActions()
         self.createMenus()
+        self.statusBar()
+        self.statusTimeout = 2000
         
         self.setWindowTitle('Cycle Tracks')
         self.showMaximized()
-               
+            
+    @Slot()
     def save(self):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
+        self.statusBar().showMessage("Data saved", msecs=self.statusTimeout)
         
-    def _backup(self):
+    @Slot()
+    def backup(self):
         bak = self.file + '.bak'
         self.df.to_csv(bak, sep=self.sep, index=False)
         

@@ -188,6 +188,7 @@ class CycleData(QObject):
             tmp = datetime(year, month, 1)
             dts.append(tmp)
             odo.append(0)
+            
             for _, row in df.iterrows():
                 dt = row['Date'].to_pydatetime()
                 dist = odo[-1] + row['Distance (km)']
