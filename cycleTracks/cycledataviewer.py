@@ -197,6 +197,8 @@ class CycleDataViewer(QTreeWidget):
         dfs = self.data.splitMonths()
         
         for df in reversed(dfs):
+            if df.empty:
+                continue
             
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
