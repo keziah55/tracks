@@ -166,20 +166,30 @@ class CycleData(QObject):
             The datetime objects are required, as they add dummy 1st of the 
             month data points to reset the total to 0km.
         """
-        # TODO use splitMonths here (this also allows us to see if a whole month is empty)
+        
+        dfs = self.splitMonths()
         odo = []
         dts = []
-            
-        for i, dt in enumerate(self.datetimes):
-            if i == 0 or self.datetimes[i-1].month != dt.month:
-                tmp = datetime(self.datetimes[i].year, self.datetimes[i].month, 1)
-                dts.append(tmp)
-                prev = 0
-                odo.append(prev)
+        for i, df in enumerate(dfs):
+            # if df.empty or i == 0:# or df['Date'].iloc[0].day > 1:
+            if df.empty:
+                prevDate = dfs[-1]['Date'].iloc[0]
+                month = prevDate.month - 1
+                if month == 0:
+                    month = 12
+                year = prevDate.year
+                if month == 12:
+                    year -= 1
             else:
-                prev = odo[-1]
-            dts.append(dt)
-            odo.append(prev + self.distance[i-1])
-        
+                month = df['Date'].iloc[0].month
+                year = df['Date'].iloc[0].year
+            tmp = datetime(year, month, 1)
+            dts.append(tmp)
+            odo.append(0)
+            for _, row in df.iterrows():
+                dt = row['Date'].to_pydatetime()
+                dist = odo[-1] + row['Distance (km)']
+                dts.append(dt)
+                odo.append(dist)
         return dts, odo
-    
+ 

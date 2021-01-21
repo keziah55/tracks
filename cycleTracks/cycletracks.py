@@ -64,11 +64,11 @@ class CycleTracks(QMainWindow):
         self.showMaximized()
                
     def save(self):
-        self.data.df.to_csv(self.file, sep=self.sep)
+        self.data.df.to_csv(self.file, sep=self.sep, index=False)
         
     def _backup(self):
         bak = self.file + '.bak'
-        self.df.to_csv(bak, sep=self.sep)
+        self.df.to_csv(bak, sep=self.sep, index=False)
         
     def createDockWidget(self, widget, area, title=None):
         self.dock = QDockWidget()
