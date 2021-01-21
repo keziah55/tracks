@@ -19,6 +19,7 @@ from validate import (validateDate, validateFloat, validateInt, validateTime,
 
 from datetime import datetime
 import calendar
+from functools import partial
 
 class AddCycleData(QWidget):
     
@@ -40,14 +41,14 @@ class AddCycleData(QWidget):
         self.widthSpace = widthSpace
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        
+        # dict of methods to validate and cast types for input data in each column
         validateMethods = [validateDate, validateTime, validateFloat, 
                            validateFloat, validateInt]
-        self.validateMethods = dict(zip(self.headerLabels, validateMethods))
-        
-        # TODO combine these into one dict
-        # TODO make partial of parseDate with pd_timestamp=True
-        castMethods = [parseDate, parseTime, float, float, int]
-        self.castMethods = dict(zip(self.headerLabels, castMethods))
+        parseDatePd = partial(parseDate, pd_timestamp=True)
+        castMethods = [parseDatePd, parseTime, float, float, int]
+        self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
+                      for i, name in enumerate(self.headerLabels)}
         
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
@@ -140,7 +141,7 @@ class AddCycleData(QWidget):
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
                 value = item.text()
-                mthd = self.validateMethods[name]
+                mthd = self.mthds[name]['validate']
                 valid = mthd(value)
                 if not valid:
                     self.invalid.emit(row, col)
@@ -161,12 +162,8 @@ class AddCycleData(QWidget):
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
                 value = item.text()
-                mthd = self.castMethods[name]
+                mthd = self.mthds[name]['cast']
                 value = mthd(value)
-                # if name == 'Date':
-                #     value = parseDate(value, pd_timestamp=True)
-                # elif name == 'Time':
-                #     value = parseTime(value)
                 values[name].append(value)
                 
         self.newData.emit(values)

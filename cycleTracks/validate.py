@@ -52,7 +52,7 @@ def parseTime(value):
     return s
 
             
-def parseDate(value, pd_timestamp=True):
+def parseDate(value, pd_timestamp=False):
     """ Convert string to datetime.date object (or pandas.Timestamp, if 
     `pd_timestamp` is True).
     
@@ -80,31 +80,31 @@ def parseDate(value, pd_timestamp=True):
     
     Examples
     --------
-    >>> str_to_date('02 Mar 17')
+    >>> parseDate('02 Mar 17')
     datetime.date(2017, 3, 2)
     
-    >>> str_to_date('04 April 17')
+    >>> parseDate('04 April 17')
     datetime.date(2017, 4, 4)
     
-    >>> str_to_date('4/8/15')
+    >>> parseDate('4/8/15')
     datetime.date(2015, 8, 4)
     
-    >>> str_to_date('4-8-2015')
+    >>> parseDate('4-8-2015')
     datetime.date(2015, 8, 4)
     
-    >>> str_to_date('')
+    >>> parseDate('')
     datetime.date(2017, 9, 28)   # current date at time of writing
     
-    >>> str_to_date('3')
+    >>> parseDate('3')
     datetime.date(2017, 9, 3)    # time of writing was September 2017
     
-    >>> str_to_date('5.5')
+    >>> parseDate('5.5')
     datetime.date(2017, 5, 5)    # time of writing was September 2017
     
-    >>> str_to_date('020312')
+    >>> parseDate('020312')
     datetime.date(12, 3, 2)
     
-    >>> str_to_date('02032012')
+    >>> parseDate('02032012')
     datetime.date(2012, 3, 2)
     """
     
