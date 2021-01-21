@@ -12,6 +12,8 @@ import re
 import calendar
 import itertools
 from cycledata import CycleData
+from customsort import(isHourMinSec, isMonthYear, isNumeric, getHourMinSec, 
+                       getMonthYear)
 
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
@@ -32,15 +34,15 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, other):
         item0 = self.text(self.sortColumn)
         item1 = other.text(self.sortColumn)
-        if self._isNumeric(item0) and self._isNumeric(item1):
+        if isNumeric(item0) and isNumeric(item1):
             return float(item0) < float(item1)
-        elif self._isMonthYear(item0) and self._isMonthYear(item1):
-            value0 = self._getMonthYear(item0)
-            value1 = self._getMonthYear(item1)
+        elif isMonthYear(item0) and isMonthYear(item1):
+            value0 = getMonthYear(item0)
+            value1 = getMonthYear(item1)
             return value0 < value1
-        elif self._isHourMinSec(item0) and self._isHourMinSec(item1):
-            value0 = self._getHourMinSec(item0)
-            value1 = self._getHourMinSec(item1)
+        elif isHourMinSec(item0) and isHourMinSec(item1):
+            value0 = getHourMinSec(item0)
+            value1 = getHourMinSec(item1)
             return value0 < value1
         else:
             return item0 < item1
@@ -52,56 +54,6 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     @sortColumn.setter 
     def sortColumn(self, value):
         self._sortColumn = value
-        
-    @staticmethod
-    def _isNumeric(value):
-        try:
-            float(value)
-            ret = True
-        except ValueError:
-            ret = False
-        return ret
-    
-    @classmethod 
-    def _isMonthYear(cls, value):
-        try:
-            cls._getMonthYear(value)
-            ret = True
-        except ValueError:
-            ret = False
-        return ret
-        
-    @staticmethod
-    def _getMonthYear(value):
-        month, year = value.split(' ')
-        try:
-            idx = list(calendar.month_name).index(month)
-        except ValueError:
-            try:
-                idx = list(calendar.month_abbr).index(month)
-            except ValueError:
-                raise ValueError(f"{month} is not valid month")
-        year = float(year)
-        
-        value = year + (idx/12)
-        
-        return value
-    
-    @classmethod
-    def _isHourMinSec(cls, value):
-        try:
-            cls._getHourMinSec(value)
-            ret = True
-        except ValueError:
-            ret = False
-        return ret
-
-    @staticmethod
-    def _getHourMinSec(value):
-        hours, minssec = value.split(':')
-        mins, secs = minssec.split('.')
-        value = float(hours) + (float(mins)/60) + (float(secs)/3600)
-        return value
         
 
 class CycleDataViewer(QTreeWidget):

@@ -20,6 +20,16 @@ from validate import (validateDate, validateFloat, validateInt, validateTime,
 from datetime import datetime
 import calendar
 from functools import partial
+from customsort import getDateMonthYear
+
+
+class TableWidgetDateItem(QTableWidgetItem):
+    def __lt__(self, other):
+        item0 = self.text()
+        item1 = other.text()
+        value0 = getDateMonthYear(item0)
+        value1 = getDateMonthYear(item1)
+        return value0 < value1
 
 class AddCycleData(QWidget):
     
@@ -107,7 +117,7 @@ class AddCycleData(QWidget):
         row = self.table.rowCount()
         self.table.insertRow(row)
         
-        item = QTableWidgetItem(date)
+        item = TableWidgetDateItem(date)
         item.setTextAlignment(Qt.AlignCenter)
         self.table.setItem(row, 0, item)
         
@@ -157,6 +167,8 @@ class AddCycleData(QWidget):
             the `newData` signal, then clear the table.
         """
         values = {name:[] for name in self.headerLabels}
+        
+        self.table.sortItems(0, Qt.DescendingOrder)
 
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):
@@ -168,4 +180,6 @@ class AddCycleData(QWidget):
                 
         self.newData.emit(values)
             
-        self.table.clearContents()
+        for row in reversed(range(self.table.rowCount())):
+            self.table.removeRow(row)
+    
