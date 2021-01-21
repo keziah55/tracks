@@ -42,7 +42,7 @@ class CycleTracks(QMainWindow):
         
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self.viewer.newData)
-        self.data.dataChanged.connect(self.plot.newData)
+        # self.data.dataChanged.connect(self.plot.newData)
         
         dockWidgets = [(self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
@@ -63,6 +63,8 @@ class CycleTracks(QMainWindow):
         self.setWindowTitle('Cycle Tracks')
         self.showMaximized()
                
+    def save(self):
+        self.data.df.to_csv(self.file, sep=self.sep)
         
     def _backup(self):
         bak = self.file + '.bak'
@@ -81,8 +83,13 @@ class CycleTracks(QMainWindow):
                                statusTip="Exit the application", 
                                triggered=self.close)
             
+        self.saveAct = QAction("&Save", self, shortcut="Ctrl+S", 
+                               statusTip="Save data", triggered=self.save)
+        
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
+        self.fileMenu.addAction(self.saveAct)
+        self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
     
     

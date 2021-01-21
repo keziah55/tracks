@@ -166,6 +166,7 @@ class CycleData(QObject):
             The datetime objects are required, as they add dummy 1st of the 
             month data points to reset the total to 0km.
         """
+        # TODO use splitMonths here (this also allows us to see if a whole month is empty)
         odo = []
         dts = []
             
