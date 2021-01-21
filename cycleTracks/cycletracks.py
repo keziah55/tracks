@@ -33,7 +33,7 @@ class CycleTracks(QMainWindow):
                 fileobj.write(s+'\n')
                 
         self.df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
-        self.backup() # TODO call this after every save (or change?)
+        self.backup()
 
         self.data = CycleData(self.df)
 

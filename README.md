@@ -12,9 +12,13 @@ plots of my cycling stats.
 
 - Highlights value under mouse and shows stats of that point in label under plot
 
+- Tree widget showing data, split by month, with a summary of each months total/best values
+
 ### To do
 
-- Add/edit stats dialogues
+- Update plot when new data added
+
+- Unit tests
 
 - Compare multiple points
 
