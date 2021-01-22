@@ -45,7 +45,7 @@ class AddCycleData(QWidget):
         Emitted if the data in cell `row`,`col` is invalid.
     """
     
-    def __init__(self, widthSpace=5):
+    def __init__(self, widthSpace=10):
         super().__init__()
         
         self.widthSpace = widthSpace
@@ -67,7 +67,7 @@ class AddCycleData(QWidget):
         self._makeEmptyRow()
         self.defaultBrush = self.table.item(0,0).background()
         self.invalidBrush = QBrush(QColor("#910404"))
-        self.table.verticalHeader().resizeSections(QHeaderView.ResizeToContents)
+        # self.table.verticalHeader().resizeSections(QHeaderView.ResizeToContents)
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)
@@ -99,8 +99,11 @@ class AddCycleData(QWidget):
         
         
     def sizeHint(self):
+        # can't believe this is necessary...
         width = self.table.verticalHeader().length() + self.widthSpace
-        height = super().sizeHint().height()
+        for i in range(self.table.columnCount()):
+            width += self.table.columnWidth(i)
+        height = self.table.sizeHint().height()
         return QSize(width, height)
         
         
@@ -125,7 +128,7 @@ class AddCycleData(QWidget):
             item = QTableWidgetItem()
             item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, i+1, item)
-            
+        
     @Slot()
     def _removeSelectedRow(self):
         """ Remove the currently selected row from the table. """

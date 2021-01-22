@@ -72,7 +72,7 @@ class CycleDataViewer(QTreeWidget):
             Spacing to add to width in `sizeHint`. Default is 5.
     """
     
-    def __init__(self, parent, widthSpace=5):
+    def __init__(self, parent, widthSpace=10):
         super().__init__()
         
         self.parent = parent
@@ -97,6 +97,7 @@ class CycleDataViewer(QTreeWidget):
         self.sortOrder = [itertools.cycle([Qt.DescendingOrder, Qt.AscendingOrder])
                           for _ in range(len(self.headerLabels))]
         self.header().sectionDoubleClicked.connect(self.sortTree)
+        
         
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
