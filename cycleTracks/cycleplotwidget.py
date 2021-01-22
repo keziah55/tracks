@@ -91,7 +91,7 @@ class _CyclePlotWidget(PlotWidget):
         
         self._initRightAxis()
         
-        self.setYSeries('distance')
+        self.setYSeries('speed')
         self.plotTotalDistance()
         
         # axis labels

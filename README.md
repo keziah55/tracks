@@ -1,6 +1,6 @@
 # cycleTracks
 
-(Soon to be) new and improved version of [MyCycle](https://github.com/keziah55/MyCycle).
+New and improved version of [MyCycle](https://github.com/keziah55/MyCycle).
 
 This GUI centres on the plotting, and uses PyQtGraph to create interactive
 plots of my cycling stats.
@@ -14,9 +14,10 @@ plots of my cycling stats.
 
 - Tree widget showing data, split by month, with a summary of each months total/best values
 
-### To do
+- Click on labels under plot to switch data series plotted
 
-- Update plot when new data added
+
+### To do
 
 - Unit tests
 
@@ -25,8 +26,6 @@ plots of my cycling stats.
 - Personal bests
 
 - Zoom in on month (double click? or tools menu/list?)
-
-- Panel to allow user to set plot parameters?
 
 
 ## Requirements
