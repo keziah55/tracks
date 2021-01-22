@@ -26,13 +26,13 @@ class CycleData(QObject):
         """
         super().__init__()
         self.df = df
-        self.propertyNames = {'Distance (km)':self.distance, 
-                              'Date':self.date,
-                              'Time':self.time,
-                              'Calories':self.calories,
-                              'Avg speed (km/h)':self.avgSpeed,
-                              'Avg. speed (km/h)':self.avgSpeed,
-                              'Gear':self.gear}
+        self.propertyNames = {'Distance (km)':'distance', 
+                              'Date':'date',
+                              'Time':'time',
+                              'Calories':'calories',
+                              'Avg speed (km/h)':'avgSpeed',
+                              'Avg. speed (km/h)':'avgSpeed',
+                              'Gear':'gear'}
         
         shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
         self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
@@ -42,7 +42,8 @@ class CycleData(QObject):
     
     def __getitem__(self, key):
         if key in self.propertyNames.keys():
-            return self.propertyNames[key]
+            name = self.propertyNames[key]
+            return getattr(self, name)
         else:
             raise NameError(f"{key} not a valid property name.")
          

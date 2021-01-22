@@ -79,7 +79,7 @@ class _CyclePlotWidget(PlotWidget):
         
         self._initRightAxis()
         
-        self.setYSeries('speed')
+        self.setYSeries('distance')
         self.plotTotalDistance()
         
         # axis labels
@@ -126,7 +126,8 @@ class _CyclePlotWidget(PlotWidget):
     
     @Slot(object)
     def updatePlots(self, index):
-        print(index)
+        self.plotSeries(self.ySeries, mode='set')
+        self.plotTotalDistance(mode='set')
         
     @property
     def ySeries(self):
@@ -140,7 +141,7 @@ class _CyclePlotWidget(PlotWidget):
     def setYSeries(self, key):
         self.ySeries = key
     
-    def plotSeries(self, key):
+    def plotSeries(self, key, mode='new'):
         """ Plot given series on y1 axis. """
         label = self.data.quickNames[key]
         if key == 'time':
@@ -149,18 +150,24 @@ class _CyclePlotWidget(PlotWidget):
             series = self.data[label]
         styleDict = self.style[key]
         style = self._makeScatterStyle(**styleDict)
-        self.dataItem = self.plotItem.scatterPlot(self.data.dateTimestamps, 
-                                                  series, **style)
+        if mode == 'new':
+            self.dataItem = self.plotItem.scatterPlot(self.data.dateTimestamps, 
+                                                      series, **style)
+        elif mode == 'set':
+            self.dataItem.setData(self.data.dateTimestamps, series, **style)
         self.plotItem.setLabel('left', text=label, color=styleDict['colour'])
         
-    def plotTotalDistance(self):
+    def plotTotalDistance(self, mode='new'):
         """ Plot monthly total distance. """
         colour = self.style['odometer']['colour']
         style = self._makeFillStyle(colour)
         dts, odo = self.data.getMonthlyOdometer()
         dts = [dt.timestamp() for dt in dts]
-        self.backgroundItem = PlotCurveItem(dts, odo, **style)
-        self.vb2.addItem(self.backgroundItem)
+        if mode == 'new':
+            self.backgroundItem = PlotCurveItem(dts, odo, **style)
+            self.vb2.addItem(self.backgroundItem)
+        elif mode == 'set':
+             self.backgroundItem.setData(dts, odo, **style)
         self.plotItem.getAxis('right').setLabel('Total monthly distance', 
             color=colour)
         # bug workaround - we don't need units/SI prefix on dates
