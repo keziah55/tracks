@@ -40,7 +40,7 @@ class CyclePlotWidget(QWidget):
         
     @Slot(object)
     def newData(self, index):
-        self.plotWidget.updatePlots()
+        self.plotWidget.updatePlots(index)
         
 
 class _CyclePlotWidget(PlotWidget):
