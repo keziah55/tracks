@@ -13,6 +13,8 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 from cycleplotlabel import CyclePlotLabel
 
+# TODO if date label clicked, highlight in tree
+
 
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
@@ -24,6 +26,13 @@ class CyclePlotWidget(QWidget):
             CycleData object.
     """
     
+    currentPointChanged = Signal(dict)
+    """ **signal**  currentPointChanged(dict `values`)
+        
+        Emitted when a point in the plot is hovered over. The dict provides
+        the date, speed, distance, calories and time data for the chosen point.
+    """
+    
     def __init__(self, parent):
         
         super().__init__()
@@ -33,6 +42,8 @@ class CyclePlotWidget(QWidget):
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
+        
+        self.plotWidget.currentPointChanged.connect(self.currentPointChanged)
         
         self.layout.addWidget(self.plotWidget)
         self.layout.addWidget(self.plotLabel)
@@ -178,10 +189,10 @@ class _CyclePlotWidget(PlotWidget):
         
     @Slot(str)
     def switchSeries(self, key):
-        self.plotItem.removeItem(self.dataItem)
-        self.plotSeries(key)
-        print(self.dataItem.scatter)
-    
+        if key in self.data.quickNames.keys():
+            self.plotItem.removeItem(self.dataItem)
+            self.plotSeries(key)
+        
     @staticmethod
     def _makeScatterStyle(colour, symbol):
         """ Make style for series with no line but with symbols. """
@@ -210,12 +221,12 @@ class _CyclePlotWidget(PlotWidget):
         """ Set the `currentPoint` dict from index `idx` in the `data` DataFrame
             and emit `currentPointChanged` signal.
         """
+        self.currentPoint['index'] = idx
         self.currentPoint['date'] = self.data.dateFmt[idx]
         self.currentPoint['speed'] = self.data.avgSpeed[idx]
         self.currentPoint['distance'] = self.data.distance[idx]
         self.currentPoint['calories'] = self.data.calories[idx]
         self.currentPoint['time'] = self.data.time[idx]
-        
         self.currentPointChanged.emit(self.currentPoint)
     
     def _highlightPoint(self, point):

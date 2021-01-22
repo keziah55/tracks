@@ -91,6 +91,7 @@ class CyclePlotLabel(QWidget):
     def setLabels(self, dct):
         """ For given `dct` set label text. """
         for key, data in dct.items():
-            text = self.data[key]['string'].format(data)
-            label = self.data[key]['widget']
-            label.setText(text)
+            if key in self.data.keys():
+                text = self.data[key]['string'].format(data)
+                label = self.data[key]['widget']
+                label.setText(text)

@@ -6,8 +6,7 @@ Main window for cycleTracks.
 
 import sys
 import os
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QDockWidget, QSizePolicy, 
-                             QAction)
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDockWidget, QAction
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as Slot
 import pandas as pd
@@ -54,11 +53,6 @@ class CycleTracks(QMainWindow):
             self.createDockWidget(widget, area, title=title)
             
         self.setCentralWidget(self.plot)
-        
-        # policy = QSizePolicy.Expanding
-        # self.viewer.setSizePolicy(policy, QSizePolicy.Preferred)
-        # self.addData.setSizePolicy(policy, QSizePolicy.Preferred)
-        # self.plot.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         
         self.createActions()
         self.createMenus()

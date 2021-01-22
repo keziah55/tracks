@@ -15,7 +15,6 @@ from cycledata import CycleData
 from customsort import(isHourMinSec, isMonthYear, isNumeric, getHourMinSec, 
                        getMonthYear)
 
-
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
         the QTreeWidget can sort the items, where each column may contain
@@ -98,7 +97,6 @@ class CycleDataViewer(QTreeWidget):
                           for _ in range(len(self.headerLabels))]
         self.header().sectionDoubleClicked.connect(self.sortTree)
         
-        
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
         height = super().sizeHint().height()
@@ -108,10 +106,23 @@ class CycleDataViewer(QTreeWidget):
     def data(self):
         return self.parent.data
     
+    @property 
+    def topLevelItems(self):
+        """ List of top level QTreeWidgetItems. """
+        items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
+        return items
+    
     @Slot()
     def newData(self):
+        expanded = []
+        for item in self.topLevelItems:
+            if item.isExpanded():
+                expanded.append(item.text(0))
         self.clear()
         self.makeTree()
+        for item in self.topLevelItems:
+            if item.text(0) in expanded:
+                self.expandItem(item)
     
     @Slot(int)
     def sortTree(self, idx):
@@ -134,11 +145,6 @@ class CycleDataViewer(QTreeWidget):
                 
         self.sortItems(idx, order)
         
-    @property 
-    def topLevelItems(self):
-        """ List of top level QTreeWidgetItems. """
-        items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
-        return items
         
     def makeTree(self):
         """ Populate tree with data from CycleData object. """
@@ -192,3 +198,4 @@ class CycleDataViewer(QTreeWidget):
         secs *= 60
         s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
         return s
+    
