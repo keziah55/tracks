@@ -38,9 +38,9 @@ class CyclePlotWidget(QWidget):
         
         self.setLayout(self.layout)
         
-    @Slot()
-    def newData(self):
-        self.plotWidget.defaultPlot()
+    @Slot(object)
+    def newData(self, index):
+        self.plotWidget.updatePlots()
         
 
 class _CyclePlotWidget(PlotWidget):
@@ -68,29 +68,26 @@ class _CyclePlotWidget(PlotWidget):
         
         self.style = {'speed':{'colour':"#024aeb",
                                'symbol':'x'},
+                      'distance':{'colour':"#cf0202",
+                                  'symbol':'x'},
+                      'time':{'colour':"#19b536",
+                              'symbol':'x'},
+                      'calories':{'colour':"#ff9100",
+                                  'symbol':'x'},
                       'odometer':{'colour':"#4d4d4d"},# "#"},
-                      'distance':{'colour':"#cf0202"},
-                      'time':{'colour':"#19b536"},
-                      'calories':{'colour':"#ff9100"},
                       'highlightPoint':{'colour':"#faed00"}}
         
         self._initRightAxis()
         
-        self.defaultPlot()
+        self.setYSeries('speed')
+        self.plotTotalDistance()
         
         # axis labels
-        self.plotItem.setLabels(left='Avg. speed, (km/h)', bottom='Date')
-        self.plotItem.getAxis('right').setLabel('Total monthly distance', 
-            color=self.style['odometer']['colour'])
+        self.plotItem.setLabel('bottom',text='Date')
         
         # show grid on left and bottom axes
         self.plotItem.getAxis('left').setGrid(255)
         self.plotItem.getAxis('bottom').setGrid(255)
-        
-        # bug workaround - we don't need units/SI prefix on dates
-        # this has been fixed in the pyqtgraph source, so won't be necessary
-        # once this makes its way into the deb packages
-        self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
         
         # cross hairs
         self.vLine = InfiniteLine(angle=90, movable=False)
@@ -127,25 +124,49 @@ class _CyclePlotWidget(PlotWidget):
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
     
-    @Slot()
-    def defaultPlot(self):
-        self.plotItem.clear()
-        self.plotSpeed()
-        self.plotTotalDistance()
+    @Slot(object)
+    def updatePlots(self, index):
+        print(index)
+        
+    @property
+    def ySeries(self):
+        return self._ySeries
     
-    def plotSpeed(self):
-        # plot avg speed
-        style = self._makeScatterStyle(**self.style['speed'])
-        self.speed = self.data.distance/self.data.timeHours
-        self.plotItem.scatterPlot(self.data.dateTimestamps, self.speed, **style)
+    @ySeries.setter 
+    def ySeries(self, key):
+        self._ySeries = key
+        self.plotSeries(self.ySeries)
+        
+    def setYSeries(self, key):
+        self.ySeries = key
+    
+    def plotSeries(self, key):
+        """ Plot given series on y1 axis. """
+        label = self.data.quickNames[key]
+        if key == 'time':
+            series = self.data.timeHours
+        else:
+            series = self.data[label]
+        styleDict = self.style[key]
+        style = self._makeScatterStyle(**styleDict)
+        self.dataItem = self.plotItem.scatterPlot(self.data.dateTimestamps, 
+                                                  series, **style)
+        self.plotItem.setLabel('left', text=label, color=styleDict['colour'])
         
     def plotTotalDistance(self):
-        # plot monthly total distance        
-        style = self._makeFillStyle(self.style['odometer']['colour'])
+        """ Plot monthly total distance. """
+        colour = self.style['odometer']['colour']
+        style = self._makeFillStyle(colour)
         dts, odo = self.data.getMonthlyOdometer()
         dts = [dt.timestamp() for dt in dts]
-        curve = PlotCurveItem(dts, odo, **style)
-        self.vb2.addItem(curve)
+        self.backgroundItem = PlotCurveItem(dts, odo, **style)
+        self.vb2.addItem(self.backgroundItem)
+        self.plotItem.getAxis('right').setLabel('Total monthly distance', 
+            color=colour)
+        # bug workaround - we don't need units/SI prefix on dates
+        # this has been fixed in the pyqtgraph source, so won't be necessary
+        # once this makes its way into the deb packages
+        self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
     
     @staticmethod
     def _makeScatterStyle(colour, symbol):
@@ -176,7 +197,7 @@ class _CyclePlotWidget(PlotWidget):
             and emit `currentPointChanged` signal.
         """
         self.currentPoint['date'] = self.data.dateFmt[idx]
-        self.currentPoint['speed'] = self.speed[idx]
+        self.currentPoint['speed'] = self.data.avgSpeed[idx]
         self.currentPoint['distance'] = self.data.distance[idx]
         self.currentPoint['calories'] = self.data.calories[idx]
         self.currentPoint['time'] = self.data.time[idx]

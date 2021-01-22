@@ -34,6 +34,9 @@ class CycleData(QObject):
                               'Avg. speed (km/h)':self.avgSpeed,
                               'Gear':self.gear}
         
+        shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
+        self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
+        
     def __len__(self):
         return len(self.df)
     
@@ -45,6 +48,10 @@ class CycleData(QObject):
          
     def __repr__(self):
         return repr(self.df)
+    
+    @property
+    def quickNames(self):
+        return self._quickNames
          
     @Slot(dict)
     def append(self, dct):
