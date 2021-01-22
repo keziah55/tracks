@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from cycleplotlabel import CyclePlotLabel
 
 # TODO if date label clicked, highlight in tree
+# TODO format ticks when plotting time (will need to subclass AxisItem. fuck sake.)
 
 
 class CyclePlotWidget(QWidget):
