@@ -5,16 +5,66 @@ QWidget containing QLabels for each data series in the CyclePlotWidget.
 """
 
 from PyQt5.QtWidgets import QLabel, QHBoxLayout, QWidget
+from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtCore import Qt
 
+class ClickableLabel(QLabel):
+    """ QLabel that emited `clicked` signal. 
+    
+        Parameters
+        ----------
+        name : str
+            Identifying sring to emit with `clicked` signal.
+        text : str, optional
+            Text to display in label.
+        colour : {str, QColor}, optional
+            Colour to display text in.
+        fontSize : int
+            Font size for label text. Default is 12.
+    """
+    
+    clicked = Signal(str)
+    """ **signal** clicked(str `name`) 
+    
+        Emitted when label clicked, with given name.
+    """
+    
+    def __init__(self, name, text="", colour=None, fontSize=12):
+        super().__init__()
+        self.name = name
+        self.colour = colour
+        self.fontSize = fontSize
+        if text is not None:
+            self.setText(text)
+    
+    def mouseReleaseEvent(self, event):
+        self.clicked.emit(self.name)
+        super().mouseReleaseEvent(event)
+        
+    def setText(self, text):
+        """ Set label text. Automatically apply style. """
+        fontSize = f"font-size: {self.fontSize}pt"
+        if self.colour is not None:
+            style = f"'{fontSize}; color: {self.colour}'"
+        else:
+            style = f"'{fontSize}'"
+        html = f"<div style={style}>{text}</div>"
+        super().setText(html)
+
+
 class CyclePlotLabel(QWidget):
+    
+    labelClicked = Signal(str)
+    """ **signal** labelClicked(str `name`) 
+    
+        Emitted when a label is clicked.
+    """
     
     def __init__(self, style, fontSize=12):
         
         super().__init__()
         
         self.style = style
-        self.fontSize = f"font-size: {fontSize}pt"
         
         self.layout = QHBoxLayout()
         
@@ -26,25 +76,21 @@ class CyclePlotLabel(QWidget):
         self.data['time'] = {'string':"Time: {}"}
         
         for key, value in self.data.items():
-            widget = QLabel()
+            # make ClickableLabel with given size
+            colour = self.style[key]['colour'] if key in self.style.keys() else None
+            widget = ClickableLabel(key, colour=colour, fontSize=fontSize)
             widget.setAlignment(Qt.AlignCenter)
+            # connect to labelClicked signal
+            widget.clicked.connect(self.labelClicked)
+            # add to dict and layout
             self.data[key]['widget'] = widget
             self.layout.addWidget(widget)
             
         self.setLayout(self.layout)
             
-            
     def setLabels(self, dct):
-        # TODO iterate through kwargs, not data
+        """ For given `dct` set label text. """
         for key, data in dct.items():
-            
             text = self.data[key]['string'].format(data)
             label = self.data[key]['widget']
-                
-            if key in self.style.keys():
-                colour = self.style[key]['colour']
-                style = f"'{self.fontSize}; color: {colour}'"
-            else:
-                style = f"'{self.fontSize}'"
-            html = f"<div style={style}>{text}</div>"
-            label.setText(html)
+            label.setText(text)

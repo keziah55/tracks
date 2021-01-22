@@ -31,6 +31,7 @@ class CyclePlotWidget(QWidget):
         self.layout = QVBoxLayout()
         self.plotWidget = _CyclePlotWidget(parent)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
+        self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
         
         self.layout.addWidget(self.plotWidget)
@@ -174,6 +175,12 @@ class _CyclePlotWidget(PlotWidget):
         # this has been fixed in the pyqtgraph source, so won't be necessary
         # once this makes its way into the deb packages
         self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
+        
+    @Slot(str)
+    def switchSeries(self, key):
+        self.plotItem.removeItem(self.dataItem)
+        self.plotSeries(key)
+        print(self.dataItem.scatter)
     
     @staticmethod
     def _makeScatterStyle(colour, symbol):
@@ -215,11 +222,13 @@ class _CyclePlotWidget(PlotWidget):
         """ Change pen of given point (and reset any previously highlighted
             points). 
         """
-        
         pen = mkPen(self.style['highlightPoint']['colour'])
         
-        if self.hgltPnt is not None:
+        try:
+            # if other points are already highlighted, remove highlighting
             self.hgltPnt.resetPen()
+        except AttributeError:
+            pass
             
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
@@ -233,7 +242,7 @@ class _CyclePlotWidget(PlotWidget):
             idx = int(mousePoint.x())
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
                 self._makePointDict(idx)
-                pts = self.scatterPointsAtX(mousePoint, self.plotItem.listDataItems()[0].scatter)
+                pts = self.scatterPointsAtX(mousePoint, self.dataItem.scatter)
                 if len(pts) != 0:
                     self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
