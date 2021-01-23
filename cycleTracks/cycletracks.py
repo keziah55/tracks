@@ -10,10 +10,8 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QDockWidget, QAction
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as Slot
 import pandas as pd
-from cycleplotwidget import CyclePlotWidget
-from cycledataviewer import CycleDataViewer
-from cycledata import CycleData
-from addcycledata import AddCycleData
+from .plot import CyclePlotWidget
+from .data import CycleData, CycleDataViewer, AddCycleData
 
     
 class CycleTracks(QMainWindow):
@@ -93,11 +91,4 @@ class CycleTracks(QMainWindow):
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
-    
-    
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = CycleTracks()
-    window.show()
-    sys.exit(app.exec_())
     

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Widget containing plot and labels.
 """
@@ -11,11 +9,10 @@ from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
-from cycleplotlabel import CyclePlotLabel
+from .cycleplotlabel import CyclePlotLabel
 
 # TODO if date label clicked, highlight in tree
 # TODO format ticks when plotting time (will need to subclass AxisItem. fuck sake.)
-
 
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
@@ -284,3 +281,4 @@ class _CyclePlotWidget(PlotWidget):
             if x > sx-s2x and x < sx+s2x:
                 pts.append(s)
         return pts[::-1]
+    

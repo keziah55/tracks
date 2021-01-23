@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QWidget containing a QTableWidget, where users can add new cycling data. 
 
@@ -8,22 +6,22 @@ be clicked.
 """
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
-                             QVBoxLayout, QHBoxLayout, QHeaderView)
+                             QVBoxLayout, QHBoxLayout)
 from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtGui import QBrush, QColor
 
-from validate import (validateDate, validateFloat, validateInt, validateTime,
-                      parseDate, parseTime)
+from cycleTracks.util import (validateDate, validateFloat, validateInt, 
+                              validateTime, parseDate, parseTime)
+from cycleTracks.util import getDateMonthYear
 
 from datetime import datetime
 import calendar
 from functools import partial
-from customsort import getDateMonthYear
-
 
 class TableWidgetDateItem(QTableWidgetItem):
+    """ QTableWidgetItem, which will sort dates. """
     def __lt__(self, other):
         item0 = self.text()
         item1 = other.text()
@@ -32,6 +30,10 @@ class TableWidgetDateItem(QTableWidgetItem):
         return value0 < value1
 
 class AddCycleData(QWidget):
+    """ QWidget containing a QTableWidget, where users can add new data. 
+    
+        User input is validated live; it is not possible to submit invalid data.
+    """
     
     newData = Signal(dict)
     """ **signal** newData(dict `data`)

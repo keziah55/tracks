@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QTreeWidget showing data from cycling DataFrame.
 """
@@ -11,9 +9,9 @@ from PyQt5.QtGui import QFontMetrics
 import re
 import calendar
 import itertools
-from cycledata import CycleData
-from customsort import(isHourMinSec, isMonthYear, isNumeric, getHourMinSec, 
-                       getMonthYear)
+from .cycledata import CycleData
+from cycleTracks.util import(isHourMinSec, isMonthYear, isNumeric, getHourMinSec, 
+                             getMonthYear)
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 

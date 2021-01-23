@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QWidget containing QLabels for each data series in the CyclePlotWidget.
 """
