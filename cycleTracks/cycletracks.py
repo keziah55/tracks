@@ -4,9 +4,8 @@
 Main window for cycleTracks.
 """
 
-import sys
 import os
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDockWidget, QAction
+from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as Slot
 import pandas as pd
