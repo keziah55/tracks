@@ -10,8 +10,8 @@ import re
 import calendar
 import itertools
 from .cycledata import CycleData
-from cycleTracks.util import(isHourMinSec, isMonthYear, isNumeric, getHourMinSec, 
-                             getMonthYear)
+from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isInt, 
+                             hourMinSecToFloat, monthYearToFloat)
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
@@ -31,15 +31,15 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, other):
         item0 = self.text(self.sortColumn)
         item1 = other.text(self.sortColumn)
-        if isNumeric(item0) and isNumeric(item1):
+        if isInt(item0) and isInt(item1):
             return float(item0) < float(item1)
-        elif isMonthYear(item0) and isMonthYear(item1):
-            value0 = getMonthYear(item0)
-            value1 = getMonthYear(item1)
+        elif checkMonthYearFloat(item0) and checkMonthYearFloat(item1):
+            value0 = monthYearToFloat(item0)
+            value1 = monthYearToFloat(item1)
             return value0 < value1
-        elif isHourMinSec(item0) and isHourMinSec(item1):
-            value0 = getHourMinSec(item0)
-            value1 = getHourMinSec(item1)
+        elif checkHourMinSecFloat(item0) and checkHourMinSecFloat(item1):
+            value0 = hourMinSecToFloat(item0)
+            value1 = hourMinSecToFloat(item1)
             return value0 < value1
         else:
             return item0 < item1
