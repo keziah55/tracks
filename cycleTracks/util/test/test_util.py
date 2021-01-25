@@ -2,45 +2,84 @@
 # -*- coding: utf-8 -*-
 
 from cycleTracks.util import (isInt, isFloat, isDate, isDuration, checkMonthYearFloat, 
-                              checkHourMinSecFloat, parseDuration, parseDate, 
-                              hourMinSecToFloat, monthYearToFloat, dateMonthYearToFloat)
+                              checkHourMinSecFloat, checkDayMonthYearFloat, 
+                              parseDuration, parseDate, hourMinSecToFloat, 
+                              monthYearToFloat, dayMonthYearToFloat)
 import pytest
-from datetime import datetime
+from datetime import datetime, date
+import pandas as pd
+import numpy as np
 
 def validDateStrings():
     today = datetime.today()
-    values = {'02 Mar 17':{'date':2, 'month':3, 'year':2017}, 
-              '04 April 19':{'date':4, 'month':4, 'year':2019}, 
-              '4/8/20':{'date':4, 'month':8, 'year':2020}, 
-              '14-8-2015':{'date':14, 'month':8, 'year':2015}, 
-              '':{'date':today.day, 'month':today.month, 'year':today.year},
-              '3':{'date':2, 'month':today.month, 'year':today.year}, 
-              '5.5':{'date':5, 'month':5, 'year':today.year},
-              '020312':{'date':2, 'month':3, 'year':2012}, 
-              '02032012':{'date':2, 'month':3, 'year':2012}}
+    values = [('02 Mar 17', {'day':2, 'month':3, 'year':2017}), 
+              ('04 April 19', {'day':4, 'month':4, 'year':2019}), 
+              ('4/8/20', {'day':4, 'month':8, 'year':2020}), 
+              ('14-8-2015', {'day':14, 'month':8, 'year':2015}), 
+              ('', {'day':today.day, 'month':today.month, 'year':today.year}),
+              ('3', {'day':3, 'month':today.month, 'year':today.year}), 
+              ('5.5', {'day':5, 'month':5, 'year':today.year}),
+              ('020312', {'day':2, 'month':3, 'year':2012}), 
+              ('02032012', {'day':2, 'month':3, 'year':2012})]
     return values
 
 def invalidDateStrings():
-    return ["31 Feb", "invalid", "March", "2020", "6/25/19", "2020/03/01"]
+    lst = ["31 Feb", "invalid", "March", "2020", "6/25/19", "2020/03/01"]
+    return [(item, None) for item in lst]
 
 def isDateParams():
-    valid = [(s, True) for s in validDateStrings().keys()]
-    invalid = [(s, False) for s in invalidDateStrings()]
+    valid = [(tup[0], True) for tup in validDateStrings()]
+    invalid = [(tup[0], False) for tup in invalidDateStrings()]
     return valid + invalid
 
-
 def validDurationStrings():
-    values = {"5":"00:05:00", "12:30":"00:12:30", "100:11":"01:40:01", 
-              "30:55:29":"30:55:29"}
+    values = [("5", "00:05:00"), ("12:30", "00:12:30"), ("100:11", "01:40:11"), 
+              ("30:55:29", "30:55:29")]
     return values
 
 def invalidDurationStrings():
-    return ["01:23.30", "invalid"]
+    lst = ["01:23.30", "invalid"]
+    return [(item, None) for item in lst]
 
 def isDurationParams():
-    valid = [(s, True) for s in validDurationStrings().keys()]
-    invalid = [(s, False) for s in invalidDurationStrings()]
+    valid = [(tup[0], True) for tup in validDurationStrings()]
+    invalid = [(tup[0], False) for tup in invalidDurationStrings()]
     return valid + invalid
+
+def convertParams():
+    lst = [(hourMinSecToFloat, checkHourMinSecFloat, 
+            [("03:45:12", 3 + (45/60) + (12/3600)),
+              ("00:00:58", 58/3600),
+              ("10:00:00", 10),
+              ("03:45:11", 3 + (45/60) + (11/3600)),
+              ("03:45:13", 3 + (45/60) + (13/3600)),
+              ("03:46:12", 3 + (46/60) + (12/3600)),
+              ("02:45:12", 2 + (45/60) + (12/3600)),
+              ("15:23", None),
+              ("12", None)],
+            [1, 6, 3, 0, 4, 5, 2]),
+           (monthYearToFloat, checkMonthYearFloat,
+            [("Apr 2016", 2016.25),
+              ("March 2016", 2016+(2/12)),
+              ("December 2019", 2019+(11/12)),
+              ("Jan 2020", 2020),
+              ("15 June 2023", None),
+              ("May 20", None),
+              ("Blah 2021", None)],
+            [1, 0, 2, 3]),
+           (dayMonthYearToFloat, checkDayMonthYearFloat,
+            [("1 May 2016", 1+(5*31)+(2016*31*12)),
+              ("30 Apr 2016", 30+(4*31)+(2016*31*12)),
+              ("1 Jan 2020", 1+31+(2020*31*12)),
+              ("31 December 2019", 31+(12*31)+(2019*31*12)),
+              ("15 June", None),
+              ("5 May 20", None),
+              ("32 May 2020", None),
+              ("10 Blah 2021", None)],
+            [1, 0, 3, 2])
+           ]
+    return lst
+
     
 @pytest.mark.parametrize("value,valid", [("3", True), ("123456", True), ("16.05", False), ("12 Jan 21", False)])
 def test_isInt(value, valid):
@@ -57,3 +96,48 @@ def test_isDate(value, valid):
 @pytest.mark.parametrize("value,valid", isDurationParams())
 def test_isDuration(value, valid):
     assert isDuration(value) is valid
+    
+@pytest.mark.parametrize("value,expected", validDateStrings()+invalidDateStrings())
+@pytest.mark.parametrize("pd_timestamp", [True, False])
+def test_parseDate(value, expected, pd_timestamp):
+    if expected is None:
+        with pytest.raises(ValueError):
+            parseDate(value, pd_timestamp=pd_timestamp)
+    else:
+        expected = date(expected['year'], expected['month'], expected['day'])
+        if pd_timestamp:
+            expected = pd.Timestamp(expected)
+        assert parseDate(value, pd_timestamp=pd_timestamp) == expected
+    
+@pytest.mark.parametrize("value,expected", validDurationStrings()+invalidDurationStrings())
+def test_parseDuration(value, expected):
+    if expected is None:
+        with pytest.raises(ValueError):
+            parseDuration(value) 
+    else:
+        assert parseDuration(value) == expected
+    
+    
+@pytest.mark.parametrize("convert_func,check_func,values,expected_idx", convertParams())
+def test_convert_to_float(convert_func,check_func,values,expected_idx):
+    
+    for value, expected in values:
+        valid = False if expected is None else True
+        assert check_func(value) is valid
+        
+        if valid:
+            print(f"value: {value}, converted: {convert_func(value)}, expected: {expected}")
+            if convert_func(value) % 1 == 0 and expected % 1 == 0:
+                assert convert_func(value) == expected
+            else:
+                assert np.isclose(convert_func(value), expected)
+        else:
+            with pytest.raises(ValueError):
+                convert_func(value)
+        
+    values = [tup[0] for tup in values if tup[1] is not None]
+    expected = [values[idx] for idx in expected_idx]
+    
+    sorted_values = sorted(values, key=convert_func)
+    assert sorted_values == expected
+    

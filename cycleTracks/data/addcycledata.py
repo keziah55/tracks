@@ -13,7 +13,7 @@ from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtGui import QBrush, QColor
 
 from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 
-                              parseDuration, dateMonthYearToFloat)
+                              parseDuration, dayMonthYearToFloat)
 
 from datetime import datetime
 import calendar
@@ -24,8 +24,8 @@ class TableWidgetDateItem(QTableWidgetItem):
     def __lt__(self, other):
         item0 = self.text()
         item1 = other.text()
-        value0 = dateMonthYearToFloat(item0)
-        value1 = dateMonthYearToFloat(item1)
+        value0 = dayMonthYearToFloat(item0)
+        value1 = dayMonthYearToFloat(item1)
         return value0 < value1
 
 class AddCycleData(QWidget):

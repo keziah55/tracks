@@ -155,8 +155,7 @@ def hourMinSecToFloat(value):
     """ Convert a string of hh:mm:ss to a float. Useful if you want to
         compare or sort many values.
     """
-    hours, minssec = value.split(':')
-    mins, secs = minssec.split('.')
+    hours, mins, secs = value.split(':')
     value = float(hours) + (float(mins)/60) + (float(secs)/3600)
     return value
 
@@ -172,17 +171,19 @@ def monthYearToFloat(value):
             idx = list(calendar.month_abbr).index(month)
         except ValueError:
             raise ValueError(f"{month} is not valid month")
+    if len(year) != 4:
+        raise ValueError("'year' should be four digits")
     year = float(year)
     
-    value = year + (idx/12)
+    value = year + ((idx-1)/12)
     
     return value
 
-def dateMonthYearToFloat(value):
-    """ Convert a string of 'date month year' to a float. Useful if you want to
+def dayMonthYearToFloat(value):
+    """ Convert a string of 'day month year' to a float. Useful if you want to
         compare or sort many values.
     """
-    date, month, year = value.split(' ')
+    day, month, year = value.split(' ')
     try:
         idx = list(calendar.month_name).index(month)
     except ValueError:
@@ -190,9 +191,13 @@ def dateMonthYearToFloat(value):
             idx = list(calendar.month_abbr).index(month)
         except ValueError:
             raise ValueError(f"{month} is not valid month")
-    year = float(year)
-    date = float(date)/31
-    
-    value = year + (idx/12) + date
+    if len(year) != 4:
+        raise ValueError("'year' should be four digits")
+    if float(day) > 31 or float(day) < 1:
+        raise ValueError("'day' should be between 1 and 31")
+        
+    year = int(year)
+    day = int(day)
+    value = day + (idx*31) + (year*12*31)
     
     return value
