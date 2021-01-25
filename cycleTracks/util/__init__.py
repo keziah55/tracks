@@ -1,8 +1,8 @@
-from .validate import (isInt, isFloat, isDate, isTime, checkMonthYearFloat, 
+from .validate import (isInt, isFloat, isDate, isDuration, checkMonthYearFloat, 
                        checkHourMinSecFloat)
-from .convertfuncs import (parseTime, parseDate, hourMinSecToFloat, 
+from .convertfuncs import (parseDuration, parseDate, hourMinSecToFloat, 
                            monthYearToFloat, dateMonthYearToFloat)
 
-__all__ = ["isInt", "isFloat", "isDate", "isTime", "checkMonthYearFloat",
+__all__ = ["isInt", "isFloat", "isDate", "isDuration", "checkMonthYearFloat",
            "checkHourMinSecFloat", "hourMinSecToFloat", "monthYearToFloat", 
-           "dateMonthYearToFloat", "parseTime", "parseDate"]
+           "dateMonthYearToFloat", "parseDuration", "parseDate"]

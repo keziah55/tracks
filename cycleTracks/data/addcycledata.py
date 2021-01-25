@@ -12,8 +12,8 @@ from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtGui import QBrush, QColor
 
-from cycleTracks.util import (isDate, isFloat, isInt, isTime, parseDate, 
-                              parseTime, dateMonthYearToFloat)
+from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 
+                              parseDuration, dateMonthYearToFloat)
 
 from datetime import datetime
 import calendar
@@ -54,10 +54,10 @@ class AddCycleData(QWidget):
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
         
         # dict of methods to validate and cast types for input data in each column
-        validateMethods = [isDate, isTime, isFloat, 
+        validateMethods = [isDate, isDuration, isFloat, 
                            isFloat, isInt]
         parseDatePd = partial(parseDate, pd_timestamp=True)
-        castMethods = [parseDatePd, parseTime, float, float, int]
+        castMethods = [parseDatePd, parseDuration, float, float, int]
         self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
                       for i, name in enumerate(self.headerLabels)}
         

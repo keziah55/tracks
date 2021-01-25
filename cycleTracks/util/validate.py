@@ -3,7 +3,7 @@ Some functions for type checking/checking if a string can be converted
 to a float, date or time string.
 """
 
-from .convertfuncs import monthYearToFloat, hourMinSecToFloat, parseDate, parseTime
+from .convertfuncs import monthYearToFloat, hourMinSecToFloat, parseDate, parseDuration
 
 def isInt(value):
     """ Return True if string `value` only contains digits (i.e. represents an int). """
@@ -25,10 +25,10 @@ def isDate(value):
     except (ValueError, TypeError):
         return False
 
-def isTime(value):
+def isDuration(value):
     """ Return True if `value` can be cast to a valid time. """
     try:
-        parseTime(value)
+        parseDuration(value)
         return True
     except ValueError:
         return False

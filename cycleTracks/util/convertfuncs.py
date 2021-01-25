@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`parseTime` and `parseDate` convert a given string into a 'hh:mm:ss' string
+`parseDuration` and `parseDate` convert a given string into a 'hh:mm:ss' string
 and a datetime.date/pandas.Timestamp object, respectively.
 
 The remaining three functions convert time or date strings into floats, so values
@@ -13,7 +13,7 @@ import calendar
 import re
 import pandas as pd
 
-def parseTime(value):
+def parseDuration(value):
     """ Convert string `value`, which should be a time in [hh]:mm:[ss] format,
         into hh:mm:ss format.
     """
