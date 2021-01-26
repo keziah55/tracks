@@ -18,6 +18,13 @@ class CycleData(QObject):
         of the new rows.
     """
     
+    newMax = Signal(str, object)
+    """ **signal** newMax(str `column`, object `value`)
+        
+        Emitted when newly added data contains a new max value for a given
+        column.
+    """
+    
     def __init__(self, df):
         """ Object providing convenience functions for accessing data from 
             a given DataFrame of cycling data.
@@ -88,15 +95,17 @@ class CycleData(QObject):
     
     @staticmethod
     def _convertSecs(t, mode='hour'):
-        valid = ['mins', 'hour']
+        minutes = ['m', 'min', 'mins', 'minutes']
+        hours = ['h', 'hr', 'hour', 'hours']
+        valid = minutes + hours
         if mode not in valid:
             msg = f"Mode '{mode}' not in valid modes: {valid}"
             raise ValueError(msg)
         m = t / 60
-        if mode == 'mins':
+        if mode in minutes:
             return m
         h = m / 60
-        if mode == 'hour':
+        if mode in hours:
             return h
         
     @property
