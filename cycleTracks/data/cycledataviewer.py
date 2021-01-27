@@ -10,7 +10,7 @@ import re
 import calendar
 import itertools
 from .cycledata import CycleData
-from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isInt, 
+from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
@@ -31,7 +31,7 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, other):
         item0 = self.text(self.sortColumn)
         item1 = other.text(self.sortColumn)
-        if isInt(item0) and isInt(item1):
+        if isFloat(item0) and isFloat(item1):
             return float(item0) < float(item1)
         elif checkMonthYearFloat(item0) and checkMonthYearFloat(item1):
             value0 = monthYearToFloat(item0)
@@ -93,7 +93,8 @@ class CycleDataViewer(QTreeWidget):
         
         self.sortOrder = [itertools.cycle([Qt.DescendingOrder, Qt.AscendingOrder])
                           for _ in range(len(self.headerLabels))]
-        self.header().sectionDoubleClicked.connect(self.sortTree)
+        self.header().setSectionsClickable(True)
+        self.header().sectionClicked.connect(self.sortTree)
         
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
