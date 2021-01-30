@@ -82,6 +82,7 @@ class AddCycleData(QWidget):
         self.rmvLineButton = QPushButton("Remove line")
         self.rmvLineButton.setToolTip("Remove currently selected line")
         self.okButton = QPushButton("Ok")
+        self.okButton.setShortcut(Qt.Key_Enter)
         
         self.addLineButton.clicked.connect(self._makeEmptyRow)
         self.rmvLineButton.clicked.connect(self._removeSelectedRow)
@@ -186,4 +187,5 @@ class AddCycleData(QWidget):
             
         for row in reversed(range(self.table.rowCount())):
             self.table.removeRow(row)
+        self._makeEmptyRow()
     
