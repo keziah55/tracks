@@ -1,7 +1,6 @@
 from cycleTracks.data import CycleData
+from . import makeDataFrame
 import numpy as np
-import pandas as pd
-import os
 import pytest
 
 
@@ -9,9 +8,7 @@ class TestCycleData:
     
     @pytest.fixture
     def setup(self):
-        d = os.path.dirname(__file__)
-        self.file = os.path.join(d, 'data', 'cycletracks.csv')
-        self.df = pd.read_csv(self.file, sep=',', parse_dates=['Date'])
+        self.df = makeDataFrame(100)
         self.data = CycleData(self.df)
     
     def test_properties(self, setup):

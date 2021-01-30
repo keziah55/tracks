@@ -8,7 +8,6 @@ import pandas as pd
 import numpy as np
 import time
 
-
 def makeDataFrame(size=100):
     
     d = {'Date':makeDates(size),
