@@ -24,6 +24,7 @@ class TableWidgetDateItem(QTableWidgetItem):
     def __lt__(self, other):
         item0 = self.text()
         item1 = other.text()
+        item0, item1 = [parseDate(item).strftime("%d %b %Y") for item in [item0, item1]]
         value0 = dayMonthYearToFloat(item0)
         value1 = dayMonthYearToFloat(item1)
         return value0 < value1
@@ -44,6 +45,12 @@ class AddCycleData(QWidget):
     """ **signal** invalid(int `row`, int `col`)
     
         Emitted if the data in cell `row`,`col` is invalid.
+    """
+    
+    rowRemoved = Signal()
+    """ **signal** rowRemoved()
+    
+        Emitted when the current row is removed from the table.
     """
     
     def __init__(self, widthSpace=10):
@@ -136,6 +143,7 @@ class AddCycleData(QWidget):
         """ Remove the currently selected row from the table. """
         row = self.table.currentRow()
         self.table.removeRow(row)
+        self.rowRemoved.emit()
         
     @Slot(int, int)
     def _invalid(self, row, col):
