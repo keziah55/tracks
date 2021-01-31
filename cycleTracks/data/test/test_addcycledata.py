@@ -1,5 +1,5 @@
 from cycleTracks.data import AddCycleData
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt
 from datetime import date
 import random
 import pandas as pd
@@ -117,6 +117,4 @@ class TestAddCycleData:
             assert self.okButton.isEnabled() is False
             assert self.table.item(0, col).background() == self.widget.invalidBrush
             
-        
-        
         
