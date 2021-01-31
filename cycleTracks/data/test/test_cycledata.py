@@ -1,6 +1,8 @@
 from cycleTracks.data import CycleData
 from . import makeDataFrame
+import pandas as pd
 import numpy as np
+import tempfile
 import pytest
 
 
@@ -8,7 +10,12 @@ class TestCycleData:
     
     @pytest.fixture
     def setup(self):
-        self.df = makeDataFrame(100)
+        self.tmpfile = tempfile.NamedTemporaryFile()
+        makeDataFrame(100, path=self.tmpfile.name)
+        
+        path = "/home/keziah/.cycletracks/cycletracks.csv"
+        # self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
+        self.df = pd.read_csv(path, parse_dates=['Date'])
         self.data = CycleData(self.df)
     
     def test_properties(self, setup):
@@ -36,3 +43,22 @@ class TestCycleData:
             if mode.startswith('h'):
                 expected /= 60
             assert np.isclose(self.data._convertSecs(value, mode=mode), expected)
+            
+    def test_group_months(self, setup):
+        dfs = self.data.splitMonths()
+        for df in dfs:
+            if not df.empty:
+                dates = df['Date']
+                monthyear = [(date.month, date.year) for date in dates]
+                assert len(set(monthyear)) == 1
+                
+    def test_monthly_odometer(self, setup):
+        # TODO finish this test
+        dts, odo = self.data.getMonthlyOdometer()
+        dts = iter(dts)
+        odo = iter(odo)
+        
+        
+            
+            
+            

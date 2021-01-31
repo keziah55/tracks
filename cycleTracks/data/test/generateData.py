@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import time
 
-def makeDataFrame(size=100):
+def makeDataFrame(size=100, path=None):
     
     d = {'Date':makeDates(size),
          'Time':makeTimes(size),
@@ -17,6 +17,9 @@ def makeDataFrame(size=100):
          'Gear':np.random.default_rng().integers(1, 8, size=size)}
     
     df = pd.DataFrame.from_dict(d)
+    
+    if path is not None:
+        df.to_csv(path, index=False)
     
     return df
     
