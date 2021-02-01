@@ -13,6 +13,7 @@ class TestAddCycleData:
     def setup(self, qtbot):
         self.widget = AddCycleData()
         qtbot.addWidget(self.widget)
+        self.widget.move(100,100)
         self.widget.show()
         
         self.table = self.widget.table
