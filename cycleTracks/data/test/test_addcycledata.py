@@ -25,7 +25,9 @@ class TestAddCycleData:
         assert self.table.rowCount() == 1
         assert self.table.columnCount() == 5
         
-        assert self.table.item(0, 0).text() == date.today().strftime("%d %b %Y")
+        today = date.today()
+        expected = f'{today.day} {today.strftime("%b %Y")}'
+        assert self.table.item(0, 0).text() == expected
         
         for col in range(1, self.table.columnCount()):
             assert self.table.item(0, col).text() == ""

@@ -13,9 +13,9 @@ class TestCycleData:
         self.tmpfile = tempfile.NamedTemporaryFile()
         makeDataFrame(100, path=self.tmpfile.name)
         
-        path = "/home/keziah/.cycletracks/cycletracks.csv"
-        # self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        self.df = pd.read_csv(path, parse_dates=['Date'])
+        self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
+        # path = "/home/keziah/.cycletracks/cycletracks.csv"
+        # self.df = pd.read_csv(path, parse_dates=['Date'])
         self.data = CycleData(self.df)
     
     def test_properties(self, setup):
