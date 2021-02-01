@@ -87,6 +87,8 @@ class _CyclePlotWidget(PlotWidget):
                       'odometer':{'colour':"#4d4d4d"},# "#"},
                       'highlightPoint':{'colour':"#faed00"}}
         
+        self.plottable = ['speed', 'distance', 'time', 'calories']
+        
         self._initRightAxis()
         
         self.setYSeries('speed')
@@ -187,7 +189,7 @@ class _CyclePlotWidget(PlotWidget):
         
     @Slot(str)
     def switchSeries(self, key):
-        if key in self.data.quickNames.keys():
+        if key in self.plottable and key in self.data.quickNames.keys():
             self.plotItem.removeItem(self.dataItem)
             self.plotSeries(key)
         

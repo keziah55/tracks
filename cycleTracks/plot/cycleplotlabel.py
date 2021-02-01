@@ -7,12 +7,12 @@ from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtCore import Qt
 
 class ClickableLabel(QLabel):
-    """ QLabel that emited `clicked` signal. 
+    """ QLabel that emits `clicked` signal. 
     
         Parameters
         ----------
         name : str
-            Identifying sring to emit with `clicked` signal.
+            Identifying string to emit with `clicked` signal.
         text : str, optional
             Text to display in label.
         colour : {str, QColor}, optional
