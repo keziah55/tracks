@@ -104,7 +104,7 @@ class TestAddCycleData:
             for idx in range(self.table.columnCount()):
                 text = str(valid[idx])
                 self.table.item(0, idx).setText(text)
-            qtbot.wait(100)
+            qtbot.wait(10)
             assert self.okButton.isEnabled()
             
             # set 'col' to invalid value
