@@ -151,6 +151,13 @@ def parseDate(value, pd_timestamp=False):
     return ret
 
 
+def floatToHourMinSec(value):
+    """ Convert a float of hours into hh:mm:ss. """
+    hours, minssecs = divmod((value*60), 60)
+    mins, secs = divmod((minssecs*60), 60)
+    s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
+    return s
+
 def hourMinSecToFloat(value):
     """ Convert a string of hh:mm:ss to a float. Useful if you want to
         compare or sort many values.

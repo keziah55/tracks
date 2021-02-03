@@ -3,16 +3,44 @@ Widget containing plot and labels.
 """
 
 from pyqtgraph import (PlotWidget, DateAxisItem, PlotCurveItem, ViewBox, mkPen, 
-                       mkBrush, InfiniteLine)
+                       mkBrush, InfiniteLine, AxisItem)
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 from .cycleplotlabel import CyclePlotLabel
+from cycleTracks.util import floatToHourMinSec
 
 # TODO if date label clicked, highlight in tree
-# TODO format ticks when plotting time (will need to subclass AxisItem. fuck sake.)
+
+class Axis(AxisItem):
+    """ Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.
+    
+        This can be set to a function which will format this axis' tick values
+        as strings in the desired way (e.g. as hh:mm:ss). 
+        
+        To switch back to default tick spacing, set `tickFormatter` to None.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tickFormatter = None
+        
+    @property
+    def tickFormatter(self):
+        return self._tickFormatter
+    
+    @tickFormatter.setter
+    def tickFormatter(self, func):
+        self._tickFormatter = func
+        
+    def tickStrings(self, values, *args, **kwargs):
+        if self.tickFormatter is not None:
+            return [self.tickFormatter(v) for v in values]
+        else:
+            return super().tickStrings(values, *args, **kwargs)
+        
 
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
@@ -70,7 +98,7 @@ class _CyclePlotWidget(PlotWidget):
     """
     
     def __init__(self, parent):
-        super().__init__(axisItems={'bottom': DateAxisItem()})
+        super().__init__(axisItems={'bottom': DateAxisItem(), 'left':Axis('left')})
         
         self.hgltPnt = None
         
@@ -158,8 +186,10 @@ class _CyclePlotWidget(PlotWidget):
         label = self.data.quickNames[key]
         if key == 'time':
             series = self.data.timeHours
+            self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
         else:
             series = self.data[label]
+            self.plotItem.getAxis('left').tickFormatter = None
         styleDict = self.style[key]
         style = self._makeScatterStyle(**styleDict)
         if mode == 'new':
