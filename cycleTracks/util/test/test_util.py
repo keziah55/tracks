@@ -4,7 +4,7 @@
 from cycleTracks.util import (isInt, isFloat, isDate, isDuration, checkMonthYearFloat, 
                               checkHourMinSecFloat, checkDayMonthYearFloat, 
                               parseDuration, parseDate, hourMinSecToFloat, 
-                              monthYearToFloat, dayMonthYearToFloat)
+                              monthYearToFloat, dayMonthYearToFloat, floatToHourMinSec)
 import pytest
 from datetime import datetime, date
 import pandas as pd
@@ -140,4 +140,12 @@ def test_convert_to_float(convert_func,check_func,values,expected_idx):
     
     sorted_values = sorted(values, key=convert_func)
     assert sorted_values == expected
+    
+
+@pytest.mark.parametrize("value", [0.12, 1.23, 5.274564, 0.057])
+def test_float_to_hms(value):
+    s = floatToHourMinSec(value)
+    value2 = hourMinSecToFloat(s)
+    assert np.isclose(value, value2, atol=1/3600) # tolerance within one second
+    
     
