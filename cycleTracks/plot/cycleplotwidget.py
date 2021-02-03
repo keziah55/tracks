@@ -268,7 +268,7 @@ class _CyclePlotWidget(PlotWidget):
         try:
             # if other points are already highlighted, remove highlighting
             self.hgltPnt.resetPen()
-        except AttributeError:
+        except (AttributeError, RuntimeError):
             pass
             
         self.hgltPnt = point
