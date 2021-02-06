@@ -213,6 +213,7 @@ class CycleData(QObject):
         return dts, odo
  
     def combineRows(self, date):
+        """ Combine all rows in the dataframe with the given data. """
         i0, *idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
         
         combinable = ['Time', 'Distance (km)', 'Calories']

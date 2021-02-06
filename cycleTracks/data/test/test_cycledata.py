@@ -51,14 +51,18 @@ class TestCycleData:
                 dates = df['Date']
                 monthyear = [(date.month, date.year) for date in dates]
                 assert len(set(monthyear)) == 1
-                
+             
+    def test_combine_rows(self, setup):
+        # TODO finish this test
+        pass
+             
     def test_monthly_odometer(self, setup):
         # TODO finish this test
         dts, odo = self.data.getMonthlyOdometer()
         dts = iter(dts)
         odo = iter(odo)
         
-        
+
             
             
             
