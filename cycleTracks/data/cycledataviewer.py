@@ -2,16 +2,18 @@
 QTreeWidget showing data from cycling DataFrame.
 """
 
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QHeaderView
+from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
+                             QAbstractItemView, QMessageBox)
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
 import calendar
 import itertools
+import numpy as np
 from .cycledata import CycleData
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
-                             hourMinSecToFloat, monthYearToFloat)
+                             hourMinSecToFloat, monthYearToFloat, floatToHourMinSec)
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
@@ -77,7 +79,7 @@ class CycleDataViewer(QTreeWidget):
         self.widthSpace = widthSpace
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
-                             'Calories']
+                             'Calories', 'Gear']
         self.setHeaderLabels(self.headerLabels)
         self.header().setStretchLastSection(False)
         # make header tall enough for two rows of text (avg speed has line break)
@@ -88,6 +90,8 @@ class CycleDataViewer(QTreeWidget):
         # align header text centrally
         for idx in range(len(self.headerLabels)):
             self.headerItem().setTextAlignment(idx, Qt.AlignCenter)
+            
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         
         self.makeTree()
         
@@ -159,10 +163,12 @@ class CycleDataViewer(QTreeWidget):
             data = CycleData(df) # make CycleData object for the month
             date = df['Date'].iloc[0]
             rootText = [f"{calendar.month_name[date.month]} {date.year}"]
-            rootText.append(self._getHMS(sum(data.timeHours)))
+            rootText.append(floatToHourMinSec(sum(data.timeHours)))
             rootText.append(f"{sum(data.distance):.2f}")
             rootText.append(f"{max(data.avgSpeed):.2f}")
-            rootText.append(f"{sum(data.calories):.2f}")
+            rootText.append(f"{sum(data.calories):.1f}")
+            gear = np.around(np.mean(data.gear))
+            rootText.append(f"{gear:.0f}")
             
             rootItem = CycleTreeWidgetItem(self)
             for idx, text in enumerate(rootText):
@@ -181,20 +187,34 @@ class CycleDataViewer(QTreeWidget):
                     if col == 'Date':
                         value = value.strftime("%d %b %Y")
                     elif col != 'Time':
-                        value = f"{value:.2f}"
+                        if col == 'Calories':
+                            value = f"{value:.1f}"
+                        elif col == 'Gear':
+                            value = f"{value:.0f}"
+                        else:
+                            value = f"{value:.2f}"
                     item.setText(idx, value)
                     item.setTextAlignment(idx, Qt.AlignCenter)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
         
-        
-    @staticmethod
-    def _getHMS(totalHours):
-        """ Convert `totalHours` float to hh:mm:ss string. """
-        hours, mins = divmod(totalHours, 1)
-        mins *= 60
-        mins, secs = divmod(mins, 1)
-        secs *= 60
-        s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
-        return s
     
+    @Slot()
+    def combineRows(self):
+        selected = self.selectedItems()
+        if len(selected) == 1:
+            return None
+        
+        idx = self.headerLabels.index('Date')
+        dates = [item.text(idx) for item in selected]
+        idx = self.headerLabels.index('Gear')
+        gears = [item.text(idx) for item in selected]
+        
+        if len(set(dates)) > 1:
+            QMessageBox.warning(self, "Cannot combine selected data",
+                                "Cannot combine selected data - dates do not match.")
+        elif len(set(gears)) > 1:
+            QMessageBox.warning(self, "Cannot combine selected data",
+                                "Cannot combine selected data - gears do not match.")
+        else:
+            self.data.combineRows(dates[0])

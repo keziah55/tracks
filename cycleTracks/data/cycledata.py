@@ -5,6 +5,7 @@ data.
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
+from cycleTracks.util import parseDate, hourMinSecToFloat, floatToHourMinSec
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -211,3 +212,20 @@ class CycleData(QObject):
                 odo.append(dist)
         return dts, odo
  
+    def combineRows(self, date):
+        i0, *idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
+        
+        combinable = ['Time', 'Distance (km)', 'Calories']
+        
+        for i in idx:
+            for name in combinable:
+                if name == 'Time':
+                    t0 = hourMinSecToFloat(self.df.iloc[i0][name])
+                    t1 = hourMinSecToFloat(self.df.iloc[i][name])
+                    newValue = floatToHourMinSec(t0 + t1)
+                    self.df.at[i0, name] = newValue
+                else:
+                    self.df.at[i0, name] += self.df.iloc[i][name]
+                    
+        self.df = self.df.drop(idx)
+        self.dataChanged.emit(i0)

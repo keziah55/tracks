@@ -41,6 +41,25 @@ class Axis(AxisItem):
         else:
             return super().tickStrings(values, *args, **kwargs)
         
+        
+class DateAxis(DateAxisItem):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tickSpecs = None
+    
+    def mouseClickEvent(self, event):
+        if event.double() and self.tickSpecs is not None:
+            x = event.pos().x()
+            print(x)
+            tickXs = [point.x() for _, point, _ in self.tickSpecs]
+            
+        super().mouseClickEvent(event)
+        
+    def generateDrawSpecs(self, *args, **kwargs):
+        axisSpec, self.tickSpecs, textSpecs = super().generateDrawSpecs(*args, **kwargs)
+        return axisSpec, self.tickSpecs, textSpecs
+        
 
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
@@ -98,7 +117,7 @@ class _CyclePlotWidget(PlotWidget):
     """
     
     def __init__(self, parent):
-        super().__init__(axisItems={'bottom': DateAxisItem(), 'left':Axis('left')})
+        super().__init__(axisItems={'bottom': DateAxis(), 'left':Axis('left')})
         
         self.hgltPnt = None
         

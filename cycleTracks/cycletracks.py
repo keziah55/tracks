@@ -85,9 +85,16 @@ class CycleTracks(QMainWindow):
         self.saveAct = QAction("&Save", self, shortcut="Ctrl+S", 
                                statusTip="Save data", triggered=self.save)
         
+        self.combineAct = QAction("&Combine", self, shortcut="Ctrl+Shift+C", 
+                                  statusTip="Combine the selected rows in the viewer",
+                                  triggered=self.viewer.combineRows)
+        
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
+        
+        self.editMenu = self.menuBar().addMenu("&Edit")
+        self.editMenu.addAction(self.combineAct)
     
