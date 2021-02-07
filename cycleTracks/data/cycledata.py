@@ -5,7 +5,8 @@ data.
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
-from cycleTracks.util import parseDate, hourMinSecToFloat, floatToHourMinSec
+from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
+                              floatToHourMinSec)
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -221,8 +222,8 @@ class CycleData(QObject):
         for i in idx:
             for name in combinable:
                 if name == 'Time':
-                    t0 = hourMinSecToFloat(self.df.iloc[i0][name])
-                    t1 = hourMinSecToFloat(self.df.iloc[i][name])
+                    t0 = hourMinSecToFloat(parseDuration(self.df.iloc[i0][name]))
+                    t1 = hourMinSecToFloat(parseDuration(self.df.iloc[i][name]))
                     newValue = floatToHourMinSec(t0 + t1)
                     self.df.at[i0, name] = newValue
                 else:

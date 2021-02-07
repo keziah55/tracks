@@ -1,10 +1,13 @@
 from cycleTracks.data import CycleData
 from . import makeDataFrame
+from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
+                              floatToHourMinSec)
 import pandas as pd
 import numpy as np
 import tempfile
 import pytest
 
+pytest_plugin = "pytest-qt"
 
 class TestCycleData:
     
@@ -52,9 +55,47 @@ class TestCycleData:
                 monthyear = [(date.month, date.year) for date in dates]
                 assert len(set(monthyear)) == 1
              
-    def test_combine_rows(self, setup):
-        # TODO finish this test
-        pass
+                
+    def test_combine_rows(self, setup, qtbot):
+        
+        rng = np.random.default_rng()
+        row = rng.integers(0, len(self.df))
+        
+        while True:        
+            replace = rng.integers(0, len(self.df), size=3)
+            if row not in replace:
+                break
+            
+        names = self.df.columns
+            
+        expected = {name:self.df.iloc[row][name] for name in names}
+        expected['Time'] = hourMinSecToFloat(parseDuration(expected['Time']))
+        
+        for idx in replace:
+            self.df.at[idx, 'Date'] = expected['Date']
+            self.df.at[idx, 'Gear'] = expected['Gear']
+            expected['Distance (km)'] += self.df.at[idx, 'Distance (km)']
+            expected['Calories'] += self.df.at[idx, 'Calories']
+            expected['Time'] += hourMinSecToFloat(parseDuration(self.df.at[idx, 'Time']))
+        expected['Time'] = floatToHourMinSec(expected['Time'])
+            
+        data = CycleData(self.df)
+        date = expected['Date'].strftime("%d %b %Y")
+        
+        with qtbot.waitSignal(data.dataChanged):
+            data.combineRows(date)
+        
+        df = data.df[data.df['Date'] == expected['Date']]
+        assert len(df) == 1
+        
+        for name in names:
+            try:
+                float(df.iloc[0][name])
+            except:
+                assert df.iloc[0][name] == expected[name]
+            else:
+                assert np.isclose(df.iloc[0][name], expected[name])
+        
              
     def test_monthly_odometer(self, setup):
         # TODO finish this test
