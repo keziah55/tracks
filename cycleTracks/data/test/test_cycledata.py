@@ -97,6 +97,7 @@ class TestCycleData:
                 assert np.isclose(df.iloc[0][name], expected[name])
         
              
+    @pytest.mark.skip("unfinished")
     def test_monthly_odometer(self, setup):
         # TODO finish this test
         dts, odo = self.data.getMonthlyOdometer()
