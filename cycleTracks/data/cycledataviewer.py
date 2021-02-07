@@ -203,7 +203,7 @@ class CycleDataViewer(QTreeWidget):
     def combineRows(self):
         """ Combine selected rows, if the date and gear values are the same. """
         selected = self.selectedItems()
-        if len(selected) == 1:
+        if len(selected) <= 1:
             return None
         
         idx = self.headerLabels.index('Date')

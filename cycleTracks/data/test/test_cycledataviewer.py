@@ -1,6 +1,7 @@
 from cycleTracks.data import CycleDataViewer, CycleData
 from cycleTracks.util import monthYearToFloat, hourMinSecToFloat
 from . import makeDataFrame
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import Qt
 from datetime import date
 import random
@@ -77,4 +78,53 @@ class TestCycleDataViewer:
                 assert item.text(0) in expanded
         
         
+    def test_combine_data(self, setup, qtbot, monkeypatch):
+        
+        assert self.widget.currentItem() is None
+        
+        ret = self.widget.combineRows()
+        assert ret is None
+        
+        # pick a top-level item
+        item = random.sample(self.widget.topLevelItems, k=1)[0]
+        idx = random.sample(range(item.childCount()), k=1)[0]
+        item = item.child(idx)
+        self.widget.setCurrentItem(item)
+        
+        ret = self.widget.combineRows()
+        assert ret is None
+        
+        # pick another
+        item = random.sample(self.widget.topLevelItems, k=1)[0]
+        idx = random.sample(range(item.childCount()), k=1)[0]
+        item = item.child(idx)
+        item.setSelected(True)
+        
+        assert len(self.widget.selectedItems()) == 2
+        
+        date0, date1 = [item.text(0) for item in self.widget.selectedItems()]
+        
+        assert date0 != date1
+        
+        monkeypatch.setattr(QMessageBox, "warning", lambda *args: QMessageBox.Yes)
+        with qtbot.assertNotEmitted(self.widget.data.dataChanged):
+            self.widget.combineRows()
+        
+        
+        gears= [item.text(5) for item in self.widget.selectedItems()]
+        
+        while len(set(gears)) == 1:
+            # gears are the same, so select more items until gears differ
+            item = random.sample(self.widget.topLevelItems, k=1)[0]
+            idx = random.sample(range(item.childCount()), k=1)[0]
+            item = item.child(idx)
+            item.setSelected(True)
+        
+        for item in self.widget.selectedItems():
+            # set the same date on all selected items, so only gears differ
+            item.setText(0, date0)
+        
+        monkeypatch.setattr(QMessageBox, "warning", lambda *args: QMessageBox.Yes)
+        with qtbot.assertNotEmitted(self.widget.data.dataChanged):
+            self.widget.combineRows()
         
