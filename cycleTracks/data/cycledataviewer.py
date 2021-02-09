@@ -9,7 +9,6 @@ from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
 import calendar
-import itertools
 import numpy as np
 from .cycledata import CycleData
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
@@ -95,8 +94,8 @@ class CycleDataViewer(QTreeWidget):
         
         self.makeTree()
         
-        self.sortOrder = [itertools.cycle([Qt.DescendingOrder, Qt.AscendingOrder])
-                          for _ in range(len(self.headerLabels))]
+        self.sortColumn = None
+        self.sortDescending = [True for _ in range(len(self.headerLabels))]
         self.header().setSectionsClickable(True)
         self.header().sectionClicked.connect(self.sortTree)
         
@@ -126,16 +125,21 @@ class CycleDataViewer(QTreeWidget):
         for item in self.topLevelItems:
             if item.text(0) in expanded:
                 self.expandItem(item)
-    
+                
     @Slot(int)
     def sortTree(self, idx):
         """ Sort the tree based on column `idx`. """
-        # switch sort order
-        order = next(self.sortOrder[idx])
+        
+        # switch sort order if clicked column is already selected
+        if idx == self.sortColumn:
+            self.sortDescending[idx] = not self.sortDescending[idx]
+            
+        order = Qt.DescendingOrder if self.sortDescending[idx] else Qt.AscendingOrder
         
         # set sort column index
         for rootItem in self.topLevelItems:
             rootItem.sortColumn = idx
+        self.sortColumn = idx
             
         # make header label for sort column italic
         for i in range(self.header().count()):

@@ -11,4 +11,3 @@ app = QApplication(sys.argv)
 window = CycleTracks()
 window.show()
 sys.exit(app.exec_())
-    
