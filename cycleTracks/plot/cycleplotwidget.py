@@ -13,7 +13,6 @@ from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
 from cycleTracks.util import floatToHourMinSec
 
 # TODO if date label clicked, highlight in tree
-# TODO scale y axis when changing series when zoomed in on month
 
     
 class CyclePlotWidget(QWidget):
