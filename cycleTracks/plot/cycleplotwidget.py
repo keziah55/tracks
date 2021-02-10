@@ -14,6 +14,7 @@ from .cycleplotlabel import CyclePlotLabel
 from cycleTracks.util import floatToHourMinSec
 
 # TODO if date label clicked, highlight in tree
+# TODO scale y axis when changing series when zoomed in on month
 
 class Axis(AxisItem):
     """ Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.
@@ -113,6 +114,40 @@ class DateAxis(DateAxisItem):
         return tickVals
     
     
+class VBox(ViewBox):
+    
+    def __init__(self, *args, **kwargs):
+        self.xRange = None
+        self.yRange = None
+        super().__init__(*args, **kwargs)
+        
+    @property
+    def xRange(self):
+        return self._xRange
+    
+    @xRange.setter
+    def xRange(self, rng):
+        self._xRange = rng
+    
+    @property
+    def yRange(self):
+        return self._yRange
+    
+    @yRange.setter
+    def yRange(self, rng):
+        self._yRange = rng
+    
+    def setRange(self, rect=None, xRange=None, yRange=None, **kwargs):
+        if rect is not None:
+            self.xRange = [rect.left(), rect.right()]
+            self.yRange = [rect.top(), rect.bottom()]
+        if xRange is not None:
+            self.xRange = xRange
+        if yRange is not None:
+            self.yRange = yRange
+        super().setRange(rect, xRange, yRange, **kwargs)
+        
+    
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
         under the mouse.
@@ -170,7 +205,8 @@ class _CyclePlotWidget(PlotWidget):
     
     def __init__(self, parent):
         self.dateAxis = DateAxis()
-        super().__init__(axisItems={'bottom':self.dateAxis, 'left':Axis('left')})
+        super().__init__(axisItems={'bottom':self.dateAxis, 'left':Axis('left')},
+                         viewBox=VBox())
         
         # disconnect autoBtn from its slot and connect to new slot that will
         # auto scale both viewBoxes
@@ -264,6 +300,8 @@ class _CyclePlotWidget(PlotWidget):
     def axisDoubleClicked(self, x0, x1):
         """ Set range of both view boxes to cover the time between the given timestamps. """
         # apply to both the current scatter and background plot
+        if not hasattr(self, 'dataItem') or not hasattr(self, 'backgroundItem'):
+            return None
         data = [(self.dataItem.scatter.data['x'], self.dataItem.scatter.data['y'], 
                  self.viewBoxes[0]),
                 (self.backgroundItem.xData, self.backgroundItem.yData, 
@@ -282,7 +320,6 @@ class _CyclePlotWidget(PlotWidget):
                 # set min and max for x and y in the viewBox
                 viewBox.setRange(xRange=(x0, x1), yRange=(y0, y1))
                
-    
     @Slot(object)
     def updatePlots(self, index):
         self.plotSeries(self.ySeries, mode='set')
@@ -317,6 +354,10 @@ class _CyclePlotWidget(PlotWidget):
         elif mode == 'set':
             self.dataItem.setData(self.data.dateTimestamps, series, **style)
         self.plotItem.setLabel('left', text=label, color=styleDict['colour'])
+        
+        if self.viewBoxes[0].xRange is not None:
+            self.axisDoubleClicked(*self.viewBoxes[0].xRange)
+        
         
     def plotTotalDistance(self, mode='new'):
         """ Plot monthly total distance. """
