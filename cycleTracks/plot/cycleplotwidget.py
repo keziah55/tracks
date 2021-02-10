@@ -50,6 +50,10 @@ class DateAxis(DateAxisItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tickSpecs = None
+        # bug workaround - we don't need units/SI prefix on dates
+        # this has been fixed in the pyqtgraph source, so won't be necessary
+        # once this makes its way into the deb packages
+        self.enableAutoSIPrefix(False)
     
     def mouseClickEvent(self, event):
         axisLength = self.boundingRect().width()
@@ -214,11 +218,14 @@ class _CyclePlotWidget(PlotWidget):
                 year += 1
             x1 = datetime(year, month+1, 1).timestamp()
             
-        # else:
-                            
+            xPoints = self.dataItem.scatter.data['x']
+            mask = np.in1d(np.where(xPoints > x0)[0], np.where(xPoints < x1)[0])
+            idx = np.where(xPoints > x0)[0][mask]
+            yPoints = self.dataItem.scatter.data['y'][idx]
+            y0 = np.min(yPoints)
+            y1 = np.max(yPoints)
             
-            self.plotItem.vb.setRange(xRange=(x0, x1))
-            self.vb2.setRange(xRange=(x0, x1))
+            self.plotItem.vb.setRange(xRange=(x0, x1), yRange=(y0, y1))
     
     
     @Slot(object)
@@ -269,10 +276,6 @@ class _CyclePlotWidget(PlotWidget):
              self.backgroundItem.setData(dts, odo, **style)
         self.plotItem.getAxis('right').setLabel('Total monthly distance', 
             color=colour)
-        # bug workaround - we don't need units/SI prefix on dates
-        # this has been fixed in the pyqtgraph source, so won't be necessary
-        # once this makes its way into the deb packages
-        self.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
         
     @Slot(str)
     def switchSeries(self, key):
