@@ -8,6 +8,7 @@ import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from datetime import datetime
 
 from .cycleplotlabel import CyclePlotLabel
 from cycleTracks.util import floatToHourMinSec
@@ -44,23 +45,37 @@ class Axis(AxisItem):
         
 class DateAxis(DateAxisItem):
     
+    zoomOnMonth = Signal(int)
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tickSpecs = None
     
     def mouseClickEvent(self, event):
+        axisLength = self.boundingRect().width()
         if event.double() and self.tickSpecs is not None:
-            x = event.pos().x()
-            print(x)
-            tickXs = [point.x() for _, point, _ in self.tickSpecs]
+            if event.pos().y() >= 0:
+                x = event.pos().x()
+                tickXs = [point.x() for _, point, _ in self.tickSpecs]
+                tickXs = [0] + tickXs + [axisLength]
+                tickXs.sort()
+                
+                for n in range(len(tickXs)):
+                    tk0 = tickXs[n]
+                    tk1 = tickXs[n+1]
+                    if tk0 <= x < tk1:
+                        self.zoomOnMonth.emit(n)
+                        break
+                
+                # print(f"point {x} in month {n}")
             
         super().mouseClickEvent(event)
         
     def generateDrawSpecs(self, *args, **kwargs):
         axisSpec, self.tickSpecs, textSpecs = super().generateDrawSpecs(*args, **kwargs)
         return axisSpec, self.tickSpecs, textSpecs
-        
-
+    
+    
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
         under the mouse.
@@ -117,7 +132,10 @@ class _CyclePlotWidget(PlotWidget):
     """
     
     def __init__(self, parent):
-        super().__init__(axisItems={'bottom': DateAxis(), 'left':Axis('left')})
+        self.dateAxis = DateAxis()
+        super().__init__(axisItems={'bottom':self.dateAxis, 'left':Axis('left')})
+        
+        self.dateAxis.zoomOnMonth.connect(self.axisDoubleClicked)
         
         self.hgltPnt = None
         
@@ -182,6 +200,26 @@ class _CyclePlotWidget(PlotWidget):
         # incorrectly while views had different shapes.
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
+        
+    @Slot(int)
+    def axisDoubleClicked(self, n):
+        dfs = self.data.splitMonths()
+        df = dfs[n]
+        if not df.empty:
+            month = df.iloc[0]['Date'].month
+            year = df.iloc[0]['Date'].year
+            x0 = datetime(year, month, 1).timestamp()
+            if month == 12:
+                month = 0
+                year += 1
+            x1 = datetime(year, month+1, 1).timestamp()
+            
+        # else:
+                            
+            
+            self.plotItem.vb.setRange(xRange=(x0, x1))
+            self.vb2.setRange(xRange=(x0, x1))
+    
     
     @Slot(object)
     def updatePlots(self, index):
