@@ -45,39 +45,72 @@ class Axis(AxisItem):
         
 class DateAxis(DateAxisItem):
     
-    zoomOnMonth = Signal(int)
+    zoomOnMonth = Signal(float, float)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tickSpecs = None
+        self.tickXs = None
+        self.tickVals = None
         # bug workaround - we don't need units/SI prefix on dates
         # this has been fixed in the pyqtgraph source, so won't be necessary
         # once this makes its way into the deb packages
         self.enableAutoSIPrefix(False)
     
     def mouseClickEvent(self, event):
-        axisLength = self.boundingRect().width()
-        if event.double() and self.tickSpecs is not None:
+        
+        if event.double() and self.tickXs is not None:
+            # positive y coord is underneath axis, not within plot
             if event.pos().y() >= 0:
                 x = event.pos().x()
-                tickXs = [point.x() for _, point, _ in self.tickSpecs]
-                tickXs = [0] + tickXs + [axisLength]
+                # get coords of ticks, plus beginning and end
+                tickXs = [0] + self.tickXs + [self.boundingRect().width()]
                 tickXs.sort()
                 
-                for n in range(len(tickXs)):
+                # make corresponding list of tick values, by adding timestamps
+                # for the months preceding and succeding the tickVals
+                dt = datetime.fromtimestamp(self.tickVals[0])
+                month = dt.month - 1
+                year = dt.year
+                if month == 0:
+                    month = 12
+                    year = year - 1
+                ts0 = datetime(year, month, 1).timestamp()
+                
+                dt = datetime.fromtimestamp(self.tickVals[-1])
+                month = dt.month + 1
+                year = dt.year
+                if month > 12:
+                    month = 1
+                    year = year + 1
+                ts1 = datetime(year, month, 1).timestamp()
+                
+                tickVals = [ts0] + self.tickVals + [ts1]
+                tickVals.sort()
+                
+                for n in range(len(tickXs)-1):
+                    # find ticks between which the mouse was clicked
                     tk0 = tickXs[n]
                     tk1 = tickXs[n+1]
                     if tk0 <= x < tk1:
-                        self.zoomOnMonth.emit(n)
+                        # when found, emit signal with corresponding timestamps
+                        self.zoomOnMonth.emit(tickVals[n], tickVals[n+1])
                         break
                 
-                # print(f"point {x} in month {n}")
-            
         super().mouseClickEvent(event)
         
+        
     def generateDrawSpecs(self, *args, **kwargs):
-        axisSpec, self.tickSpecs, textSpecs = super().generateDrawSpecs(*args, **kwargs)
-        return axisSpec, self.tickSpecs, textSpecs
+        axisSpec, tickSpecs, textSpecs = super().generateDrawSpecs(*args, **kwargs)
+        self.tickXs = [point.x() for _, point, _ in tickSpecs]
+        return axisSpec, tickSpecs, textSpecs
+    
+    def tickValues(self, *args, **kwargs):
+        tickVals = super().tickValues(*args, **kwargs)
+        self.tickVals = []
+        for _, values in tickVals:
+            self.tickVals += values
+        self.tickVals.sort()
+        return tickVals
     
     
 class CyclePlotWidget(QWidget):
@@ -139,6 +172,11 @@ class _CyclePlotWidget(PlotWidget):
         self.dateAxis = DateAxis()
         super().__init__(axisItems={'bottom':self.dateAxis, 'left':Axis('left')})
         
+        # disconnect autoBtn from its slot and connect to new slot that will
+        # auto scale both viewBoxes
+        self.plotItem.autoBtn.clicked.disconnect(self.plotItem.autoBtnClicked)
+        self.plotItem.autoBtn.clicked.connect(self.autoBtnClicked)
+        
         self.dateAxis.zoomOnMonth.connect(self.axisDoubleClicked)
         
         self.hgltPnt = None
@@ -195,6 +233,14 @@ class _CyclePlotWidget(PlotWidget):
         self.plotItem.getAxis('right').linkToView(self.vb2)
         self.vb2.setXLink(self.plotItem)
         
+    @property
+    def viewBoxes(self):
+        """ Return list of all viexBoxes in the plot. """
+        vbx = [self.plotItem.vb]
+        if hasattr(self, 'vb2'):
+            vbx.append(self.vb2)
+        return vbx
+        
     @Slot()
     def updateViews(self):
         ## Copied from PyQtGraph MultiplePlotAxes.py example ##
@@ -205,28 +251,37 @@ class _CyclePlotWidget(PlotWidget):
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
         
-    @Slot(int)
-    def axisDoubleClicked(self, n):
-        dfs = self.data.splitMonths()
-        df = dfs[n]
-        if not df.empty:
-            month = df.iloc[0]['Date'].month
-            year = df.iloc[0]['Date'].year
-            x0 = datetime(year, month, 1).timestamp()
-            if month == 12:
-                month = 0
-                year += 1
-            x1 = datetime(year, month+1, 1).timestamp()
-            
-            xPoints = self.dataItem.scatter.data['x']
+    def autoBtnClicked(self):
+        # enableAutoRange on both viewBoxes
+        if self.plotItem.autoBtn.mode == 'auto':
+            for vb in self.viewBoxes:
+                vb.enableAutoRange()
+            self.plotItem.autoBtn.hide()
+        else:
+            self.plotItem.disableAutoRange()
+        
+    @Slot(float, float)
+    def axisDoubleClicked(self, x0, x1):
+        """ Set range of both view boxes to cover the time between the given timestamps. """
+        # apply to both the current scatter and background plot
+        data = [(self.dataItem.scatter.data['x'], self.dataItem.scatter.data['y'], 
+                 self.viewBoxes[0]),
+                (self.backgroundItem.xData, self.backgroundItem.yData, 
+                 self.viewBoxes[1])]
+        
+        for xPoints, yData, viewBox in data:
+            # find x-coords of points in the given month
             mask = np.in1d(np.where(xPoints > x0)[0], np.where(xPoints < x1)[0])
-            idx = np.where(xPoints > x0)[0][mask]
-            yPoints = self.dataItem.scatter.data['y'][idx]
-            y0 = np.min(yPoints)
-            y1 = np.max(yPoints)
-            
-            self.plotItem.vb.setRange(xRange=(x0, x1), yRange=(y0, y1))
-    
+            if np.any(mask):
+                # select the corresponding y data
+                idx = np.where(xPoints > x0)[0][mask]
+                yPoints = yData[idx]
+                # get min and max
+                y0 = np.min(yPoints)
+                y1 = np.max(yPoints)
+                # set min and max for x and y in the viewBox
+                viewBox.setRange(xRange=(x0, x1), yRange=(y0, y1))
+               
     
     @Slot(object)
     def updatePlots(self, index):
