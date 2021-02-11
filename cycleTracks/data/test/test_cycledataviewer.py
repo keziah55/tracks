@@ -1,9 +1,7 @@
 from cycleTracks.data import CycleDataViewer, CycleData
 from cycleTracks.util import monthYearToFloat, hourMinSecToFloat
-from . import makeDataFrame
+from cycleTracks.test import makeDataFrame
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import Qt
-from datetime import date
 import random
 import tempfile
 import pandas as pd

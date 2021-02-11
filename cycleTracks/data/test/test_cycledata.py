@@ -1,7 +1,6 @@
 from cycleTracks.data import CycleData
-from . import makeDataFrame
-from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
-                              floatToHourMinSec)
+from cycleTracks.util import parseDuration, hourMinSecToFloat, floatToHourMinSec
+from cycleTracks.test import makeDataFrame
 import pandas as pd
 import numpy as np
 import tempfile

@@ -12,15 +12,12 @@ import pandas as pd
 from .plot import CyclePlotWidget
 from .data import CycleData, CycleDataViewer, AddCycleData
 
-    
+
 class CycleTracks(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        home = os.path.expanduser('~')
-        path = os.path.join(home, '.cycletracks')
-        os.makedirs(path, exist_ok=True)
-        self.file = os.path.join(path, 'cycletracks.csv')
+        self.file = self.getFile()
         self.sep = ','
         if not os.path.exists(self.file):
             header = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
@@ -59,6 +56,14 @@ class CycleTracks(QMainWindow):
         self.setWindowTitle('Cycle Tracks')
         self.showMaximized()
             
+    @staticmethod
+    def getFile():
+        home = os.path.expanduser('~')
+        path = os.path.join(home, '.cycletracks')
+        os.makedirs(path, exist_ok=True)
+        file = os.path.join(path, 'cycletracks.csv')
+        return file
+        
     @Slot()
     def save(self):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
