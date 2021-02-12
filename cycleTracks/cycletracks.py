@@ -39,6 +39,7 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.plot.newData)
         self.addData.newData.connect(self.backup)
         self.data.dataChanged.connect(self.save)
+        self.plot.pointSelected.connect(self.viewer.highlightItem)
         
         dockWidgets = [(self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]

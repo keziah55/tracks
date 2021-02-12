@@ -12,8 +12,6 @@ from .cycleplotlabel import CyclePlotLabel
 from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
 from cycleTracks.util import floatToHourMinSec
 
-# TODO if date label clicked, highlight in tree
-
     
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
@@ -32,6 +30,13 @@ class CyclePlotWidget(QWidget):
         the date, speed, distance, calories and time data for the chosen point.
     """
     
+    pointSelected = Signal(object)
+    """ **signal** pointSelected(dict `currentPoint`)
+        
+        Emitted when the plot is double clicked, with the dict of info about the
+        current point.
+    """
+    
     def __init__(self, parent):
         
         super().__init__()
@@ -42,7 +47,8 @@ class CyclePlotWidget(QWidget):
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
         
-        self.plotWidget.currentPointChanged.connect(self.currentPointChanged)
+        # self.plotWidget.currentPointChanged.connect(self.currentPointChanged)
+        self.plotWidget.pointSelected.connect(self.pointSelected)
         
         self.layout.addWidget(self.plotWidget)
         self.layout.addWidget(self.plotLabel)
@@ -68,6 +74,13 @@ class _CyclePlotWidget(PlotWidget):
         
         Emitted when a point in the plot is hovered over. The dict provides
         the date, speed, distance, calories and time data for the chosen point.
+    """
+    
+    pointSelected = Signal(object)
+    """ **signal** pointSelected(dict `currentPoint`)
+        
+        Emitted when the plot is double clicked, with the dict of info about the
+        current point.
     """
     
     def __init__(self, parent):
@@ -118,6 +131,7 @@ class _CyclePlotWidget(PlotWidget):
         self.plotItem.addItem(self.hLine, ignoreBounds=True)
         
         self.plotItem.scene().sigMouseMoved.connect(self.mouseMoved)
+        self.plotItem.scene().sigMouseClicked.connect(self.plotClicked)
         
         # update second view box
         self.updateViews()
@@ -245,6 +259,24 @@ class _CyclePlotWidget(PlotWidget):
         if key in self.plottable and key in self.data.quickNames.keys():
             self.plotItem.removeItem(self.dataItem)
             self.plotSeries(key)
+            
+    @Slot(object)
+    def plotClicked(self, event):
+        """ If the plot is double clicked, emit `pointSelected` signal with 
+            `currentPoint` dict.  
+        """
+        # get x and y bounds
+        yMin = 0 # no top axis
+        yMax = self.plotItem.getAxis('bottom').scenePos().y()
+        # left axis position is 1,1 (don't know why), so use the bottom axis x here
+        xMin = self.plotItem.getAxis('bottom').scenePos().x() 
+        xMax = self.plotItem.getAxis('right').scenePos().x()
+        
+        pos = event.scenePos()
+        if event.double() and xMin <= pos.x() <= xMax and yMin <= pos.y() <= yMax:
+            idx = self.currentPoint['index']
+            date = self.data.datetimes[idx]
+            self.pointSelected.emit(date)
         
     @staticmethod
     def _makeScatterStyle(colour, symbol):

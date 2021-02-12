@@ -106,6 +106,8 @@ class CustomDateAxisItem(DateAxisItem):
     
 class CustomViewBox(ViewBox):
     
+    plotDoubleClicked = Signal()
+    
     def __init__(self, *args, **kwargs):
         self.xRange = None
         self.yRange = None
@@ -136,3 +138,6 @@ class CustomViewBox(ViewBox):
         if yRange is not None:
             self.yRange = yRange
         super().setRange(rect, xRange, yRange, **kwargs)
+        
+    # def mouseClickEvent(self, event):
+    #     print(event, event.double(), event.pos())

@@ -76,6 +76,7 @@ class CycleDataViewer(QTreeWidget):
         self.parent = parent
         
         self.widthSpace = widthSpace
+        self.dateFmt = "%d %b %Y"
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
                              'Calories', 'Gear']
@@ -156,6 +157,7 @@ class CycleDataViewer(QTreeWidget):
     def makeTree(self):
         """ Populate tree with data from CycleData object. """
         
+        self.items = []
         dfs = self.data.splitMonths()
         
         for df in reversed(dfs):
@@ -189,7 +191,7 @@ class CycleDataViewer(QTreeWidget):
                     col = re.sub(r"\s", " ", col) # remove \n from avg speed
                     value = data[col][rowIdx]
                     if col == 'Date':
-                        value = value.strftime("%d %b %Y")
+                        value = value.strftime(self.dateFmt)
                     elif col != 'Time':
                         if col == 'Calories':
                             value = f"{value:.1f}"
@@ -199,6 +201,9 @@ class CycleDataViewer(QTreeWidget):
                             value = f"{value:.2f}"
                     item.setText(idx, value)
                     item.setTextAlignment(idx, Qt.AlignCenter)
+                dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
+                       'item':item}
+                self.items.append(dct)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
         
@@ -223,3 +228,10 @@ class CycleDataViewer(QTreeWidget):
                                 "Cannot combine selected data - gears do not match.")
         else:
             self.data.combineRows(dates[0])
+            
+            
+    @Slot(object)
+    def highlightItem(self, date):
+        for item in self.items:
+            if item['datetime'] == date:
+                self.setCurrentItem(item['item'])
