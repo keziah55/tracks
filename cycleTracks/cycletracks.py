@@ -75,11 +75,14 @@ class CycleTracks(QMainWindow):
         self.df.to_csv(bak, sep=self.sep, index=False)
         
     def createDockWidget(self, widget, area, title=None):
-        self.dock = QDockWidget()
-        self.dock.setWidget(widget)
+        dock = QDockWidget()
+        dock.setWidget(widget)
         if title is not None:
-            self.dock.setWindowTitle(title)
-        self.addDockWidget(area, self.dock)
+            dock.setWindowTitle(title)
+        self.addDockWidget(area, dock)
+        if not hasattr(self, "dockWidgets"):
+            self.dockWidgets = []
+        self.dockWidgets.append(dock)
         
     def createActions(self):
         
@@ -102,4 +105,9 @@ class CycleTracks(QMainWindow):
         
         self.editMenu = self.menuBar().addMenu("&Edit")
         self.editMenu.addAction(self.combineAct)
+        
+        self.viewMenu = self.menuBar().addMenu("&View")
+        self.panelMenu = self.viewMenu.addMenu("&Panels")
+        for dock in self.dockWidgets:
+            self.panelMenu.addAction(dock.toggleViewAction())
     
