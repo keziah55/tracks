@@ -339,6 +339,7 @@ class _CyclePlotWidget(PlotWidget):
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
                 self._makePointDict(idx)
                 pts = self.scatterPointsAtX(mousePoint, self.dataItem.scatter)
+                # TODO if multiple points at x, check closest y
                 if len(pts) != 0:
                     self._highlightPoint(pts[0])
             self.vLine.setPos(mousePoint.x())
