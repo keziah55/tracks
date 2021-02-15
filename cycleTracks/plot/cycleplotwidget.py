@@ -273,7 +273,7 @@ class _CyclePlotWidget(PlotWidget):
         xMax = self.plotItem.getAxis('right').scenePos().x()
         
         pos = event.scenePos()
-        if event.double() and xMin <= pos.x() <= xMax and yMin <= pos.y() <= yMax:
+        if xMin <= pos.x() <= xMax and yMin <= pos.y() <= yMax: # event.double() and 
             idx = self.currentPoint['index']
             date = self.data.datetimes[idx]
             self.pointSelected.emit(date)
