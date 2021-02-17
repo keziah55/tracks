@@ -47,7 +47,6 @@ class CyclePlotWidget(QWidget):
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
         
-        # self.plotWidget.currentPointChanged.connect(self.currentPointChanged)
         self.plotWidget.pointSelected.connect(self.pointSelected)
         
         self.layout.addWidget(self.plotWidget)

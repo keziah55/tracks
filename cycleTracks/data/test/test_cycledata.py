@@ -14,7 +14,6 @@ class TestCycleData:
     def setup(self):
         self.tmpfile = tempfile.NamedTemporaryFile()
         makeDataFrame(1000, path=self.tmpfile.name)
-        
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
         self.data = CycleData(self.df)
     
