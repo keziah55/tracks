@@ -16,6 +16,9 @@ plots of my cycling stats.
 
 - Click on labels under plot to switch data series plotted
 
+- Double click on month on plot x-axis to zoom in on that month
+
+- Click on point to select that point in the data viewer
 
 ### To do
 
@@ -24,8 +27,6 @@ plots of my cycling stats.
 - Compare multiple points
 
 - Personal bests
-
-- Zoom in on month (double click? or tools menu/list?)
 
 
 ## Requirements
