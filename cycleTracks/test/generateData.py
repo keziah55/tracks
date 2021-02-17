@@ -31,7 +31,8 @@ def makeDates(size, startDate="2018-01-01", endDate="2021-12-31", fmt="%Y-%m-%d"
     diff = dt.days
     
     rng = np.random.default_rng()
-    days = rng.choice(np.arange(diff), size=size, replace=False)
+    days = rng.choice(np.arange(diff), size=size, replace=False, shuffle=False)
+    days = np.sort(days)
     dates = [start + timedelta(days=int(d)) for d in days]
     return dates
 

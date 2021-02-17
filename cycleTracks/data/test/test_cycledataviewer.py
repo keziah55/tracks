@@ -78,8 +78,6 @@ class TestCycleDataViewer:
         
     def test_combine_data(self, setup, qtbot, monkeypatch):
         
-        assert self.widget.currentItem() is None
-        
         ret = self.widget.combineRows()
         assert ret is None
         
@@ -108,8 +106,7 @@ class TestCycleDataViewer:
         with qtbot.assertNotEmitted(self.widget.data.dataChanged):
             self.widget.combineRows()
         
-        
-        gears= [item.text(5) for item in self.widget.selectedItems()]
+        gears = [item.text(5) for item in self.widget.selectedItems()]
         
         while len(set(gears)) == 1:
             # gears are the same, so select more items until gears differ
@@ -117,6 +114,7 @@ class TestCycleDataViewer:
             idx = random.sample(range(item.childCount()), k=1)[0]
             item = item.child(idx)
             item.setSelected(True)
+            gears = [item.text(5) for item in self.widget.selectedItems()]
         
         for item in self.widget.selectedItems():
             # set the same date on all selected items, so only gears differ

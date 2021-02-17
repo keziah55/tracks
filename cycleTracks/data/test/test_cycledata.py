@@ -16,8 +16,6 @@ class TestCycleData:
         makeDataFrame(1000, path=self.tmpfile.name)
         
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        # path = "/home/keziah/.cycletracks/cycletracks.csv"
-        # self.df = pd.read_csv(path, parse_dates=['Date'])
         self.data = CycleData(self.df)
     
     def test_properties(self, setup):
@@ -96,14 +94,30 @@ class TestCycleData:
                 assert np.isclose(df.iloc[0][name], expected[name])
         
              
-    @pytest.mark.skip("unfinished")
     def test_monthly_odometer(self, setup):
-        # TODO finish this test
-        dts, odo = self.data.getMonthlyOdometer()
-        dts = iter(dts)
-        odo = iter(odo)
         
-
+        tmpfile = tempfile.NamedTemporaryFile()
+        makeDataFrame(100, path=tmpfile.name)
+        df = pd.read_csv(tmpfile.name, parse_dates=['Date'])
+        data = CycleData(df)
+        
+        dts, odo = data.getMonthlyOdometer()
+        
+        dfIdx = 0
+        expectedDist = 0
+        
+        for i in range(len(dts)):
+            dt = dts[i]
+            dist = odo[i]
             
-            
-            
+            if i == 0 or dt.day == 1 and dts[i-1] != dt:
+                # new month
+                expectedDist = 0
+            else:
+                row = df.iloc[dfIdx]
+                print(f"row: {row}")
+                assert row['Date'] == dt
+                expectedDist += row['Distance (km)']
+                dfIdx += 1
+            assert dist == expectedDist
+        
