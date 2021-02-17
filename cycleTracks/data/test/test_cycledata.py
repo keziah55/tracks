@@ -13,7 +13,7 @@ class TestCycleData:
     @pytest.fixture
     def setup(self):
         self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(100, path=self.tmpfile.name)
+        makeDataFrame(1000, path=self.tmpfile.name)
         
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
         # path = "/home/keziah/.cycletracks/cycletracks.csv"

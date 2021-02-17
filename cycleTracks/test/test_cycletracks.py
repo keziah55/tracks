@@ -12,7 +12,7 @@ class TestTracks:
     def setup(self, qtbot, monkeypatch):
         
         self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(100, path=self.tmpfile.name)
+        makeDataFrame(1000, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
             return self.tmpfile.name
@@ -24,5 +24,6 @@ class TestTracks:
         yield
         self.app.close()
         
-    def test_app(self, setup, teardown):
+    def test_app(self, setup, qtbot, teardown):
+        # qtbot.wait(10000)
         pass
