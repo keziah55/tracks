@@ -192,13 +192,12 @@ class CycleData(QObject):
             if df.empty:
                 # if there's no data in the df, need to get month and year from
                 # previous df
-                prevDate = dfs[-1]['Date'].iloc[0]
-                month = prevDate.month - 1
-                if month == 0:
-                    month = 12
+                prevDate = dfs[i-1]['Date'].iloc[0]
+                month = prevDate.month + 1
                 year = prevDate.year
-                if month == 12:
-                    year -= 1
+                if month > 12:
+                    month = 1
+                    year += 1
             else:
                 month = df['Date'].iloc[0].month
                 year = df['Date'].iloc[0].year
