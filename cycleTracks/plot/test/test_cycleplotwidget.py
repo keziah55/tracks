@@ -1,6 +1,8 @@
 from cycleTracks.data import CycleData
 from cycleTracks.plot import CyclePlotWidget
 from cycleTracks.test import makeDataFrame
+from PyQt5.QtCore import Qt
+import random
 import tempfile
 import pandas as pd
 import pytest
@@ -25,6 +27,28 @@ class TestCyclePlotWidget:
         self.widget.showMaximized()
         
         
-    def test_plot(self, setup, qtbot):
-        # qtbot.wait(10000)
-        pass
+    def test_switch_series(self, setup, qtbot):
+        
+        plotLabel = self.widget.plotLabel
+        
+        def callback(name):
+            return name == key
+        
+        keys = list(plotLabel.data.keys())
+        random.shuffle(keys)
+        if keys[0] == 'distance':
+            name = keys.pop(0)
+            keys.append(name)
+        
+        for key in keys:
+            dct = plotLabel.data[key]
+            label = dct['widget']
+            
+            with qtbot.waitSignal(plotLabel.labelClicked, check_params_cb=callback):
+                qtbot.mouseClick(label, Qt.LeftButton)
+                
+            if key != 'date':
+                axis = self.widget.plotWidget.plotItem.getAxis('left')
+                axisLabel = axis.labelText
+                assert axisLabel == self.parent.data.quickNames[key]
+                
