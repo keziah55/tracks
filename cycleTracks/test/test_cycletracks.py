@@ -23,7 +23,10 @@ class TestTracks:
     def teardown(self):
         yield
         self.app.close()
-        
-    def test_app(self, setup, qtbot, teardown):
-        # qtbot.wait(10000)
+    
+    def test_add_data(self, setup, qtbot, teardown):
+        pass
+    
+    def test_plot_clicked(self, setup, qtbot, teardown):
+        # test that clicking on the plot highlights the nearest plot in the viewer
         pass

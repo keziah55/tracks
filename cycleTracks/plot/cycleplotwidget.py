@@ -261,7 +261,7 @@ class _CyclePlotWidget(PlotWidget):
             
     @Slot(object)
     def plotClicked(self, event):
-        """ If the plot is double clicked, emit `pointSelected` signal with 
+        """ If the plot is clicked, emit `pointSelected` signal with 
             `currentPoint` dict.  
         """
         # get x and y bounds

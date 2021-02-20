@@ -73,3 +73,7 @@ class TestCyclePlotWidget:
         with qtbot.waitSignal(axis.zoomOnMonth):
             axis.mouseClickEvent(click)
         
+    
+    def test_mouse_hover(self, setup, qtbot):
+        # check point is highlighted and labels update
+        pass
