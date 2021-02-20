@@ -1,7 +1,7 @@
 from cycleTracks.data import CycleData
 from cycleTracks.plot import CyclePlotWidget
 from cycleTracks.test import makeDataFrame
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 import random
 import tempfile
 import pandas as pd
@@ -15,6 +15,18 @@ class DummyParent:
         makeDataFrame(500, path=self.tmpfile.name)
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
         self.data = CycleData(self.df)
+
+class Click:
+    def __init__(self, pos, double):
+        self._double = double
+        self._pos = pos
+        
+    def double(self):
+        return self._double
+    
+    def pos(self):
+        return self._pos
+
 
 class TestCyclePlotWidget:
     
@@ -52,3 +64,12 @@ class TestCyclePlotWidget:
                 axisLabel = axis.labelText
                 assert axisLabel == self.parent.data.quickNames[key]
                 
+                
+    def test_month_zoom(self, setup, qtbot):
+    
+        axis = self.widget.plotWidget.plotItem.getAxis('bottom')
+        
+        click = Click(pos=axis.pos(), double=True)
+        with qtbot.waitSignal(axis.zoomOnMonth):
+            axis.mouseClickEvent(click)
+        

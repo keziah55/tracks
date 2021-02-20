@@ -48,7 +48,7 @@ class CustomDateAxisItem(DateAxisItem):
         self.enableAutoSIPrefix(False)
     
     def mouseClickEvent(self, event):
-        
+               
         if event.double() and self.tickXs is not None:
             # positive y coord is underneath axis, not within plot
             if event.pos().y() >= 0:
@@ -87,8 +87,6 @@ class CustomDateAxisItem(DateAxisItem):
                         self.zoomOnMonth.emit(tickVals[n], tickVals[n+1])
                         break
                 
-        super().mouseClickEvent(event)
-        
         
     def generateDrawSpecs(self, *args, **kwargs):
         axisSpec, tickSpecs, textSpecs = super().generateDrawSpecs(*args, **kwargs)
