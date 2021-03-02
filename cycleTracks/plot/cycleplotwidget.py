@@ -343,7 +343,6 @@ class _CyclePlotWidget(PlotWidget):
 
     @Slot(object)
     def mouseMoved(self, pos):
-        
         if self.plotItem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotItem.vb.mapSceneToView(pos)
             

@@ -10,9 +10,9 @@ import pytest
 pytest_plugin = "pytest-qt"
 
 class DummyParent:
-    def __init__(self):
+    def __init__(self, size=500):
         self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(500, path=self.tmpfile.name)
+        makeDataFrame(size, path=self.tmpfile.name)
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
         self.data = CycleData(self.df)
 
@@ -33,6 +33,14 @@ class TestCyclePlotWidget:
     @pytest.fixture
     def setup(self, qtbot):
         self.parent = DummyParent()
+        
+        self.widget = CyclePlotWidget(self.parent)
+        qtbot.addWidget(self.widget)
+        self.widget.showMaximized()
+        
+    @pytest.fixture
+    def setup_reduced_points(self, qtbot):
+        self.parent = DummyParent(size=50)
         
         self.widget = CyclePlotWidget(self.parent)
         qtbot.addWidget(self.widget)
@@ -73,7 +81,32 @@ class TestCyclePlotWidget:
         with qtbot.waitSignal(axis.zoomOnMonth):
             axis.mouseClickEvent(click)
         
-    @pytest.mark.skip("test not yet written")
-    def test_mouse_hover(self, setup, qtbot):
-        # check point is highlighted and labels update
-        pass
+    def test_mouse_hover(self, setup_reduced_points, qtbot):
+        qtbot.wait(10) # wait for widget to be maximized so we can get the right size
+        
+        size = self.widget.size()
+        y = size.height() // 2
+
+        idx = None
+        plotWidget = self.widget.plotWidget
+        plotLabel = self.widget.plotLabel
+        
+        for x in range(size.width()):
+            pos = QPoint(x, y)
+            qtbot.mouseMove(plotWidget, pos)
+        
+            if plotWidget.currentPoint and idx != plotWidget.currentPoint['index']:
+                idx = plotWidget.currentPoint['index']
+                pt = plotWidget.dataItem.scatter.data[idx]
+                
+                dateLabel = plotLabel.data['date']['widget']
+                expected = f"<div style='font-size: {dateLabel.fontSize}pt'>"
+                expected += f"{self.widget.plotWidget.currentPoint['date']}</div>"
+                assert dateLabel.text() == expected
+                
+                distLabel = plotLabel.data['distance']['widget']
+                expected = f"<div style='font-size: {distLabel.fontSize}pt; "
+                expected += f"color: {distLabel.colour}'>"
+                expected += f"Distance: {self.widget.plotWidget.currentPoint['distance']} km</div>"
+                assert distLabel.text() == expected
+                
