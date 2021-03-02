@@ -32,3 +32,8 @@ class TestTracks:
     def test_plot_clicked(self, setup, qtbot, teardown):
         # test that clicking on the plot highlights the nearest plot in the viewer
         pass
+
+    @pytest.mark.skip("test not yet written")
+    def test_viewer_clicked(self, setup, qtbot, teardown):
+        # test that clicking on an item in the viewer highlights the corresponding point in the plot
+        pass
