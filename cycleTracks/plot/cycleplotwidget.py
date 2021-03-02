@@ -2,6 +2,7 @@
 Widget containing plot and labels.
 """
 
+from datetime import datetime
 from pyqtgraph import PlotWidget, PlotCurveItem, ViewBox, mkPen, mkBrush, InfiniteLine
 import numpy as np
 from PyQt5.QtCore import pyqtSlot as Slot
@@ -31,9 +32,9 @@ class CyclePlotWidget(QWidget):
     """
     
     pointSelected = Signal(object)
-    """ **signal** pointSelected(dict `currentPoint`)
+    """ **signal** pointSelected(datetime `currentPoint`)
         
-        Emitted when the plot is double clicked, with the dict of info about the
+        Emitted when the plot is double clicked, with the date from the
         current point.
     """
     
@@ -58,6 +59,10 @@ class CyclePlotWidget(QWidget):
     def newData(self, index):
         self.plotWidget.updatePlots(index)
         
+    @Slot(object)
+    def setCurrentPointFromDate(self, date):
+        self.plotWidget.setCurrentPointFromDate(date)
+        
 
 class _CyclePlotWidget(PlotWidget):
     """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
@@ -76,9 +81,9 @@ class _CyclePlotWidget(PlotWidget):
     """
     
     pointSelected = Signal(object)
-    """ **signal** pointSelected(dict `currentPoint`)
+    """ **signal** pointSelected(datetime `currentPoint`)
         
-        Emitted when the plot is double clicked, with the dict of info about the
+        Emitted when the plot is double clicked, with the date from the
         current point.
     """
     
@@ -262,7 +267,7 @@ class _CyclePlotWidget(PlotWidget):
     @Slot(object)
     def plotClicked(self, event):
         """ If the plot is clicked, emit `pointSelected` signal with 
-            `currentPoint` dict.  
+            `currentPoint` datetime.  
         """
         # get x and y bounds
         yMin = 0 # no top axis
@@ -312,6 +317,14 @@ class _CyclePlotWidget(PlotWidget):
         self.currentPoint['calories'] = self.data.calories[idx]
         self.currentPoint['time'] = self.data.time[idx]
         self.currentPointChanged.emit(self.currentPoint)
+        
+    @Slot(object)
+    def setCurrentPointFromDate(self, date):
+        dt = datetime(date.year, date.month, date.day)
+        idx = self.data.datetimes.index(dt)
+        pt = self.dataItem.scatter.points()[idx]
+        self._highlightPoint(pt)
+        self.setCurrentPoint(idx)
     
     def _highlightPoint(self, point):
         """ Change pen of given point (and reset any previously highlighted

@@ -5,7 +5,7 @@ QTreeWidget showing data from cycling DataFrame.
 from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
                              QAbstractItemView, QMessageBox)
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtCore import pyqtSlot as Slot
+from PyQt5.QtCore import pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
 import re
 import calendar
@@ -70,6 +70,8 @@ class CycleDataViewer(QTreeWidget):
             Spacing to add to width in `sizeHint`. Default is 5.
     """
     
+    itemSelected = Signal(object)
+    
     def __init__(self, parent, widthSpace=10):
         super().__init__()
         
@@ -99,6 +101,8 @@ class CycleDataViewer(QTreeWidget):
         self.sortDescending = [True for _ in range(len(self.headerLabels))]
         self.header().setSectionsClickable(True)
         self.header().sectionClicked.connect(self.sortTree)
+        
+        self.itemClicked.connect(self._itemClicked)
         
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
@@ -231,7 +235,14 @@ class CycleDataViewer(QTreeWidget):
             
             
     @Slot(object)
-    def highlightItem(self, date):
+    def highlightItem(self,  date):
         for item in self.items:
             if item['datetime'] == date:
                 self.setCurrentItem(item['item'])
+                
+    @Slot(QTreeWidgetItem, int)
+    def _itemClicked(self, clickedItem, column):
+        for item in self.items:
+            if item['item'] == clickedItem:
+                self.itemSelected.emit(item['datetime'])
+                # print(item)

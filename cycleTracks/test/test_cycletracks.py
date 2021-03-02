@@ -24,9 +24,11 @@ class TestTracks:
         yield
         self.app.close()
     
+    @pytest.mark.skip("test not yet written")
     def test_add_data(self, setup, qtbot, teardown):
         pass
     
+    @pytest.mark.skip("test not yet written")
     def test_plot_clicked(self, setup, qtbot, teardown):
         # test that clicking on the plot highlights the nearest plot in the viewer
         pass
