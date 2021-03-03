@@ -91,7 +91,7 @@ class TestCyclePlotWidget:
         plotWidget = self.widget.plotWidget
         plotLabel = self.widget.plotLabel
         
-        for x in range(size.width()):
+        for x in range(0, size.width(), 5):
             pos = QPoint(x, y)
             qtbot.mouseMove(plotWidget, pos)
         
