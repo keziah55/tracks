@@ -11,6 +11,7 @@ from PyQt5.QtCore import pyqtSlot as Slot
 import pandas as pd
 from .plot import CyclePlotWidget
 from .data import CycleData, CycleDataViewer, AddCycleData
+from .preferences import PreferencesDialog
 
 
 class CycleTracks(QMainWindow):
@@ -49,6 +50,8 @@ class CycleTracks(QMainWindow):
             self.createDockWidget(widget, area, title=title)
             
         self.setCentralWidget(self.plot)
+        
+        self.prefDialog = PreferencesDialog(self)
         
         self.createActions()
         self.createMenus()
@@ -99,6 +102,10 @@ class CycleTracks(QMainWindow):
                                   statusTip="Combine the selected rows in the viewer",
                                   triggered=self.viewer.combineRows)
         
+        self.preferencesAct = QAction("&Preferences", self, shortcut="F12",
+                                      statusTip="Edit preferences",
+                                      triggered=self.prefDialog.show)
+        
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction(self.saveAct)
@@ -107,6 +114,8 @@ class CycleTracks(QMainWindow):
         
         self.editMenu = self.menuBar().addMenu("&Edit")
         self.editMenu.addAction(self.combineAct)
+        self.editMenu.addSeparator()
+        self.editMenu.addAction(self.preferencesAct)
         
         self.viewMenu = self.menuBar().addMenu("&View")
         self.panelMenu = self.viewMenu.addMenu("&Panels")
