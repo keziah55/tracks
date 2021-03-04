@@ -2,8 +2,8 @@
 Preferences dialog
 """
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QListWidget, QSizePolicy,
-                             QStackedWidget, QVBoxLayout, QHBoxLayout)
+from PyQt5.QtWidgets import (QAbstractScrollArea, QDialog, QDialogButtonBox, 
+                             QListWidget, QStackedWidget, QVBoxLayout, QHBoxLayout)
 
 from .plotpref import PlotPreferences
 
@@ -32,8 +32,7 @@ class PreferencesDialog(QDialog):
         horizontalLayout.addWidget(self.contentsWidget)
         horizontalLayout.addWidget(self.pagesWidget)
         
-        self.contentsWidget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
-        self.pagesWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.contentsWidget.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
         mainLayout = QVBoxLayout()
         mainLayout.addLayout(horizontalLayout)

@@ -330,16 +330,20 @@ class _CyclePlotWidget(PlotWidget):
         """ Change pen of given point (and reset any previously highlighted
             points). 
         """
-        pen = mkPen(self.style['highlightPoint']['colour'])
+        colour = self.style['highlightPoint']['colour']
+        pen = mkPen(colour)
+        brush = mkBrush(colour)
         
         try:
             # if other points are already highlighted, remove highlighting
             self.hgltPnt.resetPen()
+            self.hgltPnt.resetBrush()
         except (AttributeError, RuntimeError):
             pass
             
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
+        self.hgltPnt.setBrush(brush)
 
     @Slot(object)
     def mouseMoved(self, pos):
