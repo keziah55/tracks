@@ -46,6 +46,37 @@ class CustomDateAxisItem(DateAxisItem):
         # this has been fixed in the pyqtgraph source, so won't be necessary
         # once this makes its way into the deb packages
         self.enableAutoSIPrefix(False)
+        
+    @property
+    def tickTimestamps(self):
+        """ Return list of tick values, with added timestamps for the months 
+            preceding and succeding the tickVals. 
+            
+            If tickVals is None, return empty list.
+        """
+        if self.tickVals is None or len(self.tickVals) == 0:
+            return []
+            
+        dt = datetime.fromtimestamp(self.tickVals[0])
+        month = dt.month - 1
+        year = dt.year
+        if month == 0:
+            month = 12
+            year = year - 1
+        ts0 = datetime(year, month, 1).timestamp()
+        
+        dt = datetime.fromtimestamp(self.tickVals[-1])
+        month = dt.month + 1
+        year = dt.year
+        if month > 12:
+            month = 1
+            year = year + 1
+        ts1 = datetime(year, month, 1).timestamp()
+        
+        tickVals = [ts0] + self.tickVals + [ts1]
+        tickVals.sort()
+        
+        return tickVals
     
     def mouseClickEvent(self, event):
                
@@ -56,44 +87,24 @@ class CustomDateAxisItem(DateAxisItem):
                 # get coords of ticks, plus beginning and end
                 tickXs = [0] + self.tickXs + [self.boundingRect().width()]
                 tickXs.sort()
-                
-                # make corresponding list of tick values, by adding timestamps
-                # for the months preceding and succeding the tickVals
-                dt = datetime.fromtimestamp(self.tickVals[0])
-                month = dt.month - 1
-                year = dt.year
-                if month == 0:
-                    month = 12
-                    year = year - 1
-                ts0 = datetime(year, month, 1).timestamp()
-                
-                dt = datetime.fromtimestamp(self.tickVals[-1])
-                month = dt.month + 1
-                year = dt.year
-                if month > 12:
-                    month = 1
-                    year = year + 1
-                ts1 = datetime(year, month, 1).timestamp()
-                
-                tickVals = [ts0] + self.tickVals + [ts1]
-                tickVals.sort()
-                
+                                
                 for n in range(len(tickXs)-1):
                     # find ticks between which the mouse was clicked
                     tk0 = tickXs[n]
                     tk1 = tickXs[n+1]
                     if tk0 <= x < tk1:
                         # when found, emit signal with corresponding timestamps
-                        self.zoomOnMonth.emit(tickVals[n], tickVals[n+1])
+                        self.zoomOnMonth.emit(self.tickTimestamps[n], self.tickTimestamps[n+1])
                         break
-                
         
     def generateDrawSpecs(self, *args, **kwargs):
+        """ Override `generateDrawSpecs` to store `tickXs` from tickSpecs."""
         axisSpec, tickSpecs, textSpecs = super().generateDrawSpecs(*args, **kwargs)
         self.tickXs = [point.x() for _, point, _ in tickSpecs]
         return axisSpec, tickSpecs, textSpecs
     
     def tickValues(self, *args, **kwargs):
+        """ Override tickValues to make `tickVals` list. """
         tickVals = super().tickValues(*args, **kwargs)
         self.tickVals = []
         for _, values in tickVals:
