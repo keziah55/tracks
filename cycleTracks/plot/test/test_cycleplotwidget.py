@@ -110,3 +110,6 @@ class TestCyclePlotWidget:
                 expected += f"Distance: {self.widget.plotWidget.currentPoint['distance']} km</div>"
                 assert distLabel.text() == expected
                 
+        # move mouse back to middle before next text
+        pos = QPoint(size.width()//2, y)
+        qtbot.mouseMove(plotWidget, pos)
