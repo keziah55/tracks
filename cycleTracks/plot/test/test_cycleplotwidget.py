@@ -78,7 +78,7 @@ class TestCyclePlotWidget:
         axis = self.widget.plotWidget.plotItem.getAxis('bottom')
         
         click = Click(pos=axis.pos(), double=True)
-        with qtbot.waitSignal(axis.zoomOnMonth):
+        with qtbot.waitSignal(axis.axisDoubleClicked):
             axis.mouseClickEvent(click)
         
     def test_mouse_hover(self, setup_reduced_points, qtbot):

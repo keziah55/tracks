@@ -35,8 +35,18 @@ class CustomAxisItem(AxisItem):
         
         
 class CustomDateAxisItem(DateAxisItem):
+    """ DateAxisItem that emits `axisDoubleClicked` signal when the axis is 
+        double clicked. 
+        
+        This signal is emitted with timestamps of the surrounding ticks.
+    """
     
-    zoomOnMonth = Signal(float, float)
+    axisDoubleClicked = Signal(float, float)
+    """ **signal** axisDoubleClicked(float `ts0`, float `ts1`)
+    
+        Emitted when the axis is double clicked, along with timestamps of the
+        surrounding ticks.
+    """
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,7 +89,7 @@ class CustomDateAxisItem(DateAxisItem):
         return tickVals
     
     def mouseClickEvent(self, event):
-               
+        """ Override mouseClickEvent to check for double clicks. """
         if event.double() and self.tickXs is not None:
             # positive y coord is underneath axis, not within plot
             if event.pos().y() >= 0:
@@ -94,8 +104,10 @@ class CustomDateAxisItem(DateAxisItem):
                     tk1 = tickXs[n+1]
                     if tk0 <= x < tk1:
                         # when found, emit signal with corresponding timestamps
-                        self.zoomOnMonth.emit(self.tickTimestamps[n], self.tickTimestamps[n+1])
+                        self.axisDoubleClicked.emit(self.tickTimestamps[n], self.tickTimestamps[n+1])
                         break
+        else:
+            super().mouseClickEvent(event)
         
     def generateDrawSpecs(self, *args, **kwargs):
         """ Override `generateDrawSpecs` to store `tickXs` from tickSpecs."""
@@ -114,8 +126,7 @@ class CustomDateAxisItem(DateAxisItem):
     
     
 class CustomViewBox(ViewBox):
-    
-    plotDoubleClicked = Signal()
+    """ ViewBox subclass that stores the current xRange and yRange as properties. """
     
     def __init__(self, *args, **kwargs):
         self.xRange = None
@@ -148,5 +159,3 @@ class CustomViewBox(ViewBox):
             self.yRange = yRange
         super().setRange(rect, xRange, yRange, **kwargs)
         
-    # def mouseClickEvent(self, event):
-    #     print(event, event.double(), event.pos())

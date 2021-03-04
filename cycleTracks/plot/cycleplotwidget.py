@@ -3,7 +3,7 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
-from pyqtgraph import PlotWidget, PlotCurveItem, ViewBox, mkPen, mkBrush, InfiniteLine
+from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
@@ -96,7 +96,7 @@ class _CyclePlotWidget(PlotWidget):
         self.plotItem.autoBtn.clicked.disconnect(self.plotItem.autoBtnClicked)
         self.plotItem.autoBtn.clicked.connect(self.autoBtnClicked)
         
-        self.dateAxis.zoomOnMonth.connect(self.setPlotRange)
+        self.dateAxis.axisDoubleClicked.connect(self.setPlotRange)
         
         self.hgltPnt = None
         
@@ -147,7 +147,7 @@ class _CyclePlotWidget(PlotWidget):
         return self.parent.data
         
     def _initRightAxis(self):
-        self.vb2 = ViewBox()
+        self.vb2 = CustomViewBox()
         self.plotItem.showAxis('right')
         self.plotItem.scene().addItem(self.vb2)
         self.plotItem.getAxis('right').linkToView(self.vb2)
