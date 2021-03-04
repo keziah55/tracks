@@ -62,6 +62,10 @@ class CyclePlotWidget(QWidget):
     def setCurrentPointFromDate(self, date):
         self.plotWidget.setCurrentPointFromDate(date)
         
+    @Slot(object)
+    def setXAxisRange(self, months):
+        self.plotWidget.setXAxisRange(months)
+        
 
 class _CyclePlotWidget(PlotWidget):
     """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
@@ -176,6 +180,8 @@ class _CyclePlotWidget(PlotWidget):
         if self.plotItem.autoBtn.mode == 'auto':
             for vb in self.viewBoxes:
                 vb.enableAutoRange()
+            self.xAxisTimestamps = self.plotItem.getAxis('bottom').tickTimestamps
+            # print(f"setting xAxisTimestamps: {self.xAxisTimestamps}")
             self.plotItem.autoBtn.hide()
         else:
             self.plotItem.disableAutoRange()
@@ -194,6 +200,7 @@ class _CyclePlotWidget(PlotWidget):
         for xPoints, yData, viewBox in data:
             # find x-coords of points in the given month
             mask = np.in1d(np.where(xPoints > x0)[0], np.where(xPoints < x1)[0])
+            # print(mask)
             if np.any(mask):
                 # select the corresponding y data
                 idx = np.where(xPoints > x0)[0][mask]
@@ -203,6 +210,17 @@ class _CyclePlotWidget(PlotWidget):
                 y1 = np.max(yPoints)
                 # set min and max for x and y in the viewBox
                 viewBox.setRange(xRange=(x0, x1), yRange=(y0, y1))
+                
+    @Slot(object)
+    def setXAxisRange(self, months):
+        # print(f"setXAxisRange({months})")
+        if months is None or not hasattr(self, "xAxisTimestamps"):
+            self.autoBtnClicked()
+        if months is not None:
+            ts1 = self.xAxisTimestamps[-1]
+            ts0 = self.xAxisTimestamps[-(months+1)]
+            # print(f"ts0: {ts0}, ts1: {ts1}")
+            self.setPlotRange(ts0, ts1)
                
     @Slot(object)
     def updatePlots(self, index):

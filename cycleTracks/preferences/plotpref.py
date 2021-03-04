@@ -10,6 +10,7 @@ class PlotPreferences(QWidget):
     
     def __init__(self, mainWindow):
         super().__init__()
+        self.mainWindow = mainWindow
         
         plotConfigGroup = QGroupBox("Default plot range")
         
@@ -49,7 +50,14 @@ class PlotPreferences(QWidget):
         
         
     def apply(self):
-        pass
+        if self.customRangeCheckBox.isChecked():
+            months = self.customRangeSpinBox.value()
+        else:
+            text = self.plotRangeCombo.currentText()
+            if text == "1 year":
+                text = "12 months"
+            months = int(text.strip(' months')) if text != 'All' else None
+        self.mainWindow.plot.setXAxisRange(months)
     
     @Slot(bool)
     def setCustomRange(self, custom):

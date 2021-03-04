@@ -25,6 +25,8 @@ class PreferencesDialog(QDialog):
         
         okButton =  self.buttonBox.button(QDialogButtonBox.Ok)
         okButton.clicked.connect(self.ok)
+        applyButton =  self.buttonBox.button(QDialogButtonBox.Apply)
+        applyButton.clicked.connect(self.apply)
         closeButton = self.buttonBox.button(QDialogButtonBox.Close)
         closeButton.clicked.connect(self.close)
 
