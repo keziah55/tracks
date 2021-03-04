@@ -108,6 +108,14 @@ def test_parseDate(value, expected, pd_timestamp):
         if pd_timestamp:
             expected = pd.Timestamp(expected)
         assert parseDate(value, pd_timestamp=pd_timestamp) == expected
+        
+def test_parseDate_type_error():
+    with pytest.raises(TypeError):
+        parseDate(25)
+        
+def test_parseDate_value_error():
+    with pytest.raises(ValueError):
+        parseDate("25 Jn 2021")
     
 @pytest.mark.parametrize("value,expected", validDurationStrings()+invalidDurationStrings())
 def test_parseDuration(value, expected):

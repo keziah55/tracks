@@ -57,6 +57,7 @@ class TestCyclePlotWidget:
         keys = list(plotLabel.data.keys())
         random.shuffle(keys)
         if keys[0] == 'distance':
+            # make sure 'distance' ins't first, as nothing will change in that case
             name = keys.pop(0)
             keys.append(name)
         

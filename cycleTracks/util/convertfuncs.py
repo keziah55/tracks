@@ -89,6 +89,9 @@ def parseDate(value, pd_timestamp=False):
     datetime.date(2012, 3, 2)
     """
     
+    if not isinstance(value, str):
+        raise TypeError(f"Cannot format '{value}' as date. Input should be a string.")
+    
     # make dictionary of month names and abbreviations : number
     c_abbr = {v: k for k,v in enumerate(calendar.month_abbr)}
     c_full = {v: k for k,v in enumerate(calendar.month_name)}
@@ -106,21 +109,15 @@ def parseDate(value, pd_timestamp=False):
     if not value:
         return today
     
-    try:
-        l = re.split(r'[\s/.-]', value)
-    except TypeError:
-        raise TypeError(f"Cannot format '{value}' as date. Input should be a string.")
+    l = re.split(r'[\s/.-]', value)
     
     # if a single value was given as input...
     if len(l) == 1:
-        # ... if value is Day, nothing needs to be done
-        if 1 <= len(value) <= 2:
-            pass
         # ... if value is DDMMYY or DDMMYYYY, split into parts
-        elif len(value) == 6 or len(value) == 8:
+        if len(value) == 6 or len(value) == 8:
             l = [value[:2], value[2:4], value[4:]]
         # ... if value is none of the above, raise exception
-        else:
+        elif len(value) not in [1,2]: # ... if value is Day, nothing needs to be done
             raise ValueError('Cannot format given date.')
     
     # substitute given input values (l) into list with current date (d)

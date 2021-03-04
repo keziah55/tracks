@@ -31,6 +31,7 @@ class TestTracks:
         yield
         self.app.close()
     
+    
     def test_add_data(self, setup, qtbot, teardown):
         
         numTopLevelItems = len(self.viewer.topLevelItems)
