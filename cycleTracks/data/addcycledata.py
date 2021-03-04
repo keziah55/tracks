@@ -8,8 +8,7 @@ be clicked.
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
                              QVBoxLayout, QHBoxLayout)
 from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtCore import pyqtSlot as Slot
-from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QBrush, QColor
 
 from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 

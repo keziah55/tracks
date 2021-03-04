@@ -5,7 +5,7 @@ QTreeWidget showing data from cycling DataFrame.
 from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
                              QAbstractItemView, QMessageBox)
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtCore import pyqtSlot as Slot, pyqtSignal as Signal
+from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
 import calendar

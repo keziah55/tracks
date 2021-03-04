@@ -5,8 +5,7 @@ Widget containing plot and labels.
 from datetime import datetime
 from pyqtgraph import PlotWidget, PlotCurveItem, ViewBox, mkPen, mkBrush, InfiniteLine
 import numpy as np
-from PyQt5.QtCore import pyqtSlot as Slot
-from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 from .cycleplotlabel import CyclePlotLabel
@@ -97,7 +96,7 @@ class _CyclePlotWidget(PlotWidget):
         self.plotItem.autoBtn.clicked.disconnect(self.plotItem.autoBtnClicked)
         self.plotItem.autoBtn.clicked.connect(self.autoBtnClicked)
         
-        self.dateAxis.zoomOnMonth.connect(self.axisDoubleClicked)
+        self.dateAxis.zoomOnMonth.connect(self.setPlotRange)
         
         self.hgltPnt = None
         
@@ -182,7 +181,7 @@ class _CyclePlotWidget(PlotWidget):
             self.plotItem.disableAutoRange()
         
     @Slot(float, float)
-    def axisDoubleClicked(self, x0, x1):
+    def setPlotRange(self, x0, x1):
         """ Set range of both view boxes to cover the time between the given timestamps. """
         # apply to both the current scatter and background plot
         if not hasattr(self, 'dataItem') or not hasattr(self, 'backgroundItem'):
@@ -241,7 +240,7 @@ class _CyclePlotWidget(PlotWidget):
         self.plotItem.setLabel('left', text=label, color=styleDict['colour'])
         
         if self.viewBoxes[0].xRange is not None:
-            self.axisDoubleClicked(*self.viewBoxes[0].xRange)
+            self.setPlotRange(*self.viewBoxes[0].xRange)
         
         
     def plotTotalDistance(self, mode='new'):
@@ -320,6 +319,7 @@ class _CyclePlotWidget(PlotWidget):
         
     @Slot(object)
     def setCurrentPointFromDate(self, date):
+        """ Find point at the given date and highlight it. """
         dt = datetime(date.year, date.month, date.day)
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
@@ -327,8 +327,8 @@ class _CyclePlotWidget(PlotWidget):
         self.setCurrentPoint(idx)
     
     def _highlightPoint(self, point):
-        """ Change pen of given point (and reset any previously highlighted
-            points). 
+        """ Change pen and brush of given point (and reset any previously 
+            highlighted points). 
         """
         colour = self.style['highlightPoint']['colour']
         pen = mkPen(colour)
@@ -365,7 +365,8 @@ class _CyclePlotWidget(PlotWidget):
         idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
         self.setCurrentPoint(idx)
         
-    def scatterPointsAtX(self, pos, scatter):
+    @staticmethod
+    def scatterPointsAtX(pos, scatter):
         """ Return a list of points on `scatter` under the x-coordinate of the 
             given position `pos`, ignoring the y-coord.
         """
