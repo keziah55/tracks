@@ -146,6 +146,7 @@ class _CyclePlotWidget(PlotWidget):
         
         self.currentPoint = {}
         
+        
     @property
     def data(self):
         return self.parent.data
