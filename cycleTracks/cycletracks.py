@@ -58,7 +58,7 @@ class CycleTracks(QMainWindow):
         self.statusBar()
         self.statusTimeout = 2000
         
-        self.setWindowTitle('Cycle Tracks')
+        # self.setWindowTitle('Cycle Tracks')
         self.showMaximized()
             
     @staticmethod
