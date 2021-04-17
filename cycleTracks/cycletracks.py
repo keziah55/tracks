@@ -6,8 +6,8 @@ Main window for cycleTracks.
 
 import os
 from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import pyqtSlot as Slot
+from PyQt5.QtCore import Qt, pyqtSlot as Slot
+from PyQt5.QtGui import QIcon
 import pandas as pd
 from .plot import CyclePlotWidget
 from .data import CycleData, CycleDataViewer, AddCycleData
@@ -58,7 +58,10 @@ class CycleTracks(QMainWindow):
         self.statusBar()
         self.statusTimeout = 2000
         
-        # self.setWindowTitle('Cycle Tracks')
+        fileDir = os.path.split(__file__)[0]
+        path = os.path.join(fileDir, "..", "images/icon.png")
+        icon = QIcon(path)
+        self.setWindowIcon(icon)
         self.showMaximized()
             
     @staticmethod
