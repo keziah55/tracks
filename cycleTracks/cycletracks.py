@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
 from .plot import CyclePlotWidget
-from .data import CycleData, CycleDataViewer, AddCycleData
+from .data import CycleData, CycleDataViewer, AddCycleData, PersonalBests
 from .preferences import PreferencesDialog
 
 
@@ -31,6 +31,7 @@ class CycleTracks(QMainWindow):
 
         self.data = CycleData(self.df)
 
+        self.pb = PersonalBests(self)
         self.viewer = CycleDataViewer(self)
         self.addData = AddCycleData()
         self.plot = CyclePlotWidget(self)
@@ -43,7 +44,8 @@ class CycleTracks(QMainWindow):
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         
-        dockWidgets = [(self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
+        dockWidgets = [(self.pb, Qt.LeftDockWidgetArea, "Personal Bests"),
+                       (self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
         
         for widget, area, title in dockWidgets:

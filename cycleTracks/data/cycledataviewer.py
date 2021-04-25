@@ -64,8 +64,6 @@ class CycleDataViewer(QTreeWidget):
     
         Parameters
         ----------
-        data : CycleData
-            CycleData object
         widthSpace : int
             Spacing to add to width in `sizeHint`. Default is 5.
     """
