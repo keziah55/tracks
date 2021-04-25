@@ -1,7 +1,8 @@
 """
 QTableWidget showing the top sessions.
 """
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy,
+
+from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView,
                              QDialog, QDialogButtonBox, QLabel, QVBoxLayout)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
@@ -43,8 +44,6 @@ class PersonalBests(QTableWidget):
         
         self.header.sectionClicked.connect(self.selectColumn)
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
-        
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
     @property
     def data(self):

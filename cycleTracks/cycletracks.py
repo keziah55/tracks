@@ -5,7 +5,7 @@ Main window for cycleTracks.
 """
 
 import os
-from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction
+from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy
 from PyQt5.QtCore import Qt, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
@@ -35,6 +35,9 @@ class CycleTracks(QMainWindow):
         self.viewer = CycleDataViewer(self)
         self.addData = AddCycleData()
         self.plot = CyclePlotWidget(self)
+        
+        self.pb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self.viewer.newData)
