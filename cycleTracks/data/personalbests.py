@@ -1,8 +1,5 @@
 """
 QTableWidget showing the top sessions.
-
-By default, it will show the five fastest sessopns. Clicking on another header
-(except 'Date') will show the top five sessions for that column.
 """
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy
 from PyQt5.QtCore import Qt, pyqtSlot as Slot
@@ -10,6 +7,19 @@ from PyQt5.QtGui import QFontMetrics
 import re
 
 class PersonalBests(QTableWidget):
+    """ QTableWidget showing the top sessions.
+
+        By default, it will show the five fastest sessopns. Clicking on another header
+        (except 'Date') will show the top five sessions for that column.
+    
+        Parameters
+        ----------
+        parent : QWidget
+            Main window/widget with :class:`CycleData` object
+        rows : int
+            Number of rows to display, i.e. the number of top sessions to show.
+            Default is 5.
+    """
     
     def __init__(self, parent, rows=5):
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
