@@ -18,6 +18,9 @@ class PersonalBests(QTableWidget):
         super().__init__(rows, columns)
         self.parent = parent
         
+        self.selectableColumns = ['Time', 'Distance (km)', 'Avg. speed (km/h)', 
+                                  'Calories', 'Gear']
+        
         self.setHorizontalHeaderLabels(self.headerLabels)
         
         # make header tall enough for two rows of text (avg speed has line break)
@@ -26,7 +29,8 @@ class PersonalBests(QTableWidget):
         height = metrics.height()
         self.header.setMinimumHeight(height*2)
         
-        self.makeTable(n=rows)
+        self.header.sectionClicked.connect(self.selectColumn)
+        self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
         
     @property
     def data(self):
@@ -36,9 +40,14 @@ class PersonalBests(QTableWidget):
     def header(self):
         return self.horizontalHeader()
     
-    def makeTable(self, n=5, key="Avg. speed (km/h)"):
-        series = self.data[key]
-        indices = series.argsort()[-n:][::-1]
+    def makeTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
+        if order == 'descending':
+            n *= -1
+        if key == 'Time':
+            series = self.data.timeHours
+        else:
+            series = self.data[key]
+        indices = series.argsort()[n:][::-1]
         for rowNum, idx in enumerate(indices):
             for colNum, key in enumerate(self.headerLabels):
                 key = re.sub(r"\s", " ", key) # remove \n from avg speed
@@ -49,3 +58,20 @@ class PersonalBests(QTableWidget):
                 self.setItem(rowNum, colNum, item)
                 
         self.header.resizeSections(QHeaderView.ResizeToContents)
+
+
+    @Slot(int)
+    def selectColumn(self, idx):
+        col = self.headerLabels[idx]
+        col = re.sub(r"\s", " ", col) # remove \n from avg speed
+        if col in self.selectableColumns:
+            self.clearContents()
+            self.makeTable(key=col)
+            
+            for i in range(self.header.count()):
+                font = self.horizontalHeaderItem(i).font()
+                if i == idx:
+                    font.setItalic(True)
+                else:
+                    font.setItalic(False)
+                self.horizontalHeaderItem(i).setFont(font)

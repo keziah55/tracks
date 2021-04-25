@@ -44,7 +44,7 @@ class CycleTracks(QMainWindow):
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         
-        dockWidgets = [(self.pb, Qt.LeftDockWidgetArea, "Personal Bests"),
+        dockWidgets = [(self.pb, Qt.LeftDockWidgetArea, "Personal Bests - top five sessions"),
                        (self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
         
