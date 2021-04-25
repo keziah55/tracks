@@ -104,6 +104,9 @@ class CycleDataViewer(QTreeWidget):
         
         self.itemClicked.connect(self._itemClicked)
         
+        self.sortTree(0)
+        
+        
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
         height = super().sizeHint().height()
