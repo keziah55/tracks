@@ -1,8 +1,9 @@
 """
 QTableWidget showing the top sessions.
 """
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy
-from PyQt5.QtCore import Qt, pyqtSlot as Slot
+from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy,
+                             QDialog, QDialogButtonBox, QLabel, QVBoxLayout)
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
 
@@ -10,7 +11,7 @@ class PersonalBests(QTableWidget):
     """ QTableWidget showing the top sessions.
 
         By default, it will show the five fastest sessopns. Clicking on another header
-        (except 'Date') will show the top five sessions for that column.
+        (except 'Date' or 'Gear') will show the top five sessions for that column.
     
         Parameters
         ----------
@@ -28,8 +29,9 @@ class PersonalBests(QTableWidget):
         super().__init__(rows, columns)
         self.parent = parent
         
-        self.selectableColumns = ['Time', 'Distance (km)', 'Avg. speed (km/h)', 
-                                  'Calories', 'Gear']
+        self.newPBdialog = NewPBDialog()
+        
+        self.selectableColumns = ['Time', 'Distance (km)', 'Avg. speed (km/h)', 'Calories']
         
         self.setHorizontalHeaderLabels(self.headerLabels)
         
@@ -52,18 +54,35 @@ class PersonalBests(QTableWidget):
     def header(self):
         return self.horizontalHeader()
     
-    def makeTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
+    def _getBestSessions(self, n=5, key="Avg. speed (km/h)", order='descending'):
         if order == 'descending':
             n *= -1
         if key == 'Time':
             series = self.data.timeHours
         else:
             series = self.data[key]
+        pb = []
         indices = series.argsort()[n:][::-1]
-        for rowNum, idx in enumerate(indices):
-            for colNum, key in enumerate(self.headerLabels):
+        for idx in indices:
+            row = {}
+            for key in self.headerLabels:
                 key = re.sub(r"\s", " ", key) # remove \n from avg speed
                 value = self.data.formatted(key)[idx]
+                row[key] = value
+            pb.append(row)
+        return pb
+                
+        
+    def makeTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
+        pb = self._getBestSessions(n=n, key=key, order=order)
+        
+        self.selectKey = key
+        self.dates = [row['Date'] for row in pb]
+        
+        for rowNum, row in enumerate(pb):
+            for colNum, key in enumerate(self.headerLabels):
+                key = re.sub(r"\s", " ", key) # remove \n from avg speed
+                value = row[key]
                 item = QTableWidgetItem()
                 item.setText(value)
                 item.setTextAlignment(Qt.AlignCenter)
@@ -87,3 +106,48 @@ class PersonalBests(QTableWidget):
                 else:
                     font.setItalic(False)
                 self.horizontalHeaderItem(i).setFont(font)
+                
+    @Slot()
+    def newData(self):
+        pb = self._getBestSessions(key=self.selectKey)
+        newDates = [row['Date'] for row in pb]
+        if newDates != self.dates:
+            i = 0
+            while newDates[i] == self.dates[i]:
+                i += 1
+            self.newPBdialog.setMessage(self.selectKey, i)
+            self.newPBdialog.exec_()
+            self.makeTable(key=self.selectKey)
+            
+    
+class NewPBDialog(QDialog):
+    
+    def __init__(self, timeout=3000):
+        super().__init__()
+        
+        self.label = QLabel()
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.okButton = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.okButton.clicked.connect(self.accept)
+        
+        self.timer = QTimer()
+        self.timer.setInterval(timeout)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.accept)
+        
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+        self.setWindowTitle("New personal best")
+        
+    def setMessage(self, key, idx):
+        key = re.sub(r"\s", " ", key) # remove \n from avg speed
+        key = re.sub(r"\(.+\)", "", key) # remove any units in brackets
+        key = key.strip()
+        key = key.lower()
+        msg = f"New #{idx+1} {key}! Congratulations!"
+        self.label.setText(msg)
+        self.timer.start()
+        
+        

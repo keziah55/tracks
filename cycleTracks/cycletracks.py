@@ -39,6 +39,7 @@ class CycleTracks(QMainWindow):
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self.viewer.newData)
         self.data.dataChanged.connect(self.plot.newData)
+        self.data.dataChanged.connect(self.pb.newData)
         self.addData.newData.connect(self.backup)
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
