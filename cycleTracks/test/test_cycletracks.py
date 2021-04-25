@@ -81,7 +81,7 @@ class TestTracks:
                 return self.sp
             
         with qtbot.waitSignal(self.plotWidget.currentPointChanged):
-            qtbot.mouseMove(self.plot, pos=pos)
+            qtbot.mouseMove(self.plot, pos=pos, delay=50)
             
         event = MockMouseEvent(scenePos)
         signals = [(self.plotWidget.pointSelected, 'pointSelected'),
