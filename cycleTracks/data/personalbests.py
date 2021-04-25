@@ -121,11 +121,24 @@ class PersonalBests(QTableWidget):
             
     
 class NewPBDialog(QDialog):
+    """ Dialog showing a message congratulating the user on a new PB.
+    
+        The dialog has an 'Ok' button, but will also timeout after a few milliseconds.
+        
+        Parameters
+        ----------
+        timeout : int
+            Number of milliseconds for the dialog to be shown. Default is 3000.
+    """
     
     def __init__(self, timeout=3000):
         super().__init__()
         
         self.label = QLabel()
+        font = self.label.font()
+        font.setPointSize(14)
+        self.label.setFont(font)
+        
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         self.okButton = self.buttonBox.button(QDialogButtonBox.Ok)
         self.okButton.clicked.connect(self.accept)
@@ -149,5 +162,4 @@ class NewPBDialog(QDialog):
         msg = f"New #{idx+1} {key}! Congratulations!"
         self.label.setText(msg)
         self.timer.start()
-        
         
