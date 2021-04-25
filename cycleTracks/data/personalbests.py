@@ -1,12 +1,12 @@
 """
+QTableWidget showing the top sessions.
 
+By default, it will show the five fastest sessopns. Clicking on another header
+(except 'Date') will show the top five sessions for that column.
 """
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QWidget, QPushButton, 
-                             QVBoxLayout, QHBoxLayout)
-from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
-from PyQt5.QtGui import QFontMetrics, QBrush, QColor
-
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy
+from PyQt5.QtCore import Qt, pyqtSlot as Slot
+from PyQt5.QtGui import QFontMetrics
 import re
 
 class PersonalBests(QTableWidget):
@@ -31,6 +31,8 @@ class PersonalBests(QTableWidget):
         
         self.header.sectionClicked.connect(self.selectColumn)
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
+        
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
     @property
     def data(self):
