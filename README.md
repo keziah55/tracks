@@ -5,6 +5,8 @@ New and improved version of [MyCycle](https://github.com/keziah55/MyCycle).
 This GUI centres on the plotting, and uses PyQtGraph to create interactive
 plots of my cycling stats.
 
+<img src="./screenshots/cycletracks-2021-04-25.png" alt="Cycle Tracks GUI" width="1000"/>
+
 
 ## Features
 
@@ -20,14 +22,12 @@ plots of my cycling stats.
 
 - Click on point to select that point in the data viewer
 
+- 'Personal bests' widget shows the top five sessions
+
+
 ### To do
 
-- Unit tests
-
 - Compare multiple points
-
-- Personal bests
-
 
 ## Requirements
 
