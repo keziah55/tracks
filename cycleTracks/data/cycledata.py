@@ -6,6 +6,7 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
                               floatToHourMinSec)
+from functools import partial
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -36,12 +37,34 @@ class CycleData(QObject):
                               'Date':'date',
                               'Time':'time',
                               'Calories':'calories',
-                              'Avg speed (km/h)':'avgSpeed',
+                              # 'Avg speed (km/h)':'avgSpeed',
                               'Avg. speed (km/h)':'avgSpeed',
                               'Gear':'gear'}
         
         shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
         self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
+        
+        
+        sigFigs = {'Distance (km)':2, 
+                   'Calories':1,
+                   'Avg. speed (km/h)':2,
+                   'Gear':0}
+        self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sigFigs.items()}
+        self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
+        self.fmtFuncs['Time'] = lambda t: t
+        
+        
+    @staticmethod
+    def _formatFloat(value, digits=2):
+        fmt = "{" + f":.{digits}f" + "}"
+        return fmt.format(value)
+    
+    @staticmethod
+    def _formatDate(value, dateFmt="%d %b %Y"):
+        return value.strftime(dateFmt)
+    
+    def formatted(self, key):
+        return [self.fmtFuncs[key](v) for v in self[key]]
         
     def __len__(self):
         return len(self.df)

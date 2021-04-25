@@ -1,11 +1,13 @@
 """
 
 """
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
+from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QWidget, QPushButton, 
                              QVBoxLayout, QHBoxLayout)
 from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5.QtGui import QFontMetrics, QBrush, QColor
+
+import re
 
 class PersonalBests(QTableWidget):
     
@@ -17,19 +19,33 @@ class PersonalBests(QTableWidget):
         self.parent = parent
         
         self.setHorizontalHeaderLabels(self.headerLabels)
-        # self.header().setStretchLastSection(False)
+        
+        # make header tall enough for two rows of text (avg speed has line break)
+        font = self.header.font()
+        metrics = QFontMetrics(font)
+        height = metrics.height()
+        self.header.setMinimumHeight(height*2)
+        
         self.makeTable(n=rows)
         
     @property
     def data(self):
         return self.parent.data
     
-    def makeTable(self, n=5):
-        indices = self.data.avgSpeed.argsort()[-n:][::-1]
+    @property
+    def header(self):
+        return self.horizontalHeader()
+    
+    def makeTable(self, n=5, key="Avg. speed (km/h)"):
+        series = self.data[key]
+        indices = series.argsort()[-n:][::-1]
         for rowNum, idx in enumerate(indices):
-            for colNum, key in enumerate(self.data.propertyNames.keys()):
+            for colNum, key in enumerate(self.headerLabels):
+                key = re.sub(r"\s", " ", key) # remove \n from avg speed
+                value = self.data.formatted(key)[idx]
                 item = QTableWidgetItem()
-                item.setText(str(self.data[key][idx]))
+                item.setText(value)
                 item.setTextAlignment(Qt.AlignCenter)
                 self.setItem(rowNum, colNum, item)
                 
+        self.header.resizeSections(QHeaderView.ResizeToContents)

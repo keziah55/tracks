@@ -192,15 +192,7 @@ class CycleDataViewer(QTreeWidget):
                 for idx, col in enumerate(self.headerLabels):
                     col = re.sub(r"\s", " ", col) # remove \n from avg speed
                     value = data[col][rowIdx]
-                    if col == 'Date':
-                        value = value.strftime(self.dateFmt)
-                    elif col != 'Time':
-                        if col == 'Calories':
-                            value = f"{value:.1f}"
-                        elif col == 'Gear':
-                            value = f"{value:.0f}"
-                        else:
-                            value = f"{value:.2f}"
+                    value = self.data.fmtFuncs[col](value)
                     item.setText(idx, value)
                     item.setTextAlignment(idx, Qt.AlignCenter)
                 dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
