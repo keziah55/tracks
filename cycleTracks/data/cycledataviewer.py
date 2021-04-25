@@ -1,5 +1,5 @@
 """
-QTreeWidget showing data from cycling DataFrame.
+QTreeWidget showing data from CycleData.
 """
 
 from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 

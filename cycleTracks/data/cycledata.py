@@ -1,6 +1,5 @@
 """
-Object providing convenient access to the contents of a DataFrame of cycling
-data.
+Object providing convenient access to the contents of a DataFrame of cycling data.
 """
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
