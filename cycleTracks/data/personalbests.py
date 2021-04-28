@@ -114,7 +114,7 @@ class PersonalBests(QTableWidget):
             i = 0
             while newDates[i] == self.dates[i]:
                 i += 1
-            self.newPBdialog.setMessage(self.selectKey, i)
+            self.newPBdialog.setMessage(self.selectKey, i, pb[i][self.selectKey])
             self.newPBdialog.exec_()
             self.makeTable(key=self.selectKey)
             
@@ -153,12 +153,24 @@ class NewPBDialog(QDialog):
         self.setLayout(self.layout)
         self.setWindowTitle("New personal best")
         
-    def setMessage(self, key, idx):
+    def setMessage(self, key, idx, value):
         key = re.sub(r"\s", " ", key) # remove \n from avg speed
-        key = re.sub(r"\(.+\)", "", key) # remove any units in brackets
+        # check for units
+        m = re.search(r"\((?P<unit>.+)\)", key)
+        if m is not None:
+            unit = m.group('unit')
+            key = re.sub(r"\(.+\)", "", key) # remove units in brackets
+        else:
+            unit = ""
         key = key.strip()
         key = key.lower()
-        msg = f"New #{idx+1} {key}! Congratulations!"
+        
+        colour = "#f7f13b"
+        
+        msg = f"<span>New #{idx+1} {key} - </span>"
+        msg += f"<span style='color: {colour}'>{value}{unit}</span>"
+        msg += "<span>! Congratulations!</span>"
+        
         self.label.setText(msg)
         self.timer.start()
         
