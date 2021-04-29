@@ -66,7 +66,13 @@ class PBMonthLabel(QLabel):
             totals.append((monthYear, summaries))
         totals.sort(key=lambda tup: float(tup[1][1]), reverse=True)
         monthYear, summaries = totals[0]
-        self.setText(f"{monthYear}: {summaries[1]} km, {summaries[0]} hours, {summaries[3]} calories")
+        text = self._makeText(monthYear, summaries[1], summaries[0], summaries[3])
+        self.setText(text)
+        
+    @staticmethod
+    def _makeText(monthYear, distance, time, calories):
+        s = f"<b>{monthYear}</b>: <b>{distance}</b> km, <b>{time}</b> hours, <b>{calories}</b> calories"
+        return s
 
 
 class PBTable(QTableWidget):
