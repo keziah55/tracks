@@ -167,21 +167,16 @@ class CycleDataViewer(QTreeWidget):
         self.items = []
         dfs = self.data.splitMonths()
         
-        for df in reversed(dfs):
-            if df.empty:
-                continue
-            
+        for monthYear, df in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
             data = CycleData(df) # make CycleData object for the month
-            date = df['Date'].iloc[0]
-            rootText = [f"{calendar.month_name[date.month]} {date.year}"]
-            rootText.append(floatToHourMinSec(sum(data.timeHours)))
-            rootText.append(f"{sum(data.distance):.2f}")
-            rootText.append(f"{max(data.avgSpeed):.2f}")
-            rootText.append(f"{sum(data.calories):.1f}")
-            gear = np.around(np.mean(data.gear))
-            rootText.append(f"{gear:.0f}")
+            rootText = [monthYear, 
+                        data.summaryString('Time (hours)'), 
+                        data.summaryString('Distance (km)'),
+                        data.summaryString('Avg. speed (km/h)', func=max),
+                        data.summaryString('Calories'),
+                        data.summaryString('Gear', func=lambda v: np.around(np.mean(v)))]
             
             rootItem = CycleTreeWidgetItem(self)
             for idx, text in enumerate(rootText):

@@ -3,12 +3,78 @@ QTableWidget showing the top sessions.
 """
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView,
-                             QDialog, QDialogButtonBox, QLabel, QVBoxLayout)
+                             QDialog, QDialogButtonBox, QLabel, QVBoxLayout,
+                             QWidget, QGroupBox)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
+from . import CycleData
 import re
+import calendar
 
-class PersonalBests(QTableWidget):
+
+class PersonalBests(QWidget):
+    
+    def __init__(self, parent):
+        super().__init__()
+        
+        self.labelGroup = QGroupBox("Best month")
+        self.label = PBMonthLabel(parent)
+        groupLayout = QVBoxLayout()
+        groupLayout.addWidget(self.label)
+        self.labelGroup.setLayout(groupLayout)
+        
+        self.tableGroup = QGroupBox("Top five sessions")
+        self.table = PBTable(parent)
+        groupLayout = QVBoxLayout()
+        groupLayout.addWidget(self.table)
+        self.tableGroup.setLayout(groupLayout)
+        
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.labelGroup)
+        self.layout.addWidget(self.tableGroup)
+        self.setLayout(self.layout)
+        
+        
+    @Slot()
+    def newData(self):
+        self.table.newData()
+        self.label.newData()
+    
+
+class PBMonthLabel(QLabel):
+    
+    def __init__(self, parent, column='Distance (km)'):
+        super().__init__()
+        self.parent = parent
+        self.column = column
+        self.newData()
+        
+    @property
+    def data(self):
+        return self.parent.data
+    
+    @Slot()
+    def newData(self):
+        pass
+        # dfs = self.data.splitMonths()
+        # totals = []
+        # for monthYear, df in dfs:
+        #     if df.empty:
+        #         continue
+        #     monthData = CycleData(df)
+        #     date = df['Date'].iloc[0]
+        #     monthName = f"{calendar.month_name[date.month]} {date.year}"
+        #     totalDist = sum(monthData.distance)
+        #     totalDist = self.data.fmtFuncs['Distance (km)'](totalDist)
+            
+        #     totals.append((monthName, totalDist))
+        # totals.sort(key=lambda tup: float(tup[1]), reverse=True)
+        # best = totals[0]
+        # self.setText(f"{best[0]}: {best[1]}km")
+    
+    
+
+class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
 
         By default, it will show the five fastest sessopns. Clicking on another header

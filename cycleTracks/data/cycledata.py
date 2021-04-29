@@ -7,6 +7,7 @@ from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat,
                               floatToHourMinSec)
 from functools import partial
 from datetime import datetime
+import calendar
 import numpy as np
 import pandas as pd
 
@@ -38,7 +39,8 @@ class CycleData(QObject):
                               'Calories':'calories',
                               # 'Avg speed (km/h)':'avgSpeed',
                               'Avg. speed (km/h)':'avgSpeed',
-                              'Gear':'gear'}
+                              'Gear':'gear',
+                              'Time (hours)':'timeHours'}
         
         shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
         self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
@@ -51,6 +53,7 @@ class CycleData(QObject):
         self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sigFigs.items()}
         self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
         self.fmtFuncs['Time'] = lambda t: t
+        self.fmtFuncs['Time (hours)'] = floatToHourMinSec
         
         
     @staticmethod
@@ -64,6 +67,9 @@ class CycleData(QObject):
     
     def formatted(self, key):
         return [self.fmtFuncs[key](v) for v in self[key]]
+    
+    def summaryString(self, key, func=sum):
+        return self.fmtFuncs[key](func(self[key]))
         
     def __len__(self):
         return len(self.df)
@@ -193,10 +199,32 @@ class CycleData(QObject):
         """ Return average speeds as numpy array. """
         return self.distance/self.timeHours
     
-    def splitMonths(self):
-        """ Split `df` into list of DataFrames, split by month. """
+    def splitMonths(self, includeEmpty=False):
+        """ Split `df` into months. 
+        
+            Parameters
+            -----------
+            includeEmpty : bool
+                If True and if a month has no data, an empty string and empty 
+                DataFrame will be included in the returned list. Otherwise, it
+                will be ignored. Default is False.
+            
+            Returns
+            -------
+            list of (monthYear string, DataFrame) tuples
+        """
         grouped = self.df.groupby(pd.Grouper(key='Date', freq='M'))
-        return [group for _,group in grouped]
+        dfs = [group for _,group in grouped]
+        lst = []
+        for df in dfs:
+            if df.empty:
+                if includeEmpty:
+                    lst.append(('', df))
+            else:
+                date = df['Date'].iloc[0]
+                monthYear = f"{calendar.month_name[date.month]} {date.year}"
+                lst.append((monthYear, df))
+        return lst
     
     def getMonthlyOdometer(self):
         """ Return list of datetime objects and list of floats.
@@ -205,10 +233,11 @@ class CycleData(QObject):
             month data points to reset the total to 0km.
         """
         
-        dfs = self.splitMonths()
+        dfs = self.splitMonths(includeEmpty=True)
         odo = []
         dts = []
         for i, df in enumerate(dfs):
+            _, df = df
             # at the start of every month, insert 0km entry
             if df.empty:
                 # if there's no data in the df, need to get month and year from

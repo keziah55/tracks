@@ -45,7 +45,7 @@ class TestCycleData:
             
     def test_group_months(self, setup):
         dfs = self.data.splitMonths()
-        for df in dfs:
+        for _, df in dfs:
             if not df.empty:
                 dates = df['Date']
                 monthyear = [(date.month, date.year) for date in dates]
