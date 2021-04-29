@@ -9,8 +9,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
 import re
-import calendar
-
+import numpy as np
 
 class PersonalBests(QWidget):
     
@@ -55,24 +54,20 @@ class PBMonthLabel(QLabel):
     
     @Slot()
     def newData(self):
-        pass
-        # dfs = self.data.splitMonths()
-        # totals = []
-        # for monthYear, df in dfs:
-        #     if df.empty:
-        #         continue
-        #     monthData = CycleData(df)
-        #     date = df['Date'].iloc[0]
-        #     monthName = f"{calendar.month_name[date.month]} {date.year}"
-        #     totalDist = sum(monthData.distance)
-        #     totalDist = self.data.fmtFuncs['Distance (km)'](totalDist)
-            
-        #     totals.append((monthName, totalDist))
-        # totals.sort(key=lambda tup: float(tup[1]), reverse=True)
-        # best = totals[0]
-        # self.setText(f"{best[0]}: {best[1]}km")
-    
-    
+        dfs = self.data.splitMonths()
+        totals = []
+        for monthYear, df in dfs:
+            monthData = CycleData(df)
+            summaries = [monthData.summaryString('Time (hours)'), 
+                         monthData.summaryString('Distance (km)'),
+                         monthData.summaryString('Avg. speed (km/h)', func=max),
+                         monthData.summaryString('Calories'),
+                         monthData.summaryString('Gear', func=lambda v: np.around(np.mean(v)))]
+            totals.append((monthYear, summaries))
+        totals.sort(key=lambda tup: float(tup[1][1]), reverse=True)
+        monthYear, summaries = totals[0]
+        self.setText(f"{monthYear}: {summaries[1]} km, {summaries[0]} hours, {summaries[3]} calories")
+
 
 class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
