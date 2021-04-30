@@ -2,12 +2,12 @@
 QTableWidget showing the top sessions.
 """
 
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView,
-                             QDialog, QDialogButtonBox, QLabel, QVBoxLayout,
-                             QWidget, QGroupBox)
-from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot
+from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
+                             QDialogButtonBox, QVBoxLayout, QWidget)
+from PyQt5.QtCore import Qt, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
+from CustomPyQtObjects import TimerDialog, GroupWidget
 import re
 import numpy as np
 
@@ -16,29 +16,24 @@ class PersonalBests(QWidget):
     def __init__(self, parent):
         super().__init__()
         
-        self.labelGroup = QGroupBox("Best month")
+        self.labelGroup = GroupWidget("Best month")
         self.label = PBMonthLabel(parent)
-        groupLayout = QVBoxLayout()
-        groupLayout.addWidget(self.label)
-        self.labelGroup.setLayout(groupLayout)
+        self.labelGroup.addWidget(self.label)
         
-        self.tableGroup = QGroupBox("Top five sessions")
+        self.tableGroup = GroupWidget("Top five sessions")
         self.table = PBTable(parent)
-        groupLayout = QVBoxLayout()
-        groupLayout.addWidget(self.table)
-        self.tableGroup.setLayout(groupLayout)
+        self.tableGroup.addWidget(self.table)
         
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.labelGroup)
         self.layout.addWidget(self.tableGroup)
         self.setLayout(self.layout)
         
-        
     @Slot()
     def newData(self):
         self.table.newData()
         self.label.newData()
-    
+
 
 class PBMonthLabel(QLabel):
     
@@ -46,6 +41,7 @@ class PBMonthLabel(QLabel):
         super().__init__()
         self.parent = parent
         self.column = column
+        self.monthYear = self.time = self.distance = self.calories = ""
         self.newData()
         
     @property
@@ -66,12 +62,14 @@ class PBMonthLabel(QLabel):
             totals.append((monthYear, summaries))
         totals.sort(key=lambda tup: float(tup[1][1]), reverse=True)
         monthYear, summaries = totals[0]
-        text = self._makeText(monthYear, summaries[1], summaries[0], summaries[3])
+        if monthYear != self.monthYear:
+            self.monthYear = monthYear
+        self.time, self.distance, _, self.calories, *vals = summaries
+        text = self._makeText()
         self.setText(text)
         
-    @staticmethod
-    def _makeText(monthYear, distance, time, calories):
-        s = f"<b>{monthYear}</b>: <b>{distance}</b> km, <b>{time}</b> hours, <b>{calories}</b> calories"
+    def _makeText(self):
+        s = f"<b>{self.monthYear}</b>: <b>{self.distance}</b> km, <b>{self.time}</b> hours, <b>{self.calories}</b> calories"
         return s
 
 
@@ -185,8 +183,8 @@ class PBTable(QTableWidget):
             self.newPBdialog.exec_()
             self.makeTable(key=self.selectKey)
             
-    
-class NewPBDialog(QDialog):
+
+class NewPBDialog(TimerDialog):
     """ Dialog showing a message congratulating the user on a new PB.
     
         The dialog has an 'Ok' button, but will also timeout after a few milliseconds.
@@ -196,9 +194,8 @@ class NewPBDialog(QDialog):
         timeout : int
             Number of milliseconds for the dialog to be shown. Default is 3000.
     """
-    
     def __init__(self, timeout=3000):
-        super().__init__()
+        super().__init__(timeout=timeout)
         
         self.label = QLabel()
         font = self.label.font()
@@ -208,11 +205,6 @@ class NewPBDialog(QDialog):
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         self.okButton = self.buttonBox.button(QDialogButtonBox.Ok)
         self.okButton.clicked.connect(self.accept)
-        
-        self.timer = QTimer()
-        self.timer.setInterval(timeout)
-        self.timer.setSingleShot(True)
-        self.timer.timeout.connect(self.accept)
         
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.label)
@@ -239,5 +231,4 @@ class NewPBDialog(QDialog):
         msg += "<span>! Congratulations!</span>"
         
         self.label.setText(msg)
-        self.timer.start()
         

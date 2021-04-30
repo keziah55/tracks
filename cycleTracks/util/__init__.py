@@ -6,4 +6,4 @@ from .convertfuncs import (parseDuration, parseDate, hourMinSecToFloat,
 __all__ = ["isInt", "isFloat", "isDate", "isDuration", "checkMonthYearFloat",
            "checkHourMinSecFloat", "checkDayMonthYearFloat", "hourMinSecToFloat", 
            "monthYearToFloat", "dayMonthYearToFloat", "parseDuration", "parseDate",
-           "floatToHourMinSec"]
+           "floatToHourMinSec", "TimerDialog"]
