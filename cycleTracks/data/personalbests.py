@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel
 from PyQt5.QtCore import Qt, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
-from CustomPyQtObjects import TimerDialog, GroupWidget
+from customQObjects.widgets import TimerDialog, GroupWidget
 import re
 import numpy as np
 
