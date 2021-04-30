@@ -22,7 +22,7 @@ plots of my cycling stats.
 
 - Click on point to select that point in the data viewer
 
-- 'Personal bests' widget shows the top five sessions
+- 'Personal bests' widget shows the best month (by distance) and top five sessions
 
 
 ### To do
