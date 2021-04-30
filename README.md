@@ -5,7 +5,7 @@ New and improved version of [MyCycle](https://github.com/keziah55/MyCycle).
 This GUI centres on the plotting, and uses PyQtGraph to create interactive
 plots of my cycling stats.
 
-![Cycle Tracks GUI](./screenshots/cycletracks-2021-04-25.png)
+![Cycle Tracks GUI](./screenshots/cycletracks.png)
 
 
 ## Features
