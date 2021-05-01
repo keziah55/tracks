@@ -72,8 +72,8 @@ class _CyclePlotWidget(PlotWidget):
     
         Parameters
         ----------
-        data : CycleData
-            CycleData object.
+        parent : QMainWindow
+            Main window.
     """
     
     currentPointChanged = Signal(dict)

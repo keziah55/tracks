@@ -2,9 +2,10 @@
 Plot preferences
 """
 
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QGroupBox, QHBoxLayout, QLabel, 
-                             QSpinBox, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
+                             QVBoxLayout, QWidget)
 from PyQt5.QtCore import pyqtSlot as Slot
+from customQObjects.widgets import GroupWidget
 
 class PlotPreferences(QWidget):
     
@@ -12,9 +13,8 @@ class PlotPreferences(QWidget):
         super().__init__()
         self.mainWindow = mainWindow
         
-        plotConfigGroup = QGroupBox("Default plot range")
+        plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
-        # plotRangeLabel = QLabel("Default plot range")
         self.plotRangeCombo = QComboBox()
         self.plotRangeCombo.addItem("1 month")
         self.plotRangeCombo.addItem("6 months")
@@ -37,10 +37,8 @@ class PlotPreferences(QWidget):
         customRangeLayout.addWidget(self.customRangeCheckBox)
         customRangeLayout.addWidget(self.customRangeSpinBox)
         
-        plotConfigLayout = QVBoxLayout()
-        plotConfigLayout.addLayout(plotRangeLayout)
-        plotConfigLayout.addLayout(customRangeLayout)
-        plotConfigGroup.setLayout(plotConfigLayout)
+        plotConfigGroup.addLayout(plotRangeLayout)
+        plotConfigGroup.addLayout(customRangeLayout)
         
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(plotConfigGroup)
