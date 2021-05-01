@@ -182,7 +182,10 @@ class _CyclePlotWidget(PlotWidget):
             for vb in self.viewBoxes:
                 vb.enableAutoRange()
             self.xAxisTimestamps = self.plotItem.getAxis('bottom').tickTimestamps
-            # print(f"setting xAxisTimestamps: {self.xAxisTimestamps}")
+            # print(f"setting xAxisTimestamps:")
+            # from datetime import date
+            # from pprint import pprint
+            # pprint([date.fromtimestamp(ts).strftime("%d %b %Y") for ts in self.xAxisTimestamps])
             self.plotItem.autoBtn.hide()
         else:
             self.plotItem.disableAutoRange()
@@ -217,6 +220,10 @@ class _CyclePlotWidget(PlotWidget):
         # print(f"setXAxisRange({months})")
         if months is None or not hasattr(self, "xAxisTimestamps"):
             self.autoBtnClicked()
+        # print(f"xAxisTimestamps:")
+        # from datetime import date
+        # from pprint import pprint
+        # pprint([date.fromtimestamp(ts).strftime("%d %b %Y") for ts in self.xAxisTimestamps])
         if months is not None:
             ts1 = self.xAxisTimestamps[-1]
             ts0 = self.xAxisTimestamps[-(months+1)]
