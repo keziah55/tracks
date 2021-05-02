@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 from .cycleplotlabel import CyclePlotLabel
 from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
+from cycleTracks.data import CycleData
 from cycleTracks.util import floatToHourMinSec
 
     
@@ -181,11 +182,6 @@ class _CyclePlotWidget(PlotWidget):
         if self.plotItem.autoBtn.mode == 'auto':
             for vb in self.viewBoxes:
                 vb.enableAutoRange()
-            self.xAxisTimestamps = self.plotItem.getAxis('bottom').tickTimestamps
-            # print(f"setting xAxisTimestamps:")
-            # from datetime import date
-            # from pprint import pprint
-            # pprint([date.fromtimestamp(ts).strftime("%d %b %Y") for ts in self.xAxisTimestamps])
             self.plotItem.autoBtn.hide()
         else:
             self.plotItem.disableAutoRange()
@@ -217,18 +213,19 @@ class _CyclePlotWidget(PlotWidget):
                 
     @Slot(object)
     def setXAxisRange(self, months):
-        # print(f"setXAxisRange({months})")
-        if months is None or not hasattr(self, "xAxisTimestamps"):
-            self.autoBtnClicked()
-        # print(f"xAxisTimestamps:")
-        # from datetime import date
-        # from pprint import pprint
-        # pprint([date.fromtimestamp(ts).strftime("%d %b %Y") for ts in self.xAxisTimestamps])
-        if months is not None:
-            ts1 = self.xAxisTimestamps[-1]
-            ts0 = self.xAxisTimestamps[-(months+1)]
-            # print(f"ts0: {ts0}, ts1: {ts1}")
-            self.setPlotRange(ts0, ts1)
+        ts1 = self.data.dateTimestamps[-1]
+        if months is None:
+            ts0 = self.data.dateTimestamps[0]
+        else:
+            mnth = self.data.splitMonths(includeEmpty=True)
+            monthYear, df = mnth[-(months)]
+            if not df.empty:
+                data = CycleData(df)
+                ts0 = data.dateTimestamps[0]
+            else:
+                ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
+            
+        self.setPlotRange(ts0, ts1)
                
     @Slot(object)
     def updatePlots(self, index):

@@ -218,12 +218,26 @@ class CycleData(QObject):
         lst = []
         for df in dfs:
             if df.empty:
-                if includeEmpty:
-                    lst.append(('', df))
+                if not includeEmpty:
+                    continue
+                else:
+                    i = 0
+                    while df.empty:
+                        i += 1
+                        df = lst[-i][1]
+                    date = df['Date'].iloc[0]
+                    month = date.month + i
+                    year = date.year
+                    if month > 12:
+                        month = 1
+                        year += 1
+                    df = pd.DataFrame()
             else:
                 date = df['Date'].iloc[0]
-                monthYear = f"{calendar.month_name[date.month]} {date.year}"
-                lst.append((monthYear, df))
+                month = date.month
+                year = date.year
+            monthYear = f"{calendar.month_name[month]} {year}"
+            lst.append((monthYear, df))
         return lst
     
     def getMonthlyOdometer(self):
