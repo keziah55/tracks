@@ -250,7 +250,6 @@ class CycleData(QObject):
             The datetime objects are required, as they add dummy 1st of the 
             month data points to reset the total to 0km.
         """
-        
         dfs = self.splitMonths(includeEmpty=True)
         odo = []
         dts = []
@@ -260,9 +259,9 @@ class CycleData(QObject):
             if df.empty:
                 # if there's no data in the df, get the month and year from the
                 # associated monthYear string
-                month1, year1 = monthYear.split(' ')
-                month1 = list(calendar.month_name).index(month1)
-                year1 = int(year1)
+                month, year = monthYear.split(' ')
+                month = list(calendar.month_name).index(month)
+                year = int(year)
             else:
                 month = df['Date'].iloc[0].month
                 year = df['Date'].iloc[0].year
