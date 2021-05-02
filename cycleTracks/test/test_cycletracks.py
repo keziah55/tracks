@@ -6,6 +6,8 @@ from . import makeDataFrame
 import tempfile
 import pytest
 
+# TODO patch settings
+
 pytest_plugin = "pytest-qt"
 pytestmark = pytest.mark.filterwarnings("error")
 
