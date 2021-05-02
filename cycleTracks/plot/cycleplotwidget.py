@@ -219,11 +219,7 @@ class _CyclePlotWidget(PlotWidget):
         else:
             mnth = self.data.splitMonths(includeEmpty=True)
             monthYear, df = mnth[-(months)]
-            if not df.empty:
-                data = CycleData(df)
-                ts0 = data.dateTimestamps[0]
-            else:
-                ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
+            ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
             
         self.setPlotRange(ts0, ts1)
                
