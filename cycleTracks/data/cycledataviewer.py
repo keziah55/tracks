@@ -8,11 +8,10 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
-import calendar
 import numpy as np
 from .cycledata import CycleData
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
-                             hourMinSecToFloat, monthYearToFloat, floatToHourMinSec)
+                             hourMinSecToFloat, monthYearToFloat)
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
