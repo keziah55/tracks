@@ -6,12 +6,16 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox,
                              QVBoxLayout, QWidget)
 from PyQt5.QtCore import pyqtSlot as Slot
 from customQObjects.widgets import GroupWidget
+from customQObjects.core import Settings
 
 class PlotPreferences(QWidget):
     
     def __init__(self, mainWindow):
         super().__init__()
         self.mainWindow = mainWindow
+        
+        self.settings = Settings()
+        self.settings.beginGroup("plot")
         
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
@@ -20,7 +24,6 @@ class PlotPreferences(QWidget):
         self.plotRangeCombo.addItem("6 months")
         self.plotRangeCombo.addItem("1 year")
         self.plotRangeCombo.addItem("All")
-        self.plotRangeCombo.setCurrentIndex(3)
         
         self.customRangeCheckBox = QCheckBox("Custom range")
         self.customRangeSpinBox = QSpinBox()
@@ -28,8 +31,19 @@ class PlotPreferences(QWidget):
         maxMonths = len(mainWindow.data.splitMonths())
         self.customRangeSpinBox.setRange(1, maxMonths)
         self.customRangeCheckBox.clicked.connect(self.setCustomRange)
-        self.setCustomRange(False)
         
+        customRange = self.settings.value("customRange", False)
+        rng = self.settings.value("range", "All")
+        
+        self.setCustomRange(customRange)
+        if customRange:
+            rng = int(rng)
+            self.customRangeSpinBox.setValue(rng)
+        else:
+            items = [self.plotRangeCombo.itemText(idx) for idx in range(self.plotRangeCombo.count())]
+            idx = items.index(rng)
+            self.plotRangeCombo.setCurrentIndex(idx)
+            
         plotRangeLayout = QHBoxLayout()
         plotRangeLayout.addWidget(self.plotRangeCombo)
         
@@ -45,10 +59,14 @@ class PlotPreferences(QWidget):
         mainLayout.addStretch(1)
 
         self.setLayout(mainLayout)
+        self.settings.endGroup()
         
+        # apply initial state
+        self.apply()
         
     def apply(self):
-        if self.customRangeCheckBox.isChecked():
+        customRange = self.customRangeCheckBox.isChecked()
+        if customRange:
             months = self.customRangeSpinBox.value()
         else:
             text = self.plotRangeCombo.currentText()
@@ -56,9 +74,18 @@ class PlotPreferences(QWidget):
                 text = "12 months"
             months = int(text.strip(' months')) if text != 'All' else None
         self.mainWindow.plot.setXAxisRange(months)
+        
+        self.settings.beginGroup("plot")
+        self.settings.setValue("customRange", customRange)
+        if customRange:
+            self.settings.setValue("range", self.customRangeSpinBox.value())
+        else:
+            self.settings.setValue("range", self.plotRangeCombo.currentText())
+        self.settings.endGroup()
     
     @Slot(bool)
     def setCustomRange(self, custom):
+        self.customRangeCheckBox.setChecked(custom)
         if custom:
             self.customRangeSpinBox.setEnabled(True)
             self.plotRangeCombo.setEnabled(False)
