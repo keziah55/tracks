@@ -255,18 +255,14 @@ class CycleData(QObject):
         odo = []
         dts = []
         for i, df in enumerate(dfs):
-            _, df = df
+            monthYear, df = df
             # at the start of every month, insert 0km entry
             if df.empty:
-                # if there's no data in the df, need to get month and year from
-                # previous item in dts list (not previous dataframe, as that
-                # could be empty too)
-                prevDate = dts[-1] 
-                month = prevDate.month + 1
-                year = prevDate.year
-                if month > 12:
-                    month = 1
-                    year += 1
+                # if there's no data in the df, get the month and year from the
+                # associated monthYear string
+                month1, year1 = monthYear.split(' ')
+                month1 = list(calendar.month_name).index(month1)
+                year1 = int(year1)
             else:
                 month = df['Date'].iloc[0].month
                 year = df['Date'].iloc[0].year
