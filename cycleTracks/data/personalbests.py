@@ -3,8 +3,8 @@ QTableWidget showing the top sessions.
 """
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
-                             QDialogButtonBox, QVBoxLayout, QWidget)
-from PyQt5.QtCore import Qt, pyqtSlot as Slot
+                             QDialogButtonBox, QVBoxLayout, QWidget, QAbstractItemView)
+from PyQt5.QtCore import Qt, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
 from customQObjects.widgets import TimerDialog, GroupWidget
@@ -12,6 +12,8 @@ import re
 import numpy as np
 
 class PersonalBests(QWidget):
+    
+    itemSelected = Signal(object)
     
     def __init__(self, parent):
         super().__init__()
@@ -23,6 +25,7 @@ class PersonalBests(QWidget):
         self.tableGroup = GroupWidget("Top five sessions")
         self.table = PBTable(parent)
         self.tableGroup.addWidget(self.table)
+        self.table.itemSelected.connect(self.itemSelected)
         
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.labelGroup)
@@ -88,6 +91,8 @@ class PBTable(QTableWidget):
             Default is 5.
     """
     
+    itemSelected = Signal(object)
+    
     def __init__(self, parent, rows=5):
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
                              'Calories', 'Gear']
@@ -101,12 +106,15 @@ class PBTable(QTableWidget):
         
         self.setHorizontalHeaderLabels(self.headerLabels)
         
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        
         # make header tall enough for two rows of text (avg speed has line break)
         font = self.header.font()
         metrics = QFontMetrics(font)
         height = metrics.height()
         self.header.setMinimumHeight(height*2)
         
+        self.cellClicked.connect(self._cellClicked)
         self.header.sectionClicked.connect(self.selectColumn)
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
         
@@ -133,17 +141,19 @@ class PBTable(QTableWidget):
                 key = re.sub(r"\s", " ", key) # remove \n from avg speed
                 value = self.data.formatted(key)[idx]
                 row[key] = value
+            row['datetime'] = self.data['Date'][idx]
             pb.append(row)
         return pb
                 
         
     def makeTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
-        pb = self._getBestSessions(n=n, key=key, order=order)
+        
+        self.items = self._getBestSessions(n=n, key=key, order=order)
         
         self.selectKey = key
-        self.dates = [row['Date'] for row in pb]
+        self.dates = [row['Date'] for row in self.items]
         
-        for rowNum, row in enumerate(pb):
+        for rowNum, row in enumerate(self.items):
             for colNum, key in enumerate(self.headerLabels):
                 key = re.sub(r"\s", " ", key) # remove \n from avg speed
                 value = row[key]
@@ -175,14 +185,19 @@ class PBTable(QTableWidget):
     def newData(self):
         pb = self._getBestSessions(key=self.selectKey)
         newDates = [row['Date'] for row in pb]
-        if newDates != self.dates:
+        dates = [row['Date'] for row in self.items]
+        if newDates != dates:
             i = 0
-            while newDates[i] == self.dates[i]:
+            while newDates[i] == dates[i]:
                 i += 1
             self.newPBdialog.setMessage(self.selectKey, i, pb[i][self.selectKey])
             self.newPBdialog.exec_()
             self.makeTable(key=self.selectKey)
             
+    @Slot(int, int)
+    def _cellClicked(self, row, column):
+        dct = self.items[row]
+        self.itemSelected.emit(dct['datetime'])
 
 class NewPBDialog(TimerDialog):
     """ Dialog showing a message congratulating the user on a new PB.

@@ -235,4 +235,3 @@ class CycleDataViewer(QTreeWidget):
         for item in self.items:
             if item['item'] == clickedItem:
                 self.itemSelected.emit(item['datetime'])
-                # print(item)
