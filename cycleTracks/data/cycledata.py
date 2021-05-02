@@ -205,7 +205,7 @@ class CycleData(QObject):
             Parameters
             -----------
             includeEmpty : bool
-                If True and if a month has no data, an empty string and empty 
+                If True and if a month has no data, a monthYear string and empty 
                 DataFrame will be included in the returned list. Otherwise, it
                 will be ignored. Default is False.
             
@@ -221,16 +221,20 @@ class CycleData(QObject):
                 if not includeEmpty:
                     continue
                 else:
+                    # go backwards until we find a non-empty dataframe
                     i = 0
                     while df.empty:
                         i += 1
                         df = lst[-i][1]
+                    # get the first date
                     date = df['Date'].iloc[0]
+                    # get the month and year and adjust to find the missing month and year
                     month = date.month + i
                     year = date.year
                     if month > 12:
                         month = 1
                         year += 1
+                    # make empty dataframe to add to lst
                     df = pd.DataFrame()
             else:
                 date = df['Date'].iloc[0]
