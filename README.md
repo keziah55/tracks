@@ -37,6 +37,7 @@ plots of my cycling stats.
 
 - Scroll to point if item in table/tree clicked that is not currently visible in plot?
 
+
 ## Requirements
 
 - [NumPy](https://numpy.org/)
