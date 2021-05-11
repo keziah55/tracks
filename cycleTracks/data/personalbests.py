@@ -11,6 +11,12 @@ from customQObjects.widgets import TimerDialog, GroupWidget
 import re
 import numpy as np
 
+# TODO make data analysis object, to separate model and view
+# this way, when new data is added, the data analysis object can tell if the
+# new PB dialog needs to display a message about both PB widgets
+
+# TODO allow multiple PBs of the same speed
+
 class PersonalBests(QWidget):
     
     itemSelected = Signal(object)
@@ -114,7 +120,7 @@ class PBTable(QTableWidget):
         height = metrics.height()
         self.header.setMinimumHeight(height*2)
         
-        self.cellClicked.connect(self._cellClicked)
+        self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
         
@@ -194,8 +200,8 @@ class PBTable(QTableWidget):
             self.newPBdialog.exec_()
             self.makeTable(key=self.selectKey)
             
-    @Slot(int, int)
-    def _cellClicked(self, row, column):
+    @Slot(int, int, int, int)
+    def _cellChanged(self, row, column, previousRow, previousColumn):
         dct = self.items[row]
         self.itemSelected.emit(dct['datetime'])
 

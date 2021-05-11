@@ -101,7 +101,7 @@ class CycleDataViewer(QTreeWidget):
         self.header().setSectionsClickable(True)
         self.header().sectionClicked.connect(self.sortTree)
         
-        self.itemClicked.connect(self._itemClicked)
+        self.currentItemChanged.connect(self._itemChanged)
         
         self.sortTree(0)
         
@@ -229,8 +229,8 @@ class CycleDataViewer(QTreeWidget):
             if item['datetime'] == date:
                 self.setCurrentItem(item['item'])
                 
-    @Slot(QTreeWidgetItem, int)
-    def _itemClicked(self, clickedItem, column):
+    @Slot(QTreeWidgetItem, QTreeWidgetItem)
+    def _itemChanged(self, currentItem, previousItem):
         for item in self.items:
-            if item['item'] == clickedItem:
+            if item['item'] == currentItem:
                 self.itemSelected.emit(item['datetime'])
