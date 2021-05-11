@@ -16,6 +16,7 @@ import numpy as np
 # new PB dialog needs to display a message about both PB widgets
 
 # TODO allow multiple PBs of the same speed
+# use setVerticalHeaderLabels to set row numbers
 
 class PersonalBests(QWidget):
     
