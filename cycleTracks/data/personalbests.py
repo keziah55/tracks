@@ -18,8 +18,6 @@ import numpy as np
 # TODO allow multiple PBs of the same speed
 # use setVerticalHeaderLabels to set row numbers
 
-
-
 class PersonalBests(QWidget):
     
     itemSelected = Signal(object)
