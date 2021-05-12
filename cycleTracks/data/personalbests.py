@@ -15,8 +15,6 @@ import numpy as np
 # this way, when new data is added, the data analysis object can tell if the
 # new PB dialog needs to display a message about both PB widgets
 
-# TODO allow multiple PBs of the same speed
-# use setVerticalHeaderLabels to set row numbers
 
 class PersonalBests(QWidget):
     
@@ -24,6 +22,10 @@ class PersonalBests(QWidget):
     
     def __init__(self, parent):
         super().__init__()
+        
+        self.newPBdialog = NewPBDialog()
+        
+        self.dataAnalysis = parent.dataAnalysis
         
         self.labelGroup = GroupWidget("Best month")
         self.label = PBMonthLabel(parent)
@@ -41,9 +43,27 @@ class PersonalBests(QWidget):
         
     @Slot()
     def newData(self):
-        self.table.newData()
-        self.label.newData()
-
+        bestSession = self.table.newData()
+        bestMonth = self.label.newData()
+        
+        if bestSession is None and bestMonth is None:
+            return None
+        
+        if bestSession is not None and bestMonth is not None:
+            msg = bestSession + "<br>and<br>" + bestMonth
+        else:
+            msg = [msg for msg in (bestSession, bestMonth) if msg is not None][0]
+        msg += "<br><span>Congratulations!</span>"
+        
+        msg = f"<center>{msg}</center>"
+        
+        self.newPBdialog.setMessage(msg)
+        self.newPBdialog.exec_()
+        
+        if bestSession is not None:
+            self.table.setTable()
+        if bestMonth is not None:
+            self.label.setText()
 
 class PBMonthLabel(QLabel):
     
@@ -53,6 +73,7 @@ class PBMonthLabel(QLabel):
         self.column = column
         self.monthYear = self.time = self.distance = self.calories = ""
         self.newData()
+        self.setText()
         
     @property
     def data(self):
@@ -72,16 +93,29 @@ class PBMonthLabel(QLabel):
             totals.append((monthYear, summaries))
         totals.sort(key=lambda tup: float(tup[1][1]), reverse=True)
         monthYear, summaries = totals[0]
+        self.time, self.distance, _, self.calories, *vals = summaries
+        
         if monthYear != self.monthYear:
             self.monthYear = monthYear
-        self.time, self.distance, _, self.calories, *vals = summaries
-        text = self._makeText()
-        self.setText(text)
+            msg = self.makeMessage(monthYear)
+            return msg
+        else:
+            return None
+        
+    def makeMessage(self, monthYear):
+        colour = "#f7f13b"
+        msg = "<span>New best month - </span>"
+        msg += f"<span style='color: {colour}'>{monthYear}</span>!"
+        return msg
         
     def _makeText(self):
         s = f"<b>{self.monthYear}</b>: <b>{self.distance}</b> km, <b>{self.time}</b> hours, <b>{self.calories}</b> calories"
         return s
 
+    def setText(self):
+        text = self._makeText()
+        super().setText(text)
+        
 
 class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
@@ -114,6 +148,8 @@ class PBTable(QTableWidget):
         self.setHorizontalHeaderLabels(self.headerLabels)
         
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        
+        self.selectKey = "Avg. speed (km/h)"
         
         # make header tall enough for two rows of text (avg speed has line break)
         font = self.header.font()
@@ -151,14 +187,23 @@ class PBTable(QTableWidget):
             row['datetime'] = self.data['Date'][idx]
             pb.append(row)
         return pb
-                
-        
-    def makeTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
+       
+    def setTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
         
         self.items = self._getBestSessions(n=n, key=key, order=order)
         
         self.selectKey = key
         self.dates = [row['Date'] for row in self.items]
+        
+        rowNums = ['1']
+        for idx in range(1, len(self.items)):
+            if self.items[idx]['Avg. speed (km/h)'] == self.items[idx-1]['Avg. speed (km/h)']:
+                if rowNums[-1][-1] != "=":
+                    # add an equals sign (unless there's one there already)
+                    rowNums[-1] += "="
+                rowNums.append(rowNums[-1])
+            else:
+                rowNums.append(str(idx+1))
         
         for rowNum, row in enumerate(self.items):
             for colNum, key in enumerate(self.headerLabels):
@@ -169,8 +214,9 @@ class PBTable(QTableWidget):
                 item.setTextAlignment(Qt.AlignCenter)
                 self.setItem(rowNum, colNum, item)
                 
+        self.setVerticalHeaderLabels(rowNums)
+                
         self.header.resizeSections(QHeaderView.ResizeToContents)
-
 
     @Slot(int)
     def selectColumn(self, idx):
@@ -178,7 +224,7 @@ class PBTable(QTableWidget):
         col = re.sub(r"\s", " ", col) # remove \n from avg speed
         if col in self.selectableColumns:
             self.clearContents()
-            self.makeTable(key=col)
+            self.setTable(key=col)
             
             for i in range(self.header.count()):
                 font = self.horizontalHeaderItem(i).font()
@@ -197,14 +243,35 @@ class PBTable(QTableWidget):
             i = 0
             while newDates[i] == dates[i]:
                 i += 1
-            self.newPBdialog.setMessage(self.selectKey, i, pb[i][self.selectKey])
-            self.newPBdialog.exec_()
-            self.makeTable(key=self.selectKey)
+            msg = self.makeMessage(self.selectKey, i, pb[i][self.selectKey])
+            return msg
+        else:
+            None
             
     @Slot(int, int, int, int)
     def _cellChanged(self, row, column, previousRow, previousColumn):
         dct = self.items[row]
         self.itemSelected.emit(dct['datetime'])
+
+    def makeMessage(self, key, idx, value):
+        key = re.sub(r"\s", " ", key) # remove \n from avg speed
+        # check for units
+        m = re.search(r"\((?P<unit>.+)\)", key)
+        if m is not None:
+            unit = m.group('unit')
+            key = re.sub(r"\(.+\)", "", key) # remove units in brackets
+        else:
+            unit = ""
+        key = key.strip()
+        key = key.lower()
+        
+        colour = "#f7f13b"
+        
+        msg = f"<span>New #{idx+1} {key} - </span>"
+        msg += f"<span style='color: {colour}'>{value}{unit}</span>!"
+        
+        return msg
+
 
 class NewPBDialog(TimerDialog):
     """ Dialog showing a message congratulating the user on a new PB.
@@ -234,23 +301,6 @@ class NewPBDialog(TimerDialog):
         self.setLayout(self.layout)
         self.setWindowTitle("New personal best")
         
-    def setMessage(self, key, idx, value):
-        key = re.sub(r"\s", " ", key) # remove \n from avg speed
-        # check for units
-        m = re.search(r"\((?P<unit>.+)\)", key)
-        if m is not None:
-            unit = m.group('unit')
-            key = re.sub(r"\(.+\)", "", key) # remove units in brackets
-        else:
-            unit = ""
-        key = key.strip()
-        key = key.lower()
-        
-        colour = "#f7f13b"
-        
-        msg = f"<span>New #{idx+1} {key} - </span>"
-        msg += f"<span style='color: {colour}'>{value}{unit}</span>"
-        msg += "<span>! Congratulations!</span>"
-        
-        self.label.setText(msg)
+    def setMessage(self, text):
+        self.label.setText(text)
         

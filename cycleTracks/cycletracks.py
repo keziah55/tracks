@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
 from .plot import CyclePlotWidget
-from .data import CycleData, CycleDataViewer, AddCycleData, PersonalBests
+from .data import CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, PersonalBests
 from .preferences import PreferencesDialog
 
 
@@ -30,6 +30,7 @@ class CycleTracks(QMainWindow):
         self.backup()
 
         self.data = CycleData(self.df)
+        self.dataAnalysis = CycleDataAnalysis(self.data)
 
         self.pb = PersonalBests(self)
         self.viewer = CycleDataViewer(self)
