@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel
 from PyQt5.QtCore import Qt, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
+from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat
 from customQObjects.widgets import TimerDialog, GroupWidget
 import re
 import numpy as np
@@ -143,7 +144,9 @@ class PBTable(QTableWidget):
         
         self.newPBdialog = NewPBDialog()
         
-        self.selectableColumns = ['Time', 'Distance (km)', 'Avg. speed (km/h)', 'Calories']
+        # dict of columns that can be selected and the functions used to compare values
+        self.selectableColumns = {'Time':hourMinSecToFloat, 'Distance (km)':float, 
+                                  'Avg. speed (km/h)':float, 'Calories':float}
         
         self.setHorizontalHeaderLabels(self.headerLabels)
         
@@ -180,13 +183,22 @@ class PBTable(QTableWidget):
         indices = series.argsort()[n:][::-1]
         for idx in indices:
             row = {}
-            for key in self.headerLabels:
-                key = re.sub(r"\s", " ", key) # remove \n from avg speed
-                value = self.data.formatted(key)[idx]
-                row[key] = value
+            for k in self.headerLabels:
+                k = re.sub(r"\s", " ", k) # remove \n from avg speed
+                value = self.data.formatted(k)[idx]
+                row[k] = value
             row['datetime'] = self.data['Date'][idx]
             pb.append(row)
+            
+        # sort by date first, then by speed, so if values are tied, most recent will be first 
+        # (this also means that the number for the message is correct automatically)
+        pb.sort(key=lambda dct: dayMonthYearToFloat(dct['Date']), reverse=True)
+        func = self.selectableColumns[key]
+        reverse = True if order == "descending" else False        
+        pb.sort(key=lambda dct: func(dct[key]), reverse=reverse)
+            
         return pb
+    
        
     def setTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
         
