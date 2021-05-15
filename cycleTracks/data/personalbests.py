@@ -12,10 +12,6 @@ from customQObjects.widgets import TimerDialog, GroupWidget
 import re
 import numpy as np
 
-# TODO make data analysis object, to separate model and view
-# this way, when new data is added, the data analysis object can tell if the
-# new PB dialog needs to display a message about both PB widgets
-
 
 class PersonalBests(QWidget):
     

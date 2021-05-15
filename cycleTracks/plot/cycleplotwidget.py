@@ -373,9 +373,11 @@ class _CyclePlotWidget(PlotWidget):
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
                 self._makePointDict(idx)
                 pts = self.scatterPointsAtX(mousePoint, self.dataItem.scatter)
-                # TODO if multiple points at x, check closest y
                 if len(pts) != 0:
-                    self._highlightPoint(pts[0])
+                    # could be multiple points at same x, so get closest point to mouse by y value
+                    yVals = np.array([pt.pos().y() for pt in pts])
+                    idx = (np.abs(yVals - mousePoint.y())).argmin()
+                    self._highlightPoint(pts[idx])
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
             
