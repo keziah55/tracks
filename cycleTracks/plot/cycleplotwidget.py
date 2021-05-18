@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 from .cycleplotlabel import CyclePlotLabel
 from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
-from cycleTracks.data import CycleData
 from cycleTracks.util import floatToHourMinSec
 
     
@@ -57,7 +56,7 @@ class CyclePlotWidget(QWidget):
         
     @Slot(object)
     def newData(self, index):
-        self.plotWidget.updatePlots(index)
+        self.plotWidget.updatePlots()
         
     @Slot(object)
     def setCurrentPointFromDate(self, date):
@@ -147,6 +146,7 @@ class _CyclePlotWidget(PlotWidget):
         
         self.currentPoint = {}
         
+        self.viewMonths = None
         
     @property
     def data(self):
@@ -199,11 +199,10 @@ class _CyclePlotWidget(PlotWidget):
         
         for xPoints, yData, viewBox in data:
             # find x-coords of points in the given month
-            mask = np.in1d(np.where(xPoints > x0)[0], np.where(xPoints < x1)[0])
-            # print(mask)
+            mask = np.in1d(np.where(xPoints >= x0)[0], np.where(xPoints <= x1)[0])
             if np.any(mask):
                 # select the corresponding y data
-                idx = np.where(xPoints > x0)[0][mask]
+                idx = np.where(xPoints >= x0)[0][mask]
                 yPoints = yData[idx]
                 # get min and max
                 y0 = np.min(yPoints)
@@ -213,6 +212,7 @@ class _CyclePlotWidget(PlotWidget):
                 
     @Slot(object)
     def setXAxisRange(self, months):
+        self.viewMonths = months
         ts1 = self.data.dateTimestamps[-1]
         if months is None:
             ts0 = self.data.dateTimestamps[0]
@@ -220,13 +220,14 @@ class _CyclePlotWidget(PlotWidget):
             mnth = self.data.splitMonths(includeEmpty=True)
             monthYear, df = mnth[-(months)]
             ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
-            
         self.setPlotRange(ts0, ts1)
                
-    @Slot(object)
-    def updatePlots(self, index):
+    @Slot()
+    def updatePlots(self):
         self.plotSeries(self.ySeries, mode='set')
         self.plotTotalDistance(mode='set')
+        if self.viewMonths is not None:
+            self.setXAxisRange(self.viewMonths)
         
     @property
     def ySeries(self):
