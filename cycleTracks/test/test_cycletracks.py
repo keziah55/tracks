@@ -96,3 +96,13 @@ class TestTracks:
     def test_viewer_clicked(self, setup, qtbot, teardown):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
         pass
+    
+    @pytest.mark.skip("test not yet written")
+    def test_pb_table_clicked(self, setup, qtbot, teardown):
+        # same as above, but for pb table
+        pass
+    
+    @pytest.mark.skip("test not yet written")
+    def test_plot_update(self, setup, qtbot, teardown):
+        # test that, when new data added, the plot auto-rescales so the new points are visible
+        pass
