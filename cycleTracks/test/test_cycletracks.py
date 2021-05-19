@@ -92,10 +92,10 @@ class TestTracks:
             self.plotWidget.plotClicked(event)
         
 
-    @pytest.mark.skip("test not yet written")
+    # @pytest.mark.skip("test not yet written")
     def test_viewer_clicked(self, setup, qtbot, teardown):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
-        pass
+        qtbot.wait(5000)
     
     @pytest.mark.skip("test not yet written")
     def test_pb_table_clicked(self, setup, qtbot, teardown):

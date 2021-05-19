@@ -6,7 +6,7 @@ Make a pandas DataFrame of random cycling data.
 
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 def makeDataFrame(size=100, path=None):
     
@@ -24,7 +24,13 @@ def makeDataFrame(size=100, path=None):
     return df
     
     
-def makeDates(size, startDate="2018-01-01", endDate="2021-12-31", fmt="%Y-%m-%d"):
+def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):
+    if endDate is None:
+        endDate = date.today().strftime(fmt)
+    if startDate is None:
+        today = date.today()
+        d = date(year=today.year-2, month=today.month, day=today.day)
+        startDate = d.strftime(fmt)
     
     start = datetime.strptime(startDate, fmt)
     dt = datetime.strptime(endDate, fmt) - datetime.strptime(startDate, fmt)
