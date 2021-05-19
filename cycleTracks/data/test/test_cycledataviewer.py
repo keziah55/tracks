@@ -31,7 +31,12 @@ class TestCycleDataViewer:
         
         columns = self.widget.headerLabels
         columns = random.sample(columns, k=len(columns))
-        
+        if columns[0] == 'Date':
+            # should already be sorted by Date, so make sure this isn't the first
+            # column to be clicked here
+            item = columns.pop(0)
+            columns.append(item)
+            
         for column in columns:
             idx = self.widget.headerLabels.index(column)
             
@@ -46,7 +51,8 @@ class TestCycleDataViewer:
             
             for _ in range(2):
                 expected.reverse()
-                self.widget.header().sectionClicked.emit(idx)
+                with qtbot.waitSignal(self.widget.viewerSorted):
+                    self.widget.header().sectionClicked.emit(idx)
                 items = [item.text(idx) for item in self.widget.topLevelItems]
                 assert items == expected
                 

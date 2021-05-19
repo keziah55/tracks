@@ -72,8 +72,14 @@ class CycleDataViewer(QTreeWidget):
     itemSelected = Signal(object)
     """ itemSelected(CycleTreeWidgetItem `item`)
     
-        Signal emitted when an item in the tree is selected, either by clicking
+        Emitted when an item in the tree is selected, either by clicking
         on it or by navigating with the up or down keys.
+    """
+    
+    viewerSorted = Signal()
+    """ viewerSorted()
+    
+        Emitted after the CycleDataViewer items have been sorted.
     """
     
     def __init__(self, parent, widthSpace=10):
@@ -163,7 +169,7 @@ class CycleDataViewer(QTreeWidget):
             self.headerItem().setFont(i, font)
                 
         self.sortItems(idx, order)
-        
+        self.viewerSorted.emit()
         
     def makeTree(self):
         """ Populate tree with data from CycleData object. """

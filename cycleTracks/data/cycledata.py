@@ -45,7 +45,6 @@ class CycleData(QObject):
         shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
         self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
         
-        
         sigFigs = {'Distance (km)':2, 
                    'Calories':1,
                    'Avg. speed (km/h)':2,
@@ -54,7 +53,6 @@ class CycleData(QObject):
         self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
         self.fmtFuncs['Time'] = lambda t: t
         self.fmtFuncs['Time (hours)'] = floatToHourMinSec
-        
         
     @staticmethod
     def _formatFloat(value, digits=2):
@@ -190,11 +188,8 @@ class CycleData(QObject):
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
     
-    @property
-    def dateFmt(self):
-        # TODO use _formatDate instead?
-        fmt = "%a %d %b %Y"
-        return [dt.strftime(fmt) for dt in self.datetimes]
+    # def dateFmt(self, fmt="%a %d %b %Y"):
+        # return [dt.strftime(fmt) for dt in self.datetimes]
     
     @property 
     def avgSpeed(self):
