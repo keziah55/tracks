@@ -9,7 +9,7 @@ import pytest
 
 pytest_plugin = "pytest-qt"
 
-class TestTracks:
+class TracksSetupTeardown:
     
     @pytest.fixture
     def setup(self, qtbot, monkeypatch):
@@ -35,6 +35,8 @@ class TestTracks:
         yield
         self.app.close()
     
+    
+class TestTracks(TracksSetupTeardown):
     
     def test_add_data(self, setup, qtbot, teardown):
         
