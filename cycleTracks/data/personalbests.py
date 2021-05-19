@@ -176,7 +176,12 @@ class PBTable(QTableWidget):
         else:
             series = self.data[key]
         pb = []
-        indices = series.argsort()[n:][::-1]
+        # Get indices of series, when series is sorted in reverse order.
+        # Get indices, and make `pb` list, for whole series, not just top `n`,
+        # so that, if there are multiple tied values that would extend the table
+        # over `n` rows, only the most recent sessions will be shown here.
+        # (So that the table is always `n` rows long.)
+        indices = series.argsort()[::-1] 
         for idx in indices:
             row = {}
             for k in self.headerLabels:
@@ -192,6 +197,9 @@ class PBTable(QTableWidget):
         func = self.selectableColumns[key]
         reverse = True if order == "descending" else False        
         pb.sort(key=lambda dct: func(dct[key]), reverse=reverse)
+        
+        # return only `n` values
+        pb = pb[:n]
             
         return pb
     
