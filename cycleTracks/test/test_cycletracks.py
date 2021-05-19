@@ -16,7 +16,8 @@ class TestTracks:
     def setup(self, qtbot, monkeypatch):
         
         self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(100, path=self.tmpfile.name)
+        self.size = 100
+        makeDataFrame(self.size, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
             return self.tmpfile.name
@@ -90,12 +91,19 @@ class TestTracks:
         
         with qtbot.waitSignals(signals):
             self.plotWidget.plotClicked(event)
-        
 
-    # @pytest.mark.skip("test not yet written")
     def test_viewer_clicked(self, setup, qtbot, teardown):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
-        qtbot.wait(5000)
+        item = self.viewer.topLevelItems[0]
+        with qtbot.waitSignal(self.viewer.itemExpanded):
+            self.viewer.expandItem(item)
+        signals = [(self.viewer.itemSelected, 'viewer.itemSelected'), 
+                   (self.plotWidget.currentPointChanged, 'plotWidget.currentPointChanged')]
+        with qtbot.waitSignals(signals):
+            self.viewer.setCurrentItem(item.child(0))
+        expectedIdx = self.size - 1
+        assert self.plotWidget.currentPoint['index'] == expectedIdx
+        assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
     
     @pytest.mark.skip("test not yet written")
     def test_pb_table_clicked(self, setup, qtbot, teardown):
