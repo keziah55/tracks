@@ -70,6 +70,7 @@ def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):
     start = datetime.strptime(startDate, fmt)
     dt = datetime.strptime(endDate, fmt) - datetime.strptime(startDate, fmt)
     diff = dt.days
+    print(diff)
     
     rng = np.random.default_rng()
     days = rng.choice(np.arange(diff), size=size, replace=False, shuffle=False)
