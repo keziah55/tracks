@@ -24,7 +24,6 @@ def makeDataFrame(size=100, path=None):
         df : pandas.DataFrame
             DataFrame of random data
     """
-    
     d = {'Date':makeDates(size),
          'Time':makeTimes(size),
          'Distance (km)':makeFloats(size, 3, 80, ".2f"),
@@ -99,7 +98,6 @@ def makeTimes(size, minMinutes=10, maxMinutes=150):
         times : list
             list of time strings
     """
-    
     def _makeTimeString(s):
         mins, secs = divmod(s, 60)
         hours, mins = divmod(mins, 60)
@@ -132,7 +130,6 @@ def makeFloats(size, minValue, maxValue, fmt):
         floats : list
             list of formatted float strings
     """
-    
     diff = maxValue - minValue
     rng = np.random.default_rng()
     floats = [minValue + r*diff for r in rng.random(size)]
