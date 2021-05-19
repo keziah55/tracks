@@ -2,6 +2,7 @@
 Plot preferences
 """
 
+from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
                              QVBoxLayout, QWidget)
 from PyQt5.QtCore import pyqtSlot as Slot
@@ -23,6 +24,7 @@ class PlotPreferences(QWidget):
         self.plotRangeCombo.addItem("1 month")
         self.plotRangeCombo.addItem("6 months")
         self.plotRangeCombo.addItem("1 year")
+        self.plotRangeCombo.addItem("Current year")
         self.plotRangeCombo.addItem("All")
         
         self.customRangeCheckBox = QCheckBox("Custom range")
@@ -72,7 +74,9 @@ class PlotPreferences(QWidget):
             text = self.plotRangeCombo.currentText()
             if text == "1 year":
                 text = "12 months"
-            months = int(text.strip(' months')) if text != 'All' else None
+            elif text == "Current year":
+                text = f"{date.today().month} months"
+            months = None if text == 'All' else int(text.strip(' months'))
         self.mainWindow.plot.setXAxisRange(months)
         
         self.settings.beginGroup("plot")
