@@ -25,21 +25,6 @@ plots of my cycling stats.
 - 'Personal bests' widget shows the best month (by distance) and top five sessions
 
 
-### To do
-
-- Compare multiple points
-
-- More tests
-
-- Common functionality between CycleDataViewer and PBTable?
-
-- PB dialog - both session and month?
-
-- Scroll to point if item in table/tree clicked that is not currently visible in plot?
-
-- Documentation
-
-
 ## Requirements
 
 - [NumPy](https://numpy.org/)
