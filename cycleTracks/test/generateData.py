@@ -9,6 +9,21 @@ import numpy as np
 from datetime import datetime, timedelta, date
 
 def makeDataFrame(size=100, path=None):
+    """ Return DataFrame of random cycling data.
+    
+        Parameters
+        ----------
+        size : int, optional
+            Length of DataFrame to generate. The default is 100.
+        path : str, optional
+            If provided, the DataFrame will be written to file at `path`. 
+            The default is None.
+    
+        Returns
+        -------
+        df : pandas.DataFrame
+            DataFrame of random data
+    """
     
     d = {'Date':makeDates(size),
          'Time':makeTimes(size),
@@ -25,6 +40,27 @@ def makeDataFrame(size=100, path=None):
     
     
 def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):
+    """ Return list of `size` random dates, between `startDate` and `endDate`.
+    
+        Parameters
+        ----------
+        size : int
+            Number of random dates to generate
+        startDate : str, optional
+            Start of range of random dates. If provided, should be string in 
+            format `fmt`. Default is current date minus two years.
+        endDate : str, optional
+            End of range of random dates. If provided, should be string in 
+            format `fmt`. Default is current date.
+        fmt : str, optional
+            If `startDate` and `endDate` strings are provided, this arg should
+            give their format. Default is "%Y-%m-%d".
+            
+        Returns
+        -------
+        dates : list
+            list of datetime objects
+    """
     if endDate is None:
         endDate = date.today().strftime(fmt)
     if startDate is None:
@@ -44,6 +80,25 @@ def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):
 
 
 def makeTimes(size, minMinutes=10, maxMinutes=150):
+    """ Return list of `size` random times, between `minMinutes` and `maxMinutes`. 
+    
+        Times will be returned as strings in the format "%H:%M:%S" or "%M:%S", if
+        hours is 0.
+        
+        Parameters
+        ----------
+        size : int
+            Number of random times to generate
+        minMinutes : int
+            Lower value of minutes to generate times between. Default is 10.
+        maxMinutes : int
+            Upper value of minutes to generate times between. Default is 150.
+            
+        Returns
+        -------
+        times : list
+            list of time strings
+    """
     
     def _makeTimeString(s):
         mins, secs = divmod(s, 60)
@@ -59,6 +114,24 @@ def makeTimes(size, minMinutes=10, maxMinutes=150):
 
 
 def makeFloats(size, minValue, maxValue, fmt):
+    """ Return list of random floats, as formatted strings. 
+    
+        Parameters
+        ----------
+        size : int
+            Number of random times to generate
+        minValue : float
+            Lower limit to generate numbers between
+        maxValue : float
+            Upper limit to generate numbers between
+        fmt : str
+            String format specifier for the floats.
+            
+        Returns
+        -------
+        floats : list
+            list of formatted float strings
+    """
     
     diff = maxValue - minValue
     rng = np.random.default_rng()
