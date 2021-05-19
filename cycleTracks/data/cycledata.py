@@ -191,7 +191,9 @@ class CycleData(QObject):
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
     
     @property
-    def dateFmt(self, fmt="%a %d %b %Y"):
+    def dateFmt(self):
+        # TODO use _formatDate instead?
+        fmt = "%a %d %b %Y"
         return [dt.strftime(fmt) for dt in self.datetimes]
     
     @property 

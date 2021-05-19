@@ -28,6 +28,7 @@ class TestTracks:
         self.viewer = self.app.viewer
         self.plot = self.app.plot
         self.plotWidget = self.plot.plotWidget
+        self.pbTable = self.app.pb.table
         
         
     @pytest.fixture
@@ -105,11 +106,18 @@ class TestTracks:
         assert self.plotWidget.currentPoint['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
     
-    @pytest.mark.skip("test not yet written")
     def test_pb_table_clicked(self, setup, qtbot, teardown):
-        # same as above, but for pb table
-        pass
-    
+        # similar to above, but for pb table
+        item = self.pbTable.item(1, 0)
+        signals = [(self.pbTable.itemSelected, 'pbTable.itemSelected'), 
+                   (self.plotWidget.currentPointChanged, 'plotWidget.currentPointChanged')]
+        with qtbot.waitSignals(signals):
+            self.pbTable.setCurrentItem(item)
+        
+        expectedIdx = self.app.data.formatted("Date").index(item.text())
+        assert self.plotWidget.currentPoint['index'] == expectedIdx
+        assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
+        
     @pytest.mark.skip("test not yet written")
     def test_plot_update(self, setup, qtbot, teardown):
         # test that, when new data added, the plot auto-rescales so the new points are visible

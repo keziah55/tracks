@@ -130,6 +130,11 @@ class PBTable(QTableWidget):
     """
     
     itemSelected = Signal(object)
+    """ itemSelected(CycleTreeWidgetItem `item`)
+    
+        Signal emitted when an item in the tree is selected, either by clicking
+        on it or by navigating with the up or down keys.
+    """
     
     def __init__(self, parent, rows=5):
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
