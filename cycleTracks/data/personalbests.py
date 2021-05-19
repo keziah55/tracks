@@ -169,8 +169,10 @@ class PBTable(QTableWidget):
         return self.horizontalHeader()
     
     def _getBestSessions(self, n=5, key="Avg. speed (km/h)", order='descending'):
-        if order == 'descending':
-            n *= -1
+        validOrders = ['descending', 'ascending']
+        if order not in validOrders:
+            msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
+            raise ValueError(msg)
         if key == 'Time':
             series = self.data.timeHours
         else:
@@ -181,7 +183,8 @@ class PBTable(QTableWidget):
         # so that, if there are multiple tied values that would extend the table
         # over `n` rows, only the most recent sessions will be shown here.
         # (So that the table is always `n` rows long.)
-        indices = series.argsort()[::-1] 
+        slc = -1 if order == 'descending' else 1
+        indices = series.argsort()[::slc] 
         for idx in indices:
             row = {}
             for k in self.headerLabels:
@@ -199,9 +202,7 @@ class PBTable(QTableWidget):
         pb.sort(key=lambda dct: func(dct[key]), reverse=reverse)
         
         # return only `n` values
-        pb = pb[:n]
-            
-        return pb
+        return pb[:n]
     
        
     def setTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
