@@ -5,8 +5,8 @@ Main window for cycleTracks.
 """
 
 import os
-from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy
-from PyQt5.QtCore import Qt, pyqtSlot as Slot
+from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QMessageBox
+from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
 from .plot import CyclePlotWidget
@@ -26,10 +26,16 @@ class CycleTracks(QMainWindow):
             with open(self.file, 'w') as fileobj:
                 fileobj.write(s+'\n')
                 
-        self.df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
+        self.fileChangedTimer = QTimer()
+        self.fileChangedTimer.setInterval(100)
+        self.fileChangedTimer.setSingleShot(True)
+        self.fileChangedTimer.timeout.connect(self.csvFileChanged)
+        self.fileWatcher = QFileSystemWatcher([self.file])
+        self.fileWatcher.fileChanged.connect(self.startTimer)
+        
+        df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
+        self.data = CycleData(df)
         self.backup()
-
-        self.data = CycleData(self.df)
         self.dataAnalysis = CycleDataAnalysis(self.data)
 
         self.pb = PersonalBests(self)
@@ -44,7 +50,7 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.viewer.newData)
         self.data.dataChanged.connect(self.plot.newData)
         self.data.dataChanged.connect(self.pb.newData)
-        self.addData.newData.connect(self.backup)
+        self.data.dataChanged.connect(self.backup)
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
@@ -88,7 +94,26 @@ class CycleTracks(QMainWindow):
     @Slot()
     def backup(self):
         bak = self.file + '.bak'
-        self.df.to_csv(bak, sep=self.sep, index=False)
+        self.data.df.to_csv(bak, sep=self.sep, index=False)
+        
+    @Slot(str)
+    def startTimer(self, file):
+        self._fileChanged = file
+        self.fileChangedTimer.start()
+        
+    @Slot()
+    def csvFileChanged(self):
+        df = pd.read_csv(self._fileChanged, sep=self.sep, parse_dates=['Date'])
+        if not self.data.df.equals(df):
+            msg = "CycleTracks csv file changed on disk. Do you want to reload?"
+            btn = QMessageBox.question(self, "File changed on disk", msg)
+            if btn == QMessageBox.Yes:
+                self.loadCsvFile()
+            
+    def loadCsvFile(self):
+        df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
+        self.backup()
+        self.data.setDataFrame(df)
         
     def createDockWidget(self, widget, area, title=None):
         dock = QDockWidget()
@@ -99,6 +124,10 @@ class CycleTracks(QMainWindow):
         if not hasattr(self, "dockWidgets"):
             self.dockWidgets = []
         self.dockWidgets.append(dock)
+        
+    def close(self, *args, **kwargs):
+        self.backup()
+        super().close()
         
     def createActions(self):
         

@@ -98,6 +98,10 @@ class CycleData(QObject):
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
         self.dataChanged.emit(index)
+        
+    def setDataFrame(self, df):
+        self.df = df
+        self.dataChanged.emit(self.df.index)
             
     @staticmethod
     def _timeToSecs(t):
