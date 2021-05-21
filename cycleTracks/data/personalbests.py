@@ -234,6 +234,7 @@ class PBTable(QTableWidget):
                 item = QTableWidgetItem()
                 item.setText(value)
                 item.setTextAlignment(Qt.AlignCenter)
+                item.setFlags(Qt.ItemIsSelectable|Qt.ItemIsEnabled)
                 self.setItem(rowNum, colNum, item)
                 
         self.setVerticalHeaderLabels(rowNums)
