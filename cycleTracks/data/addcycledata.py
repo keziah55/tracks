@@ -69,12 +69,12 @@ class AddCycleData(QWidget):
         
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
-        # self.table.horizontalHeader().setStretchLastSection(False)
         self.table.verticalHeader().setVisible(False)
+        
+        self._clicked = []
         self._makeEmptyRow()
         self.defaultBrush = self.table.item(0,0).background()
         self.invalidBrush = QBrush(QColor("#910404"))
-        # self.table.verticalHeader().resizeSections(QHeaderView.ResizeToContents)
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)
@@ -82,6 +82,7 @@ class AddCycleData(QWidget):
         self.validateTimer.timeout.connect(self._validate)
         self.table.cellChanged.connect(self.validateTimer.start)
         
+        self.table.cellChanged.connect(self._cellClicked)
         self.invalid.connect(self._invalid)
         
         self.addLineButton = QPushButton("New line")
@@ -113,6 +114,10 @@ class AddCycleData(QWidget):
             width += self.table.columnWidth(i)
         height = self.table.sizeHint().height()
         return QSize(width, height)
+    
+    @Slot(int, int)
+    def _cellClicked(self, row, col):
+        self._clicked.append((row, col))
         
         
     @Slot()
@@ -120,7 +125,6 @@ class AddCycleData(QWidget):
         """ Add a new row to the end of the table, with today's date in the 
             'Date' field and the rest blank. 
         """
-        
         today = datetime.today()
         month = calendar.month_abbr[today.month]
         date = f"{today.day} {month} {today.year}"
@@ -136,11 +140,13 @@ class AddCycleData(QWidget):
             item = QTableWidgetItem()
             item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, i+1, item)
+        self._clicked = [item for item in self._clicked if item[0] != row]
         
     @Slot()
     def _removeSelectedRow(self):
         """ Remove the currently selected row from the table. """
         row = self.table.currentRow()
+        self._clicked = [item for item in self._clicked if item[0] != row]
         self.table.removeRow(row)
         self.rowRemoved.emit()
         
@@ -166,7 +172,8 @@ class AddCycleData(QWidget):
                 mthd = self.mthds[name]['validate']
                 valid = mthd(value)
                 if not valid:
-                    self.invalid.emit(row, col)
+                    if (row, col) in self._clicked:
+                        self.invalid.emit(row, col)
                     allValid = False
                 elif valid and self.table.item(row, col).background() == self.invalidBrush:
                     self.table.item(row, col).setBackground(self.defaultBrush) 
@@ -194,5 +201,5 @@ class AddCycleData(QWidget):
             
         for row in reversed(range(self.table.rowCount())):
             self.table.removeRow(row)
+        self._clicked = []
         self._makeEmptyRow()
-    
