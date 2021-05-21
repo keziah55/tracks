@@ -1,13 +1,13 @@
-from cycleTracks.data import PersonalBests, CycleData
+from cycleTracks.data import PersonalBests
 from cycleTracks.data.personalbests import NewPBDialog
-from cycleTracks.util import parseDate, parseDuration, hourMinSecToFloat
+from cycleTracks.util import parseDate, parseDuration
+from cycleTracks.test import MockParent
 from PyQt5.QtWidgets import QDialog
-import tempfile
-import pandas as pd
 import pytest
 
 pytest_plugin = "pytest-qt"
 
+# parameters for test_new_data
 def getNewData(key):
     newDataParams = {'best month and best session':
                      ({'Date':[parseDate("6 May 2021", pd_timestamp=True)], 
@@ -30,11 +30,10 @@ def getNewData(key):
                       "<b>April 2021</b>: <b>130.83</b> km, <b>03:44:48</b> hours, <b>1956.7</b> calories")}
     return newDataParams[key]
     
-
-class DummyParent:
-    def __init__(self):
-        self.tmpfile = tempfile.NamedTemporaryFile()
-        
+class TestPersonalBests:
+    
+    @pytest.fixture
+    def setup(self, qtbot):
         # make CycleData object with known data
         dates = [f"2021-04-{i:02}" for i in range(26, 31)]
         dates += [f"2021-05-{i:02}" for i in range(1, 6)] 
@@ -46,17 +45,7 @@ class DummyParent:
                'Gear':[6]*10}
         dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
         
-        df = pd.DataFrame.from_dict(dct)
-        df.to_csv(self.tmpfile.name, index=False)
-        self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        self.data = CycleData(self.df)
-        self.dataAnalysis = None
-
-class TestPersonalBests:
-    
-    @pytest.fixture
-    def setup(self, qtbot):
-        self.parent = DummyParent()
+        self.parent = MockParent(dct=dct)
         self.widget = PersonalBests(self.parent)
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)
@@ -149,4 +138,3 @@ class TestPersonalBests:
         with pytest.raises(ValueError):
             self.widget.table._getBestSessions(order='acsending')
         
-            

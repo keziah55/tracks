@@ -1,6 +1,6 @@
 from cycleTracks.data import CycleDataViewer, CycleData
 from cycleTracks.util import monthYearToFloat, hourMinSecToFloat
-from cycleTracks.test import makeDataFrame
+from cycleTracks.test import makeDataFrame, MockParent
 from PyQt5.QtWidgets import QMessageBox
 import random
 import tempfile
@@ -9,18 +9,11 @@ import pytest
 
 pytest_plugin = "pytest-qt"
 
-class DummyParent:
-    def __init__(self):
-        self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(500, path=self.tmpfile.name)
-        self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        self.data = CycleData(self.df)
-
 class TestCycleDataViewer:
     
     @pytest.fixture
     def setup(self, qtbot):
-        self.parent = DummyParent()
+        self.parent = MockParent()
         
         self.widget = CycleDataViewer(self.parent)
         qtbot.addWidget(self.widget)

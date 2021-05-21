@@ -1,20 +1,10 @@
-from cycleTracks.data import CycleData
 from cycleTracks.plot import CyclePlotWidget
-from cycleTracks.test import makeDataFrame
+from cycleTracks.test import MockParent
 from PyQt5.QtCore import Qt, QPoint
 import random
-import tempfile
-import pandas as pd
 import pytest
 
 pytest_plugin = "pytest-qt"
-
-class DummyParent:
-    def __init__(self, size=500):
-        self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(size, path=self.tmpfile.name)
-        self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        self.data = CycleData(self.df)
 
 class Click:
     def __init__(self, pos, double):
@@ -32,7 +22,7 @@ class TestCyclePlotWidget:
     
     @pytest.fixture
     def setup(self, qtbot):
-        self.parent = DummyParent()
+        self.parent = MockParent()
         
         self.widget = CyclePlotWidget(self.parent)
         qtbot.addWidget(self.widget)
@@ -40,7 +30,7 @@ class TestCyclePlotWidget:
         
     @pytest.fixture
     def setup_reduced_points(self, qtbot):
-        self.parent = DummyParent(size=50)
+        self.parent = MockParent(size=50)
         
         self.widget = CyclePlotWidget(self.parent)
         qtbot.addWidget(self.widget)
