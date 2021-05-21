@@ -208,7 +208,6 @@ class PBTable(QTableWidget):
         
         # return only `n` values
         return pb[:n]
-    
        
     def setTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
         

@@ -188,9 +188,6 @@ class CycleData(QObject):
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
     
-    # def dateFmt(self, fmt="%a %d %b %Y"):
-        # return [dt.strftime(fmt) for dt in self.datetimes]
-    
     @property 
     def avgSpeed(self):
         """ Return average speeds as numpy array. """
