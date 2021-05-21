@@ -42,7 +42,7 @@ class CyclePlotWidget(QWidget):
         super().__init__()
         
         self.layout = QVBoxLayout()
-        self.plotWidget = _CyclePlotWidget(parent)
+        self.plotWidget = Plot(parent)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
@@ -67,7 +67,7 @@ class CyclePlotWidget(QWidget):
         self.plotWidget.setXAxisRange(months)
         
 
-class _CyclePlotWidget(PlotWidget):
+class Plot(PlotWidget):
     """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
     
         Parameters
