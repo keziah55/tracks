@@ -192,6 +192,9 @@ class Plot(PlotWidget):
         # apply to both the current scatter and background plot
         if not hasattr(self, 'dataItem') or not hasattr(self, 'backgroundItem'):
             return None
+        xRange0, xRange1 = self.viewBoxes[0].xRange
+        if xRange0 == x0 and xRange1 == x1:
+            return None
         data = [(self.dataItem.scatter.data['x'], self.dataItem.scatter.data['y'], 
                  self.viewBoxes[0]),
                 (self.backgroundItem.xData, self.backgroundItem.yData, 
@@ -343,9 +346,19 @@ class Plot(PlotWidget):
         dt = datetime(date.year, date.month, date.day)
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
+        self.ensurePointVisible(pt)
         self._highlightPoint(pt)
         self.setCurrentPoint(idx)
-    
+        
+    def ensurePointVisible(self, pt):
+        ts = pt.pos().x()
+        x0, x1 = self.viewBoxes[0].xRange
+        if ts < x0:
+            x0 = ts
+        elif ts > x1:
+            x1 = ts
+        self.setPlotRange(x0, x1)
+        
     def _highlightPoint(self, point):
         """ Change pen and brush of given point (and reset any previously 
             highlighted points). 
@@ -364,7 +377,7 @@ class Plot(PlotWidget):
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
         self.hgltPnt.setBrush(brush)
-
+        
     @Slot(object)
     def mouseMoved(self, pos):
         if self.plotItem.sceneBoundingRect().contains(pos):
