@@ -354,15 +354,18 @@ class Plot(PlotWidget):
         ts = pt.pos().x()
         x0, x1 = self.viewBoxes[0].xRange
         if ts < x0:
-            x0 = ts
+            x0 = ts - 1e6
         elif ts > x1:
-            x1 = ts
+            x1 = ts + 1e6
         self.setPlotRange(x0, x1)
         
+    @Slot(object)
     def _highlightPoint(self, point):
         """ Change pen and brush of given point (and reset any previously 
             highlighted points). 
         """
+        if point is None:
+            return None
         colour = self.style['highlightPoint']['colour']
         pen = mkPen(colour)
         brush = mkBrush(colour)
