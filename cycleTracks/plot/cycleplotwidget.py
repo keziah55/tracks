@@ -193,8 +193,6 @@ class Plot(PlotWidget):
         if not hasattr(self, 'dataItem') or not hasattr(self, 'backgroundItem'):
             return None
         xRange0, xRange1 = self.viewBoxes[0].xRange
-        if xRange0 == x0 and xRange1 == x1:
-            return None
         data = [(self.dataItem.scatter.data['x'], self.dataItem.scatter.data['y'], 
                  self.viewBoxes[0]),
                 (self.backgroundItem.xData, self.backgroundItem.yData, 
