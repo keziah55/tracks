@@ -80,6 +80,7 @@ class CycleData(QObject):
             raise NameError(f"{key} not a valid property name.")
          
     def __repr__(self):
+        # TODO make repr that includes avg speed
         return repr(self.df)
     
     @property
@@ -292,3 +293,4 @@ class CycleData(QObject):
                     
         self.df = self.df.drop(idx)
         self.dataChanged.emit(i0)
+        
