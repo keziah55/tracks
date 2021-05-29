@@ -9,4 +9,17 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
+DEVELOP="${CYCLETRACKS_DEVELOP:-0}"
+DEVELOP=$(($DEVELOP+0))
+CURRENT_BRANCH=$(git -C $DIR branch --show-current)
+if [ $DEVELOP == 0 ] && [ $CURRENT_BRANCH != "main" ]; then
+    # not in develop mode, checkout main branch
+    git -C $DIR checkout main
+fi
+
 python3 $DIR/main.py
+
+if [ $DEVELOP == 0 ] && [ $CURRENT_BRANCH != "main" ]; then
+    # return to branch
+    git -C $DIR checkout $CURRENT_BRANCH
+fi
