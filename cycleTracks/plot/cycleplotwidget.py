@@ -3,6 +3,7 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
+import time
 from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
@@ -62,9 +63,9 @@ class CyclePlotWidget(QWidget):
     def setCurrentPointFromDate(self, date):
         self.plotWidget.setCurrentPointFromDate(date)
         
-    @Slot(object)
-    def setXAxisRange(self, months):
-        self.plotWidget.setXAxisRange(months)
+    @Slot(object, bool)
+    def setXAxisRange(self, months, fromRecentSession=True):
+        self.plotWidget.setXAxisRange(months, fromRecentSession=fromRecentSession)
         
 
 class Plot(PlotWidget):
@@ -188,7 +189,9 @@ class Plot(PlotWidget):
         
     @Slot(float, float)
     def setPlotRange(self, x0, x1):
-        """ Set range of both view boxes to cover the time between the given timestamps. """
+        """ Set range of both view boxes to cover the points between the two
+            given timestamps.   
+        """
         # apply to both the current scatter and background plot
         if not hasattr(self, 'dataItem') or not hasattr(self, 'backgroundItem'):
             return None
@@ -211,10 +214,24 @@ class Plot(PlotWidget):
                 # set min and max for x and y in the viewBox
                 viewBox.setRange(xRange=(x0, x1), yRange=(y0, y1))
                 
-    @Slot(object)
-    def setXAxisRange(self, months):
+    @Slot(object, bool)
+    def setXAxisRange(self, months, fromRecentSession=True):
+        """ Scale the plot to show the most recent `months` months. 
+        
+            If `fromRecentSession` is True (default), the month range is calculated
+            relative to the most recent session in the `CycleData` object.
+            Otherwise, it is calculated from the current date.
+            These two options are equivalent if there are sessions from the current
+            month in the `CycleData` object.
+        """
         self.viewMonths = months
-        ts1 = self.data.dateTimestamps[-1]
+        if fromRecentSession:
+            ts1 = self.data.dateTimestamps[-1]
+        else:
+            now = datetime.now()
+            ts1 = now.timestamp()
+            if months is not None and now.month != self.data.datetimes[-1].month:
+                months -= now.month - self.data.datetimes[-1].month
         if months is None:
             ts0 = self.data.dateTimestamps[0]
         else:
