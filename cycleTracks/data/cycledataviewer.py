@@ -134,7 +134,6 @@ class CycleDataViewer(QTreeWidget):
     
     @Slot()
     def newData(self):
-        print("viewer.newData")
         expanded = []
         for item in self.topLevelItems:
             if item.isExpanded():

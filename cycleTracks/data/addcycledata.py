@@ -82,7 +82,7 @@ class AddCycleData(QWidget):
         self.validateTimer.timeout.connect(self._validate)
         self.table.cellChanged.connect(self.validateTimer.start)
         
-        self.table.cellChanged.connect(self._cellClicked)
+        self.table.currentCellChanged.connect(self._cellClicked)
         self.invalid.connect(self._invalid)
         
         self.addLineButton = QPushButton("New line")
@@ -117,7 +117,8 @@ class AddCycleData(QWidget):
     
     @Slot(int, int)
     def _cellClicked(self, row, col):
-        self._clicked.append((row, col))
+        if (row, col) not in self._clicked:
+            self._clicked.append((row, col))
         
         
     @Slot()
