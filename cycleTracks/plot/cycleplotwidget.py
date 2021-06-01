@@ -3,7 +3,6 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
-import time
 from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
@@ -54,6 +53,11 @@ class CyclePlotWidget(QWidget):
         self.layout.addWidget(self.plotLabel)
         
         self.setLayout(self.layout)
+        
+        msg = "Plot of session data. Click on the label below to change the metric being plotted.\n"
+        msg += "Click on a point to select it in the Monthly Data viewer."
+        # msg += "The right-hand axis shows the cumulative distance cycled each month."
+        self.setToolTip(msg)
         
     @Slot(object)
     def newData(self, index):

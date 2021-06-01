@@ -116,6 +116,11 @@ class CycleDataViewer(QTreeWidget):
         
         self.sortTree(0)
         
+        msg = "Browse all sessions, grouped by month. Click on the headers \n"
+        msg += "to sort by that metric in ascending or descending order.\n"
+        msg += "Click on a session to highlight it in the plot."
+        self.setToolTip(msg)
+        
         
     def sizeHint(self):
         width = self.header().length() + self.widthSpace

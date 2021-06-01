@@ -71,6 +71,7 @@ class PBMonthLabel(QLabel):
         self.monthYear = self.time = self.distance = self.calories = ""
         self.newData()
         self.setText()
+        self.setToolTip("The month in which the greatest distance was cycled.")
         
     @property
     def data(self):
@@ -164,6 +165,11 @@ class PBTable(QTableWidget):
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
+        
+        msg = "Top five sessions, by default, this is determined by fastest average speed.\n"
+        msg += "Click on 'Time', 'Distance (km)' or 'Calories' to change the metric.\n"
+        msg += "Click on a session to highlight it in the plot."
+        self.setToolTip(msg)
         
     @property
     def data(self):

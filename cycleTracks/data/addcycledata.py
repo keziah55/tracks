@@ -106,6 +106,9 @@ class AddCycleData(QWidget):
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
         
+        msg = "Add new session(s) data to viewer and plot."
+        self.setToolTip(msg)
+        
         
     def sizeHint(self):
         # can't believe this is necessary...
