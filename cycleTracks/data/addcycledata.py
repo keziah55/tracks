@@ -145,6 +145,7 @@ class AddCycleData(QWidget):
             item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, i+1, item)
         self._clicked = [item for item in self._clicked if item[0] != row]
+        self._cellClicked(row, 0)
         
     @Slot()
     def _removeSelectedRow(self):
@@ -168,6 +169,7 @@ class AddCycleData(QWidget):
         # it would be more efficient to only validate a single cell, after its
         # text has been changed, but this table is unlikely to ever be more 
         # than a few rows long, so this isn't too inefficient
+        # print(f"\n_validate, {self._clicked}")
         allValid = True
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):
@@ -175,20 +177,27 @@ class AddCycleData(QWidget):
                 value = item.text()
                 mthd = self.mthds[name]['validate']
                 valid = mthd(value)
+                # print(f"{row}, {col}: '{value}', valid: {valid}")
                 if not valid:
-                    if (row, col) in self._clicked:
-                        self.invalid.emit(row, col)
+                    # if (row, col) in self._clicked:
+                    self.invalid.emit(row, col)
                     allValid = False
                 elif valid and self.table.item(row, col).background() == self.invalidBrush:
                     self.table.item(row, col).setBackground(self.defaultBrush) 
         if allValid:
             self.okButton.setEnabled(True)
+            
+        return allValid
                 
     @Slot()
     def _addData(self):
         """ Take all data from the table and emit it as a list of dicts with 
             the `newData` signal, then clear the table.
         """
+        valid = self._validate()
+        if not valid:
+            return None
+        
         values = {name:[] for name in self.headerLabels}
         
         self.table.sortItems(0, Qt.AscendingOrder)

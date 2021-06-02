@@ -56,7 +56,6 @@ class CyclePlotWidget(QWidget):
         
         msg = "Plot of session data. Click on the label below to change the metric being plotted.\n"
         msg += "Click on a point to select it in the Monthly Data viewer."
-        # msg += "The right-hand axis shows the cumulative distance cycled each month."
         self.setToolTip(msg)
         
     @Slot(object)
@@ -365,7 +364,7 @@ class Plot(PlotWidget):
         dt = datetime(date.year, date.month, date.day)
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
-        self.ensurePointVisible(pt)
+        # self.ensurePointVisible(pt)
         self._highlightPoint(pt)
         self.setCurrentPoint(idx)
         
@@ -385,6 +384,9 @@ class Plot(PlotWidget):
         """
         if point is None:
             return None
+        
+        self.ensurePointVisible(point)
+        
         colour = self.style['highlightPoint']['colour']
         pen = mkPen(colour)
         brush = mkBrush(colour)
