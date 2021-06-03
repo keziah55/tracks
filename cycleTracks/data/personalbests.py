@@ -58,7 +58,7 @@ class PersonalBests(QWidget):
         self.newPBdialog.exec_()
         
         if bestSession is not None:
-            self.table.setTable()
+            self.table.setTable(highlightNew=True)
         if bestMonth is not None:
             self.label.setText()
 
@@ -166,6 +166,8 @@ class PBTable(QTableWidget):
         self.header.sectionClicked.connect(self.selectColumn)
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
         
+        self.newIdx = None
+        
         msg = "Top five sessions, by default, this is determined by fastest average speed.\n"
         msg += "Click on 'Time', 'Distance (km)' or 'Calories' to change the metric.\n"
         msg += "Click on a session to highlight it in the plot."
@@ -215,7 +217,8 @@ class PBTable(QTableWidget):
         # return only `n` values
         return pb[:n]
        
-    def setTable(self, n=5, key="Avg. speed (km/h)", order='descending'):
+    def setTable(self, n=5, key="Avg. speed (km/h)", order='descending',
+                 highlightNew=False):
         
         self.items = self._getBestSessions(n=n, key=key, order=order)
         
@@ -245,6 +248,9 @@ class PBTable(QTableWidget):
         self.setVerticalHeaderLabels(rowNums)
                 
         self.header.resizeSections(QHeaderView.ResizeToContents)
+        
+        if highlightNew and self.newIdx is not None:
+            self.setCurrentCell(self.newIdx, 0)
 
     @Slot(int)
     def selectColumn(self, idx):
@@ -271,6 +277,7 @@ class PBTable(QTableWidget):
             i = 0
             while newDates[i] == dates[i]:
                 i += 1
+            self.newIdx = i
             msg = self.makeMessage(self.selectKey, i, pb[i][self.selectKey])
             return msg
         else:
