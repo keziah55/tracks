@@ -169,7 +169,6 @@ class AddCycleData(QWidget):
         # it would be more efficient to only validate a single cell, after its
         # text has been changed, but this table is unlikely to ever be more 
         # than a few rows long, so this isn't too inefficient
-        # print(f"\n_validate, {self._clicked}")
         allValid = True
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):
@@ -177,10 +176,9 @@ class AddCycleData(QWidget):
                 value = item.text()
                 mthd = self.mthds[name]['validate']
                 valid = mthd(value)
-                # print(f"{row}, {col}: '{value}', valid: {valid}")
                 if not valid:
-                    # if (row, col) in self._clicked:
-                    self.invalid.emit(row, col)
+                    if (row, col) in self._clicked:
+                        self.invalid.emit(row, col)
                     allValid = False
                 elif valid and self.table.item(row, col).background() == self.invalidBrush:
                     self.table.item(row, col).setBackground(self.defaultBrush) 
@@ -194,6 +192,7 @@ class AddCycleData(QWidget):
         """ Take all data from the table and emit it as a list of dicts with 
             the `newData` signal, then clear the table.
         """
+        self.table.focusNextChild()
         valid = self._validate()
         if not valid:
             return None
