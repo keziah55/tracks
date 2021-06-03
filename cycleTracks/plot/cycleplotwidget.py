@@ -364,7 +364,7 @@ class Plot(PlotWidget):
         dt = datetime(date.year, date.month, date.day)
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
-        # self.ensurePointVisible(pt)
+        self.ensurePointVisible(pt)
         self._highlightPoint(pt)
         self.setCurrentPoint(idx)
         
@@ -385,18 +385,16 @@ class Plot(PlotWidget):
         if point is None:
             return None
         
-        self.ensurePointVisible(point)
-        
-        colour = self.style['highlightPoint']['colour']
-        pen = mkPen(colour)
-        brush = mkBrush(colour)
-        
         try:
             # if other points are already highlighted, remove highlighting
             self.hgltPnt.resetPen()
             self.hgltPnt.resetBrush()
         except (AttributeError, RuntimeError):
             pass
+        
+        colour = self.style['highlightPoint']['colour']
+        pen = mkPen(colour)
+        brush = mkBrush(colour)
             
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
