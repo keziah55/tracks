@@ -56,7 +56,7 @@ class CyclePlotWidget(QWidget):
         
         msg = "Plot of session data. Click on the label below to change the metric being plotted.\n"
         msg += "Click on a point to select it in the Monthly Data viewer."
-        self.setToolTip(msg)
+        # self.setToolTip(msg)
         
     @Slot(object)
     def newData(self, index):
