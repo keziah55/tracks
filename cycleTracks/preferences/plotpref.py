@@ -22,6 +22,7 @@ class PlotPreferences(QWidget):
         
         self.plotRangeCombo = QComboBox()
         self.plotRangeCombo.addItem("1 month")
+        self.plotRangeCombo.addItem("3 months")
         self.plotRangeCombo.addItem("6 months")
         self.plotRangeCombo.addItem("1 year")
         self.plotRangeCombo.addItem("Current year")
