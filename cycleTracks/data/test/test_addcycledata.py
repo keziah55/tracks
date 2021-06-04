@@ -116,6 +116,7 @@ class TestAddCycleData:
             with qtbot.waitSignals(signals, check_params_cbs=callbacks,
                                    timeout=5000):
                 self.table.item(0, col).setText(text)
+                self.table.focusNextChild()
                 
             assert self.okButton.isEnabled() is False
             assert self.table.item(0, col).background() == self.widget.invalidBrush
