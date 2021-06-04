@@ -5,14 +5,12 @@ from . import makeDataFrame
 import tempfile
 import pytest
 
-# TODO patch settings
-
 pytest_plugin = "pytest-qt"
 
 class TracksSetupTeardown:
     
     @pytest.fixture
-    def setup(self, qtbot, monkeypatch):
+    def setup(self, qtbot, monkeypatch, patchSettings):
         
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.size = 100
