@@ -2,9 +2,11 @@
 Subclasses of pyqtgraph items. 
 """
 
-from pyqtgraph import DateAxisItem, ViewBox, AxisItem
+from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem
+from pyqtgraph.graphicsItems.ButtonItem import ButtonItem
 from PyQt5.QtCore import pyqtSignal as Signal
 from datetime import datetime
+import os.path
 
 class CustomAxisItem(AxisItem):
     """ Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.
@@ -159,3 +161,50 @@ class CustomViewBox(ViewBox):
             self.yRange = yRange
         super().setRange(rect, xRange, yRange, **kwargs)
         
+        
+class CustomPlotItem(PlotItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        d = os.path.join(os.path.dirname(__file__), '..', '..', 'images')
+        self.buttonSize = 20
+        self.viewAllBtn = ButtonItem(os.path.join(d, "view_all.png"), self.buttonSize, self)
+        self.viewRangeBtn = ButtonItem(os.path.join(d, "view_range.png"), self.buttonSize, self)
+        self.buttons = [self.viewAllBtn, self.viewRangeBtn]
+        
+        self.viewAllBtn.setToolTip("View all sessions")
+        self.viewRangeBtn.setToolTip("Reset plot range")
+        
+        self.autoBtn = None
+        
+    def close(self):
+        super().close()
+        for button in self.buttons:
+            button.setParent(None)
+            button = None
+            
+    def resizeEvent(self, ev):
+        if not hasattr(self, 'buttons') or any([button is None for button in self.buttons]):
+            # closed down or being initialised
+            return
+        btnRect = self.mapRectFromItem(self.viewAllBtn, self.viewAllBtn.boundingRect())
+        y = self.size().height() - btnRect.height()
+        self.viewAllBtn.setPos(0, y)
+        self.viewRangeBtn.setPos(int(self.buttonSize * 1.5), y)
+        
+    def updateButtons(self):
+        if not hasattr(self, 'buttons') or any([button is None for button in self.buttons]):
+            # closed down or being initialised
+            return
+        try:
+            if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+                for button in self.buttons:
+                    button.show()
+            else:
+                self.hideButtons()
+        except RuntimeError:
+            pass  # this can happen if the plot has been deleted.
+        
+    def hideButtons(self):
+        for button in self.buttons:
+            button.hide()

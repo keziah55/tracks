@@ -9,7 +9,7 @@ from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 from .cycleplotlabel import CyclePlotLabel
-from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
+from .custompyqtgraph import CustomPlotItem, CustomAxisItem, CustomDateAxisItem, CustomViewBox
 from cycleTracks.util import floatToHourMinSec
 
     
@@ -95,14 +95,15 @@ class Plot(PlotWidget):
     """
     
     def __init__(self, parent):
+        self.plotItem = CustomPlotItem(viewBox=CustomViewBox())
         self.dateAxis = CustomDateAxisItem()
-        super().__init__(axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')},
-                         viewBox=CustomViewBox())
+        super().__init__(plotItem=self.plotItem, 
+                         axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
         
         # disconnect autoBtn from its slot and connect to new slot that will
         # auto scale both viewBoxes
-        self.plotItem.autoBtn.clicked.disconnect(self.plotItem.autoBtnClicked)
-        self.plotItem.autoBtn.clicked.connect(self.autoBtnClicked)
+        self.plotItem.viewAllBtn.clicked.connect(self.viewAll)
+        self.plotItem.viewRangeBtn.clicked.connect(self.resetMonthRange)
         
         self.dateAxis.axisDoubleClicked.connect(self.setPlotRange)
         
@@ -180,16 +181,20 @@ class Plot(PlotWidget):
         # incorrectly while views had different shapes.
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
-        
-    def autoBtnClicked(self):
+     
+    @Slot()
+    def viewAll(self):
         # enableAutoRange on both viewBoxes
-        if self.plotItem.autoBtn.mode == 'auto':
-            for vb in self.viewBoxes:
-                vb.enableAutoRange()
-            self.plotItem.autoBtn.hide()
-        else:
-            self.plotItem.disableAutoRange()
+        for vb in self.viewBoxes:
+            vb.enableAutoRange()
+        self.plotItem.hideButtons()
         
+    @Slot()
+    def resetMonthRange(self):
+        if self.viewMonths is not None:
+            self.setXAxisRange(self.viewMonths)
+        self.plotItem.hideButtons()
+    
     @Slot(float, float)
     def setPlotRange(self, x0, x1):
         """ Set range of both view boxes to cover the points between the two
@@ -247,8 +252,7 @@ class Plot(PlotWidget):
     def updatePlots(self):
         self.plotSeries(self.ySeries, mode='set')
         self.plotTotalDistance(mode='set')
-        if self.viewMonths is not None:
-            self.setXAxisRange(self.viewMonths)
+        self.resetMonthRange()
         
     @property
     def ySeries(self):
