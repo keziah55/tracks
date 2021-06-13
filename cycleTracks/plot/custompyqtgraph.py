@@ -167,12 +167,13 @@ class CustomPlotItem(PlotItem):
         super().__init__(*args, **kwargs)
         
         d = os.path.join(os.path.dirname(__file__), '..', '..', 'images')
-        self.buttonSize = 20
+        self.buttonSize = 24
+        self.buttonPad = 6
         self.viewAllBtn = ButtonItem(os.path.join(d, "view_all.png"), self.buttonSize, self)
         self.viewRangeBtn = ButtonItem(os.path.join(d, "view_range.png"), self.buttonSize, self)
         self.buttons = [self.viewAllBtn, self.viewRangeBtn]
         
-        self.viewAllBtn.setToolTip("View all sessions")
+        self.viewAllBtn.setToolTip("View all data")
         self.viewRangeBtn.setToolTip("Reset plot range")
         
         self.autoBtn = None
@@ -190,7 +191,7 @@ class CustomPlotItem(PlotItem):
         btnRect = self.mapRectFromItem(self.viewAllBtn, self.viewAllBtn.boundingRect())
         y = self.size().height() - btnRect.height()
         self.viewAllBtn.setPos(0, y)
-        self.viewRangeBtn.setPos(int(self.buttonSize * 1.5), y)
+        self.viewRangeBtn.setPos(self.buttonSize + self.buttonPad, y)
         
     def updateButtons(self):
         if not hasattr(self, 'buttons') or any([button is None for button in self.buttons]):

@@ -95,10 +95,10 @@ class Plot(PlotWidget):
     """
     
     def __init__(self, parent):
-        self.plotItem = CustomPlotItem(viewBox=CustomViewBox())
         self.dateAxis = CustomDateAxisItem()
-        super().__init__(plotItem=self.plotItem, 
+        self.plotItem = CustomPlotItem(viewBox=CustomViewBox(), 
                          axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
+        super().__init__(plotItem=self.plotItem)
         
         # disconnect autoBtn from its slot and connect to new slot that will
         # auto scale both viewBoxes
