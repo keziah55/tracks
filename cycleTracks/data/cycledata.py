@@ -80,8 +80,47 @@ class CycleData(QObject):
             raise NameError(f"{key} not a valid property name.")
          
     def __repr__(self):
-        # TODO make repr that includes avg speed
-        return repr(self.df)
+        return self.toString(headTail=5)
+        
+    def toString(self, headTail=None):
+        """ Return CycleData object as a string.
+        
+            Parameters
+            ----------
+            headTail : int, optional
+                If provided, abridge the object to show only the first and last 
+                `headTail` rows. By default, do not abridge and return the full object.
+        """
+        keys = ["Date", "Time", "Distance (km)", "Avg. speed (km/h)", "Calories", "Gear"]
+        joinStr = "  "
+        columns = {key: self.formatted(key) for key in keys}
+        widths = {key: max(max([len(str(item)) for item in values]), len(key))#+len(joinStr))
+                           for key, values in columns.items()}
+        size = len(self)
+        if headTail is not None:
+            indices = list(range(headTail)) + list(range(size-headTail,size))
+        else:
+            indices = range(size)
+        
+        s = ""
+        idxWidth = max(len(s), len(str(size)))
+        header = [f"{s:<{idxWidth}}"]
+        header += [f"{key:>{widths[key]}}" for key in columns]
+        rows = [joinStr.join(header)]
+            
+        for n, idx in enumerate(indices):
+            if n >= 1:
+                if idx != indices[n-1] + 1:
+                    rows.append("...")
+            row = [f"{idx:>{idxWidth}}"]
+            for key, lst in columns.items():
+                value = lst[idx]
+                width = widths[key]
+                s = f"{value:>{width}}"
+                row.append(s)
+            rows.append(joinStr.join(row))
+        
+        return "\n".join(rows)
     
     @property
     def quickNames(self):
@@ -198,20 +237,27 @@ class CycleData(QObject):
         """ Return average speeds as numpy array. """
         return self.distance/self.timeHours
     
-    def splitMonths(self, includeEmpty=False):
+    def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
         """ Split `df` into months. 
         
             Parameters
             -----------
             includeEmpty : bool
                 If True and if a month has no data, a monthYear string and empty 
-                DataFrame will be included in the returned list. Otherwise, it
-                will be ignored. Default is False.
+                DataFrame or CycleData object will be included in the returned list. 
+                Otherwise, it  will be ignored. Default is False.
+            returnType : {'DataFrame', 'CycleData'}
+                Type of object to return with each month's data. Default is 
+                (pandas) 'DataFrame'
             
             Returns
             -------
-            list of (monthYear string, DataFrame) tuples
+            list of (monthYear string, DataFrame/CycleData) tuples
         """
+        validReturnTypes = ['DataFrame', 'CycleData']
+        if returnType not in validReturnTypes:
+            msg = f"Invalid returnType '{returnType}'. Valid values are {', '.join(validReturnTypes)}"
+            raise ValueError(msg)
         grouped = self.df.groupby(pd.Grouper(key='Date', freq='M'))
         dfs = [group for _,group in grouped]
         lst = []
@@ -240,6 +286,8 @@ class CycleData(QObject):
                 month = date.month
                 year = date.year
             monthYear = f"{calendar.month_name[month]} {year}"
+            if returnType == "CycleData":
+                df = CycleData(df)
             lst.append((monthYear, df))
         return lst
     
