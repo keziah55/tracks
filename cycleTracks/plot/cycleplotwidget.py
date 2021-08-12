@@ -3,7 +3,7 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
-from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, getConfigOption
+from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
@@ -152,8 +152,6 @@ class Plot(PlotWidget):
         self.currentPoint = {}
         
         self.viewMonths = None
-        
-        # print(getConfigOption('foreground'))
         
     @property
     def data(self):

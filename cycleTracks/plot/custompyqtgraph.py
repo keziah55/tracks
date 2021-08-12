@@ -2,9 +2,10 @@
 Subclasses of pyqtgraph items. 
 """
 
-from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem
+from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem, getConfigOption, mkColor
 from pyqtgraph.graphicsItems.ButtonItem import ButtonItem
-from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtCore import Qt, pyqtSignal as Signal
+from PyQt5.QtGui import QPixmap, QImage, QColor, QPainter
 from datetime import datetime
 import os.path
 
@@ -169,8 +170,14 @@ class CustomPlotItem(PlotItem):
         d = os.path.join(os.path.dirname(__file__), '..', '..', 'images')
         self.buttonSize = 24
         self.buttonPad = 6
-        self.viewAllBtn = ButtonItem(os.path.join(d, "view_all.png"), self.buttonSize, self)
-        self.viewRangeBtn = ButtonItem(os.path.join(d, "view_range.png"), self.buttonSize, self)
+        
+        # set button pixmap to use plot's forground colour
+        foregroundColour = mkColor(getConfigOption('foreground'))
+        pixmapAll = self._makeIconPixmap(os.path.join(d, "view_all.png"), foregroundColour)
+        pixmapRange = self._makeIconPixmap(os.path.join(d, "view_range.png"), foregroundColour)
+        
+        self.viewAllBtn = ButtonItem(width=self.buttonSize, parentItem=self, pixmap=pixmapAll)
+        self.viewRangeBtn = ButtonItem(width=self.buttonSize, parentItem=self, pixmap=pixmapRange)
         self.buttons = [self.viewAllBtn, self.viewRangeBtn]
         
         self.viewAllBtn.setToolTip("View all data")
@@ -183,6 +190,14 @@ class CustomPlotItem(PlotItem):
         for button in self.buttons:
             button.setParent(None)
             button = None
+            
+    @staticmethod
+    def _makeIconPixmap(file, colour):
+        px0 = QPixmap(file)
+        px1 = QPixmap(px0.size())
+        px1.fill(colour)
+        px1.setMask(px0.createMaskFromColor(Qt.transparent))
+        return px1
             
     def resizeEvent(self, ev):
         if not hasattr(self, 'buttons') or any([button is None for button in self.buttons]):
