@@ -4,7 +4,7 @@ Plot preferences
 
 from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
-                             QVBoxLayout, QWidget, QRadioButton)
+                             QVBoxLayout, QWidget, QRadioButton, QLabel)
 from PyQt5.QtCore import pyqtSlot as Slot
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
@@ -21,11 +21,18 @@ class PlotPreferences(QWidget):
         plotStyleGroup = GroupWidget("Plot style")
         self.darkStyleButton = QRadioButton("Dark")
         self.lightStyleButton = QRadioButton("Light")
-        plotStyleGroup.addWidget(self.darkStyleButton)
-        plotStyleGroup.addWidget(self.lightStyleButton)
         plotStyle = self.settings.value("style", "dark")
         button = self.darkStyleButton if plotStyle == "dark" else self.lightStyleButton
         button.setChecked(True)
+        self.styleLabel = QLabel("Style will be updated when Cycle Tracks is next opened.")
+        
+        for button in [self.darkStyleButton, self.lightStyleButton]:
+            button.clicked.connect(lambda _: self.styleLabel.setVisible(True))
+        
+        plotStyleGroup.addWidget(self.darkStyleButton)
+        plotStyleGroup.addWidget(self.lightStyleButton)
+        plotStyleGroup.addWidget(self.styleLabel)
+        self.styleLabel.setVisible(False)
         
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
@@ -89,9 +96,6 @@ class PlotPreferences(QWidget):
                 text = f"{date.today().month} months"
             months = None if text == 'All' else int(text.strip(' months'))
         self.mainWindow.plot.setXAxisRange(months, fromRecentSession=False)
-        
-        plotStyle = "dark" if self.darkStyleButton.isChecked() else "light"
-        self.mainWindow.plot.setStyle(plotStyle)
         
         self.settings.beginGroup("plot")
         if self.darkStyleButton.isChecked():
