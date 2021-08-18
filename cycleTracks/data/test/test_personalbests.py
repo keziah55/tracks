@@ -2,7 +2,7 @@ from cycleTracks.data import PersonalBests
 from cycleTracks.data.personalbests import NewPBDialog
 from cycleTracks.util import parseDate, parseDuration
 from cycleTracks.test import MockParent
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -47,11 +47,17 @@ class TestPersonalBests:
         
         self.parent = MockParent(dct=dct)
         self.widget = PersonalBests(self.parent)
-        qtbot.addWidget(self.widget)
-        self.widget.setGeometry(100, 100, 500, 600)
+        self._widget = QWidget()
+        layout = QVBoxLayout()
+        layout.addWidget(self.widget.label)
+        layout.addWidget(self.widget.table)
+        self._widget.setLayout(layout)
+        
+        qtbot.addWidget(self._widget)
+        self._widget.setGeometry(100, 100, 500, 600)
         
         self.parent.data.dataChanged.connect(self.widget.newData)
-        self.widget.show()
+        self._widget.show()
         
     @pytest.mark.parametrize("key", ['best month and best session', 'best month', 'best session'])
     def test_new_data(self, setup, qtbot, key):
