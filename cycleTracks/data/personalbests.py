@@ -4,7 +4,7 @@ QTableWidget showing the top sessions.
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
                              QDialogButtonBox, QVBoxLayout, QWidget, QAbstractItemView)
-from PyQt5.QtCore import Qt, pyqtSlot as Slot, pyqtSignal as Signal
+from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat
@@ -13,7 +13,7 @@ import re
 import numpy as np
 
 
-class PersonalBests(QWidget):
+class PersonalBests(QObject):
     
     itemSelected = Signal(object)
     
@@ -24,19 +24,19 @@ class PersonalBests(QWidget):
         
         self.dataAnalysis = parent.dataAnalysis
         
-        self.labelGroup = GroupWidget("Best month")
+        # self.labelGroup = GroupWidget("Best month")
         self.label = PBMonthLabel(parent)
-        self.labelGroup.addWidget(self.label)
+        # self.labelGroup.addWidget(self.label)
         
-        self.tableGroup = GroupWidget("Top five sessions")
+        # self.tableGroup = GroupWidget("Top five sessions")
         self.table = PBTable(parent)
-        self.tableGroup.addWidget(self.table)
+        # self.tableGroup.addWidget(self.table)
         self.table.itemSelected.connect(self.itemSelected)
         
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.labelGroup)
-        self.layout.addWidget(self.tableGroup)
-        self.setLayout(self.layout)
+        # self.layout = QVBoxLayout()
+        # self.layout.addWidget(self.labelGroup)
+        # self.layout.addWidget(self.tableGroup)
+        # self.setLayout(self.layout)
         
     @Slot()
     def newData(self):
@@ -72,6 +72,12 @@ class PBMonthLabel(QLabel):
         self.newData()
         self.setText()
         self.setToolTip("The month in which the greatest distance was cycled.")
+        self.setAlignment(Qt.AlignHCenter)
+        
+    def sizeHint(self):
+        size = super().sizeHint()
+        height = int(1.5*size.height())
+        return QSize(size.width(), height)
         
     @property
     def data(self):

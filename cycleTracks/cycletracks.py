@@ -47,7 +47,9 @@ class CycleTracks(QMainWindow):
         plotStyle = self.settings.value("plot/style", "dark")
         self.plot = CyclePlotWidget(self, style=plotStyle)
         
-        self.pb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        # self.pb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.pb.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.pb.table.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         self.addData.newData.connect(self.data.append)
@@ -60,7 +62,9 @@ class CycleTracks(QMainWindow):
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         
-        dockWidgets = [(self.pb, Qt.LeftDockWidgetArea, "Personal Bests"),
+        dockWidgets = [#(self.pb, Qt.LeftDockWidgetArea, "Personal Bests"),
+                       (self.pb.label, Qt.LeftDockWidgetArea, "Best month"),
+                       (self.pb.table, Qt.LeftDockWidgetArea, "Top five sessions"),
                        (self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
         
@@ -119,15 +123,14 @@ class CycleTracks(QMainWindow):
         self.backup()
         self.data.setDataFrame(df)
         
-    def createDockWidget(self, widget, area, title=None):
+    def createDockWidget(self, widget, area, title):
         dock = QDockWidget()
         dock.setWidget(widget)
-        if title is not None:
-            dock.setWindowTitle(title)
+        dock.setWindowTitle(title)
         self.addDockWidget(area, dock)
         if not hasattr(self, "dockWidgets"):
-            self.dockWidgets = []
-        self.dockWidgets.append(dock)
+            self.dockWidgets = {}
+        self.dockWidgets[title] = dock
         
     def close(self, *args, **kwargs):
         self.backup()
@@ -163,6 +166,7 @@ class CycleTracks(QMainWindow):
         
         self.viewMenu = self.menuBar().addMenu("&View")
         self.panelMenu = self.viewMenu.addMenu("&Panels")
-        for dock in self.dockWidgets:
+        for key in sorted(self.dockWidgets):
+            dock = self.dockWidgets[key]
             self.panelMenu.addAction(dock.toggleViewAction())
     
