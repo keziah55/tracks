@@ -12,11 +12,14 @@ import pandas as pd
 from .plot import CyclePlotWidget
 from .data import CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, PersonalBests
 from .preferences import PreferencesDialog
+from customQObjects.core import Settings
 
 
 class CycleTracks(QMainWindow):
     def __init__(self):
         super().__init__()
+        
+        self.settings = Settings()
         
         self.file = self.getFile()
         self.sep = ','
@@ -41,7 +44,8 @@ class CycleTracks(QMainWindow):
         self.pb = PersonalBests(self)
         self.viewer = CycleDataViewer(self)
         self.addData = AddCycleData()
-        self.plot = CyclePlotWidget(self)
+        plotStyle = self.settings.value("plot/style", "dark")
+        self.plot = CyclePlotWidget(self, style=plotStyle)
         
         self.pb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)

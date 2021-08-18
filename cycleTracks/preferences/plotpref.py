@@ -4,7 +4,7 @@ Plot preferences
 
 from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
-                             QVBoxLayout, QWidget)
+                             QVBoxLayout, QWidget, QRadioButton)
 from PyQt5.QtCore import pyqtSlot as Slot
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
@@ -17,6 +17,15 @@ class PlotPreferences(QWidget):
         
         self.settings = Settings()
         self.settings.beginGroup("plot")
+        
+        plotStyleGroup = GroupWidget("Plot style")
+        self.darkStyleButton = QRadioButton("Dark")
+        self.lightStyleButton = QRadioButton("Light")
+        plotStyleGroup.addWidget(self.darkStyleButton)
+        plotStyleGroup.addWidget(self.lightStyleButton)
+        plotStyle = self.settings.value("style", "dark")
+        button = self.darkStyleButton if plotStyle == "dark" else self.lightStyleButton
+        button.setChecked(True)
         
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
@@ -58,6 +67,7 @@ class PlotPreferences(QWidget):
         plotConfigGroup.addLayout(customRangeLayout)
         
         mainLayout = QVBoxLayout()
+        mainLayout.addWidget(plotStyleGroup)
         mainLayout.addWidget(plotConfigGroup)
         mainLayout.addStretch(1)
 
@@ -80,7 +90,15 @@ class PlotPreferences(QWidget):
             months = None if text == 'All' else int(text.strip(' months'))
         self.mainWindow.plot.setXAxisRange(months, fromRecentSession=False)
         
+        plotStyle = "dark" if self.darkStyleButton.isChecked() else "light"
+        self.mainWindow.plot.setStyle(plotStyle)
+        
         self.settings.beginGroup("plot")
+        if self.darkStyleButton.isChecked():
+            self.settings.setValue("style", "dark")
+        else:
+            self.settings.setValue("style", "light")
+        
         self.settings.setValue("customRange", customRange)
         if customRange:
             self.settings.setValue("range", self.customRangeSpinBox.value())

@@ -3,7 +3,7 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
-from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine
+from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, setConfigOptions, getConfigOption
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
@@ -37,12 +37,12 @@ class CyclePlotWidget(QWidget):
         current point.
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent, style="dark"):
         
         super().__init__()
         
         self.layout = QVBoxLayout()
-        self.plotWidget = Plot(parent)
+        self.plotWidget = Plot(parent, style=style)
         self.plotLabel = CyclePlotLabel(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
@@ -70,6 +70,10 @@ class CyclePlotWidget(QWidget):
     def setXAxisRange(self, months, fromRecentSession=True):
         self.plotWidget.setXAxisRange(months, fromRecentSession=fromRecentSession)
         
+    @Slot(str)
+    def setStyle(self, style):
+        self.plotWidget.setStyle(style)
+        
 
 class Plot(PlotWidget):
     """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
@@ -94,7 +98,12 @@ class Plot(PlotWidget):
         current point.
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent, style="dark"):
+        
+        self._ySeries = None
+        self.style = PlotStyle(style)
+        self.setStyle(style)
+        
         self.dateAxis = CustomDateAxisItem()
         self.plotItem = CustomPlotItem(viewBox=CustomViewBox(), 
                          axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
@@ -110,17 +119,6 @@ class Plot(PlotWidget):
         self.hgltPnt = None
         
         self.parent = parent
-        
-        self.style = {'speed':{'colour':"#024aeb",
-                               'symbol':'x'},
-                      'distance':{'colour':"#cf0202",
-                                  'symbol':'x'},
-                      'time':{'colour':"#19b536",
-                              'symbol':'x'},
-                      'calories':{'colour':"#ff9100",
-                                  'symbol':'x'},
-                      'odometer':{'colour':"#4d4d4d"},# "#"},
-                      'highlightPoint':{'colour':"#faed00"}}
         
         self.plottable = ['speed', 'distance', 'time', 'calories']
         
@@ -181,7 +179,15 @@ class Plot(PlotWidget):
         # incorrectly while views had different shapes.
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
-     
+        
+    def setStyle(self, style):
+        self.style.name = style
+        dct = {'foreground':self.style.foreground,
+               'background':self.style.background}
+        setConfigOptions(**dct)
+        if self.ySeries is not None:
+            self.updatePlots()
+            
     @Slot()
     def viewAll(self):
         # enableAutoRange on both viewBoxes
@@ -446,4 +452,62 @@ class Plot(PlotWidget):
             if x > sx-s2x and x < sx+s2x:
                 pts.append(s)
         return pts[::-1]
+    
+
+class PlotStyle:
+    
+    def __init__(self, style="dark"):
+        self.validStyles = ['dark', 'light']
+        self.style = style
+        
+        self.colours = {
+            'speed':{'dark':"#024aeb", 'light':"#0981cb",},
+            'distance':{'dark':"#cf0202", 'light':'#d80d0d'},
+            'time':{'dark':"#19b536", 'light':'#2bb512'},
+            'calories':{'dark':"#ff9100", 'light':'#ff9100'},
+            'odometer':{'dark':"#4d4d4d", 'light':"#9f9f9f"},
+            'highlightPoint':{'dark':"#faed00", 'light':"#deb009"},
+            'foreground':{'dark':"#969696", 'light':"#4d4d4d"},
+            'background':{'dark':"#000000", 'light':"#ffffff"}}
+        
+        self.symbols = {
+            'speed':'x',
+            'distance':'x',
+            'time':'x',
+            'calories':'x'}
+        
+    @property
+    def name(self):
+        return self._styleName
+
+    @name.setter 
+    def name(self, name):
+        if name.lower() not in self.validStyles:
+            msg = f"Plot style must be one of ', '.join(self.validStyles), not '{name}'."
+            raise ValueError(msg)
+        self._styleName = name.lower()
+        
+    def __getattr__(self, name):
+        if name in self.colours.keys():
+            return self._getStyle(name)
+        else:
+            return self.__getattribute__(name)
+        
+    def __getitem__(self, name):
+        if name in self.colours.keys():
+            return self._getStyle(name)
+        else:
+            raise KeyError(f"PlotStyle has no field '{name}'")
+            
+    def keys(self):
+        return self.colours.keys()
+        
+    def _getStyle(self, field):
+        if field in ['foreground', 'background']:
+            return self.colours[field][self.style]
+        
+        dct = {'colour':self.colours[field][self.style]}
+        if field in self.symbols:
+            dct['symbol'] = self.symbols[field]
+        return dct
     
