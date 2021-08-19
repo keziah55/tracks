@@ -45,13 +45,6 @@ class CyclePlotWidget(QWidget):
         self.plotLabel = None
         self.parent = parent
         
-        # self.plotWidget = Plot(parent, style=style)
-        # self.plotLabel = CyclePlotLabel(self.plotWidget.style)
-        # self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
-        # self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
-        
-        # self.plotWidget.pointSelected.connect(self.pointSelected)
-        
         self._makePlot(parent, style=style)
         
         self.layout = QVBoxLayout()
@@ -59,10 +52,6 @@ class CyclePlotWidget(QWidget):
         self.layout.addWidget(self.plotLabel)
         
         self.setLayout(self.layout)
-        
-        msg = "Plot of session data. Click on the label below to change the metric being plotted.\n"
-        msg += "Click on a point to select it in the Monthly Data viewer."
-        # self.setToolTip(msg)
         
     def _makePlot(self, *args, **kwargs):
         self.plotWidget = Plot(*args, **kwargs)
@@ -96,7 +85,6 @@ class CyclePlotWidget(QWidget):
         self._makePlot(self.parent, style=style)
         self.plotWidget.setState(self.plotState)
         self.layout.insertWidget(0, self.plotWidget)
-        # self.plotLabel.setLabels(self.plotWidget.currentPoint)
         
 
 class Plot(PlotWidget):
@@ -218,6 +206,7 @@ class Plot(PlotWidget):
         self.ySeries = state['ySeries']
         self.viewBoxes[0].setState(state['vb0State'])
         self.viewBoxes[1].setState(state['vb1State'])
+        self.viewBoxes[1].setXLink(self.plotItem)
         if 'currentPoint' in state:
             self.setCurrentPoint(state['currentPoint'])
         
