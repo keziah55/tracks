@@ -90,14 +90,13 @@ class CyclePlotWidget(QWidget):
         
     @Slot(str)
     def setStyle(self, style):
-        # self.plotWidget.setStyle(style)
         self.plotState = self.plotWidget.getState()
         self.layout.removeWidget(self.plotWidget)
         self.plotWidget.deleteLater()
         self._makePlot(self.parent, style=style)
         self.plotWidget.setState(self.plotState)
         self.layout.insertWidget(0, self.plotWidget)
-        self.plotLabel.setLabels(self.plotWidget.currentPoint)
+        # self.plotLabel.setLabels(self.plotWidget.currentPoint)
         
 
 class Plot(PlotWidget):
@@ -210,12 +209,16 @@ class Plot(PlotWidget):
         state['ySeries'] = self.ySeries
         state['vb0State'] = self.viewBoxes[0].getState()
         state['vb1State'] = self.viewBoxes[1].getState()
+        if self.currentPoint:
+            state['currentPoint'] = self.currentPoint['index']
         return state
     
     def setState(self, state):
         self.ySeries = state['ySeries']
         self.viewBoxes[0].setState(state['vb0State'])
         self.viewBoxes[1].setState(state['vb1State'])
+        if 'currentPoint' in state:
+            self.setCurrentPoint(state['currentPoint'])
         
     def setStyle(self, style):
         self.style.name = style
