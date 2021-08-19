@@ -167,17 +167,15 @@ class CustomPlotItem(PlotItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        d = os.path.join(os.path.dirname(__file__), '..', '..', 'images')
+        self.imgDir = os.path.join(os.path.dirname(__file__), '..', '..', 'images')
         self.buttonSize = 24
         self.buttonPad = 6
         
-        # set button pixmap to use plot's forground colour
-        foregroundColour = mkColor(getConfigOption('foreground'))
-        pixmapAll = self._makeIconPixmap(os.path.join(d, "view_all.png"), foregroundColour)
-        pixmapRange = self._makeIconPixmap(os.path.join(d, "view_range.png"), foregroundColour)
+        self.viewAllBtn = ButtonItem(parentItem=self, pixmap=self._getPixmap("all"),
+                                     width=self.buttonSize)
+        self.viewRangeBtn = ButtonItem(parentItem=self, pixmap=self._getPixmap("range"),
+                                       width=self.buttonSize)
         
-        self.viewAllBtn = ButtonItem(width=self.buttonSize, parentItem=self, pixmap=pixmapAll)
-        self.viewRangeBtn = ButtonItem(width=self.buttonSize, parentItem=self, pixmap=pixmapRange)
         self.buttons = [self.viewAllBtn, self.viewRangeBtn]
         
         self.viewAllBtn.setToolTip("View all data")
@@ -198,6 +196,19 @@ class CustomPlotItem(PlotItem):
         px1.fill(colour)
         px1.setMask(px0.createMaskFromColor(Qt.transparent))
         return px1
+    
+    def _getPixmap(self, mode):
+        foregroundColour = mkColor(getConfigOption('foreground'))
+        if mode == "all":
+            pixmap = self._makeIconPixmap(os.path.join(self.imgDir, "view_all.png"), foregroundColour)
+        elif mode == "range":
+            pixmap = self._makeIconPixmap(os.path.join(self.imgDir, "view_range.png"), foregroundColour)
+        return pixmap
+    
+    def setButtonPixmaps(self):
+        # set button pixmap to use plot's foreground colour
+        self.viewAllBtn.setPixmap(self._getPixmap("all"))
+        self.viewRangeBtn.setPixmap(self._getPixmap("range"))
             
     def resizeEvent(self, ev):
         if not hasattr(self, 'buttons') or any([button is None for button in self.buttons]):

@@ -125,6 +125,7 @@ class Plot(PlotWidget):
     def __init__(self, parent, style="dark"):
         
         self._ySeries = None
+        self.plotItem = None
         self.style = PlotStyle(style)
         self.setStyle(style)
         
@@ -225,6 +226,8 @@ class Plot(PlotWidget):
         dct = {'foreground':self.style.foreground,
                'background':self.style.background}
         setConfigOptions(**dct)
+        if self.plotItem is not None:
+            self.plotItem.setButtonPixmaps()
         if self.ySeries is not None:
             self.updatePlots()
             
