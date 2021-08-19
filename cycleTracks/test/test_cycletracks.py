@@ -25,7 +25,7 @@ class TracksSetupTeardown:
         self.viewer = self.app.viewer
         self.plot = self.app.plot
         self.plotWidget = self.plot.plotWidget
-        self.pbTable = self.app.pb.table
+        self.pbTable = self.app.pb.bestSessions
         
         
     @pytest.fixture

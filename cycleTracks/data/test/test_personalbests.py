@@ -46,18 +46,18 @@ class TestPersonalBests:
         dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
         
         self.parent = MockParent(dct=dct)
-        self.widget = PersonalBests(self.parent)
-        self._widget = QWidget()
+        self.pb = PersonalBests(self.parent)
+        self.widget = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(self.widget.label)
-        layout.addWidget(self.widget.table)
-        self._widget.setLayout(layout)
+        layout.addWidget(self.pb.bestMonth)
+        layout.addWidget(self.pb.bestSessions)
+        self.widget.setLayout(layout)
         
-        qtbot.addWidget(self._widget)
-        self._widget.setGeometry(100, 100, 500, 600)
+        qtbot.addWidget(self.widget)
+        self.widget.setGeometry(100, 100, 500, 600)
         
-        self.parent.data.dataChanged.connect(self.widget.newData)
-        self._widget.show()
+        self.parent.data.dataChanged.connect(self.pb.newData)
+        self.widget.show()
         
     @pytest.mark.parametrize("key", ['best month and best session', 'best month', 'best session'])
     def test_new_data(self, setup, qtbot, key):
@@ -65,13 +65,13 @@ class TestPersonalBests:
         new, expected_dialog, expected_label = getNewData(key)
         
         signals = [(self.parent.data.dataChanged, 'data.dataChanged'),
-                   (self.widget.newPBdialog.accepted, 'dialog.accepted')]
+                   (self.pb.newPBdialog.accepted, 'dialog.accepted')]
         with qtbot.waitSignals(signals):
             self.parent.data.append(new)
             
-        assert self.widget.newPBdialog.label.text() == expected_dialog
+        assert self.pb.newPBdialog.label.text() == expected_dialog
         
-        assert self.widget.label.text() == expected_label
+        assert self.pb.bestMonth.text() == expected_label
         
     def test_new_data_different_column(self, setup, qtbot, monkeypatch):
         # test dialog message when table is sorted by Time
@@ -79,7 +79,7 @@ class TestPersonalBests:
                'Time':[parseDuration("01:05:03")], 
                'Distance (km)':[25.08], 'Calories':[375.1], 'Gear':[6]}
         
-        self.widget.table.horizontalHeader().sectionClicked.emit(1)
+        self.pb.bestSessions.horizontalHeader().sectionClicked.emit(1)
         qtbot.wait(10)
         
         # don't need dialog to pop up
@@ -88,7 +88,7 @@ class TestPersonalBests:
             self.parent.data.append(new)
             
         expected = "<center><span>New #1 time - </span><span style='color: #f7f13b'>01:05:03</span>!<br><span>Congratulations!</span></center>"
-        assert self.widget.newPBdialog.label.text() == expected   
+        assert self.pb.newPBdialog.label.text() == expected   
         
     def test_tied_data(self, setup, qtbot, monkeypatch):
         new = {'Date':[parseDate("7 May 2021", pd_timestamp=True)], 
@@ -100,14 +100,14 @@ class TestPersonalBests:
         with qtbot.waitSignal(self.parent.data.dataChanged):
             self.parent.data.append(new)
             
-        rowNums = [self.widget.table.verticalHeaderItem(i).text() 
-                   for i in range(self.widget.table.rowCount())]
+        rowNums = [self.pb.bestSessions.verticalHeaderItem(i).text() 
+                   for i in range(self.pb.bestSessions.rowCount())]
         assert rowNums == ["1=", "1=", "3", "4", "5"]
         
-        date0 = self.widget.table.item(0, 0).text()
+        date0 = self.pb.bestSessions.item(0, 0).text()
         assert date0 == "07 May 2021"
         
-        date1 = self.widget.table.item(1, 0).text()
+        date1 = self.pb.bestSessions.item(1, 0).text()
         assert date1 == "04 May 2021"
         
     def test_sort_column(self, setup, qtbot):
@@ -118,15 +118,15 @@ class TestPersonalBests:
                    'Calories':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021']}
         
         for column, expected in columns.items():
-            idx = self.widget.table.headerLabels.index(column)
+            idx = self.pb.bestSessions.headerLabels.index(column)
             
-            self.widget.table.horizontalHeader().sectionClicked.emit(idx)
+            self.pb.bestSessions.horizontalHeader().sectionClicked.emit(idx)
             qtbot.wait(10)
-            items = [self.widget.table.item(idx, 0).text() for idx in range(self.widget.table.rowCount())]
+            items = [self.pb.bestSessions.item(idx, 0).text() for idx in range(self.pb.bestSessions.rowCount())]
             assert items == expected
             
     def test_get_best_sessions(self, setup, qtbot):
-        pb = self.widget.table._getBestSessions(n=2, key="Distance (km)", order='ascending')
+        pb = self.pb.bestSessions._getBestSessions(n=2, key="Distance (km)", order='ascending')
         expected = [{'Date':"04 May 2021",
                      'Time':"00:42:11",
                      'Distance (km)':"25.08",
@@ -142,5 +142,5 @@ class TestPersonalBests:
                 assert pb_data[key] == value
                 
         with pytest.raises(ValueError):
-            self.widget.table._getBestSessions(order='acsending')
+            self.pb.bestSessions._getBestSessions(order='acsending')
         

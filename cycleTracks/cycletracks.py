@@ -47,9 +47,8 @@ class CycleTracks(QMainWindow):
         plotStyle = self.settings.value("plot/style", "dark")
         self.plot = CyclePlotWidget(self, style=plotStyle)
         
-        # self.pb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.pb.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.pb.table.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         self.addData.newData.connect(self.data.append)
@@ -62,9 +61,8 @@ class CycleTracks(QMainWindow):
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         
-        dockWidgets = [#(self.pb, Qt.LeftDockWidgetArea, "Personal Bests"),
-                       (self.pb.label, Qt.LeftDockWidgetArea, "Best month"),
-                       (self.pb.table, Qt.LeftDockWidgetArea, "Top five sessions"),
+        dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, "Best month"),
+                       (self.pb.bestSessions, Qt.LeftDockWidgetArea, "Top five sessions"),
                        (self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
         

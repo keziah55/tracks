@@ -3,45 +3,42 @@ QTableWidget showing the top sessions.
 """
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
-                             QDialogButtonBox, QVBoxLayout, QWidget, QAbstractItemView)
+                             QDialogButtonBox, QVBoxLayout, QAbstractItemView)
 from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat
-from customQObjects.widgets import TimerDialog, GroupWidget
+from customQObjects.widgets import TimerDialog
 import re
 import numpy as np
 
 
 class PersonalBests(QObject):
+    """ Object to manage the two PB widgets.
+    
+        The :meth:`newData` method updates the data in each widget and creates
+        the dialog box with the correct message, if required.
+    """
     
     itemSelected = Signal(object)
+    """ itemSelected(Timestamp `ts`)
+    
+        Emitted when an item in the PB table is selected, either by 
+        clicking on it or by navigating with the up or down keys. The datetime
+        timestamp of the selected row is passed with this signal.
+    """
     
     def __init__(self, parent):
         super().__init__()
-        
         self.newPBdialog = NewPBDialog()
-        
-        self.dataAnalysis = parent.dataAnalysis
-        
-        # self.labelGroup = GroupWidget("Best month")
-        self.label = PBMonthLabel(parent)
-        # self.labelGroup.addWidget(self.label)
-        
-        # self.tableGroup = GroupWidget("Top five sessions")
-        self.table = PBTable(parent)
-        # self.tableGroup.addWidget(self.table)
-        self.table.itemSelected.connect(self.itemSelected)
-        
-        # self.layout = QVBoxLayout()
-        # self.layout.addWidget(self.labelGroup)
-        # self.layout.addWidget(self.tableGroup)
-        # self.setLayout(self.layout)
+        self.bestMonth = PBMonthLabel(parent)
+        self.bestSessions = PBTable(parent)
+        self.bestSessions.itemSelected.connect(self.itemSelected)
         
     @Slot()
     def newData(self):
-        bestSession = self.table.newData()
-        bestMonth = self.label.newData()
+        bestSession = self.bestSessions.newData()
+        bestMonth = self.bestMonth.newData()
         
         if bestSession is None and bestMonth is None:
             return None
@@ -58,9 +55,9 @@ class PersonalBests(QObject):
         self.newPBdialog.exec_()
         
         if bestSession is not None:
-            self.table.setTable(highlightNew=True)
+            self.bestSessions.setTable(highlightNew=True)
         if bestMonth is not None:
-            self.label.setText()
+            self.bestMonth.setText()
 
 class PBMonthLabel(QLabel):
     
@@ -137,10 +134,11 @@ class PBTable(QTableWidget):
     """
     
     itemSelected = Signal(object)
-    """ itemSelected(CycleTreeWidgetItem `item`)
+    """ itemSelected(Timestamp `ts`)
     
-        Signal emitted when an item in the tree is selected, either by clicking
-        on it or by navigating with the up or down keys.
+        Emitted when an item in the PB table is selected, either by 
+        clicking on it or by navigating with the up or down keys. The datetime
+        timestamp of the selected row is passed with this signal.
     """
     
     def __init__(self, parent, rows=5):
