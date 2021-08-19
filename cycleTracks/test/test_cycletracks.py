@@ -2,7 +2,7 @@ from cycleTracks.cycletracks import CycleTracks
 from PyQt5.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
-import tempfile
+import tempfile, os
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -32,6 +32,15 @@ class TracksSetupTeardown:
     def teardown(self):
         yield
         self.app.close()
+        
+        # can't do this with a fixture in confile, as it's called when this method is called
+        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+        appName = "Cycle Tracks"
+        orgName = "kzm"
+        d = os.path.dirname(__file__)
+        confFile = os.path.join(d, ".config", orgName, appName+".conf")
+        if os.path.exists(confFile):
+            os.remove(confFile)
     
     
 class TestTracks(TracksSetupTeardown):

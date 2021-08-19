@@ -79,12 +79,13 @@ class CyclePlotWidget(QWidget):
         
     @Slot(str)
     def setStyle(self, style):
-        self.plotState = self.plotWidget.getState()
-        self.layout.removeWidget(self.plotWidget)
-        self.plotWidget.deleteLater()
-        self._makePlot(self.parent, style=style)
-        self.plotWidget.setState(self.plotState)
-        self.layout.insertWidget(0, self.plotWidget)
+        if self.plotWidget.style.name != style:
+            self.plotState = self.plotWidget.getState()
+            self.layout.removeWidget(self.plotWidget)
+            self.plotWidget.deleteLater()
+            self._makePlot(self.parent, style=style)
+            self.plotWidget.setState(self.plotState)
+            self.layout.insertWidget(0, self.plotWidget)
         
 
 class Plot(PlotWidget):
