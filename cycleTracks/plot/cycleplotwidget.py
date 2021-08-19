@@ -41,14 +41,20 @@ class CyclePlotWidget(QWidget):
         
         super().__init__()
         
+        self.plotState = None
+        self.plotLabel = None
+        self.parent = parent
+        
+        # self.plotWidget = Plot(parent, style=style)
+        # self.plotLabel = CyclePlotLabel(self.plotWidget.style)
+        # self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
+        # self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
+        
+        # self.plotWidget.pointSelected.connect(self.pointSelected)
+        
+        self._makePlot(parent, style=style)
+        
         self.layout = QVBoxLayout()
-        self.plotWidget = Plot(parent, style=style)
-        self.plotLabel = CyclePlotLabel(self.plotWidget.style)
-        self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
-        self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
-        
-        self.plotWidget.pointSelected.connect(self.pointSelected)
-        
         self.layout.addWidget(self.plotWidget)
         self.layout.addWidget(self.plotLabel)
         
@@ -57,6 +63,18 @@ class CyclePlotWidget(QWidget):
         msg = "Plot of session data. Click on the label below to change the metric being plotted.\n"
         msg += "Click on a point to select it in the Monthly Data viewer."
         # self.setToolTip(msg)
+        
+    def _makePlot(self, *args, **kwargs):
+        self.plotWidget = Plot(*args, **kwargs)
+        if self.plotLabel is None:
+            self.plotLabel = CyclePlotLabel(self.plotWidget.style)
+        else:
+            self.plotLabel.setStyle(self.plotWidget.style)
+        self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
+        self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
+        
+        self.plotWidget.pointSelected.connect(self.pointSelected)
+        
         
     @Slot(object)
     def newData(self, index):
@@ -72,7 +90,14 @@ class CyclePlotWidget(QWidget):
         
     @Slot(str)
     def setStyle(self, style):
-        self.plotWidget.setStyle(style)
+        # self.plotWidget.setStyle(style)
+        self.plotState = self.plotWidget.getState()
+        self.layout.removeWidget(self.plotWidget)
+        self.plotWidget.deleteLater()
+        self._makePlot(self.parent, style=style)
+        self.plotWidget.setState(self.plotState)
+        self.layout.insertWidget(0, self.plotWidget)
+        self.plotLabel.setLabels(self.plotWidget.currentPoint)
         
 
 class Plot(PlotWidget):
@@ -179,6 +204,18 @@ class Plot(PlotWidget):
         # incorrectly while views had different shapes.
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
+        
+    def getState(self):
+        state = {}
+        state['ySeries'] = self.ySeries
+        state['vb0State'] = self.viewBoxes[0].getState()
+        state['vb1State'] = self.viewBoxes[1].getState()
+        return state
+    
+    def setState(self, state):
+        self.ySeries = state['ySeries']
+        self.viewBoxes[0].setState(state['vb0State'])
+        self.viewBoxes[1].setState(state['vb1State'])
         
     def setStyle(self, style):
         self.style.name = style

@@ -24,15 +24,9 @@ class PlotPreferences(QWidget):
         plotStyle = self.settings.value("style", "dark")
         button = self.darkStyleButton if plotStyle == "dark" else self.lightStyleButton
         button.setChecked(True)
-        self.styleLabel = QLabel("Style will be updated when Cycle Tracks is next opened.")
-        
-        for button in [self.darkStyleButton, self.lightStyleButton]:
-            button.clicked.connect(lambda _: self.styleLabel.setVisible(True))
         
         plotStyleGroup.addWidget(self.darkStyleButton)
         plotStyleGroup.addWidget(self.lightStyleButton)
-        plotStyleGroup.addWidget(self.styleLabel)
-        self.styleLabel.setVisible(False)
         
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
@@ -85,6 +79,10 @@ class PlotPreferences(QWidget):
         self.apply()
         
     def apply(self):
+        
+        style = "dark" if self.darkStyleButton.isChecked() else "light"
+        self.mainWindow.plot.setStyle(style)
+        
         customRange = self.customRangeCheckBox.isChecked()
         if customRange:
             months = self.customRangeSpinBox.value()

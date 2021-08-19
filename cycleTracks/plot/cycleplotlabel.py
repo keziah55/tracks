@@ -73,7 +73,7 @@ class CyclePlotLabel(QWidget):
         self.data['calories'] = {'string':"Calories: {}"}
         self.data['time'] = {'string':"Time: {}"}
         
-        for key, value in self.data.items():
+        for key in self.data:
             # make ClickableLabel with given size
             colour = self.style[key]['colour'] if key in self.style.keys() else None
             widget = ClickableLabel(key, colour=colour, fontSize=fontSize)
@@ -93,3 +93,9 @@ class CyclePlotLabel(QWidget):
                 text = self.data[key]['string'].format(data)
                 label = self.data[key]['widget']
                 label.setText(text)
+
+    def setStyle(self, style):
+        self.style = style
+        for key, value in self.data.items():
+            colour = self.style[key]['colour'] if key in self.style.keys() else None
+            value['widget'].colour = colour
