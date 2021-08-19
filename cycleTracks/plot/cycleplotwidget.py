@@ -196,17 +196,20 @@ class Plot(PlotWidget):
     def getState(self):
         state = {}
         state['ySeries'] = self.ySeries
-        state['vb0State'] = self.viewBoxes[0].getState()
-        state['vb1State'] = self.viewBoxes[1].getState()
+        for n, vb in enumerate(self.viewBoxes):
+            key = f"vb{n}State"
+            state[key] = vb.getState()
         if self.currentPoint:
             state['currentPoint'] = self.currentPoint['index']
         return state
     
     def setState(self, state):
         self.ySeries = state['ySeries']
-        self.viewBoxes[0].setState(state['vb0State'])
-        self.viewBoxes[1].setState(state['vb1State'])
-        self.viewBoxes[1].setXLink(self.plotItem)
+        for n, vb in enumerate(self.viewBoxes):
+            key = f"vb{n}State"
+            vb.setState(state[key])
+        if len(self.viewBoxes) > 1:
+            self.viewBoxes[1].setXLink(self.plotItem)
         if 'currentPoint' in state:
             self.setCurrentPoint(state['currentPoint'])
         

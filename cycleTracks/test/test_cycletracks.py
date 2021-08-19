@@ -26,7 +26,7 @@ class TracksSetupTeardown:
         self.plot = self.app.plot
         self.plotWidget = self.plot.plotWidget
         self.pbTable = self.app.pb.bestSessions
-        
+        self.prefDialog = self.app.prefDialog
         
     @pytest.fixture
     def teardown(self):

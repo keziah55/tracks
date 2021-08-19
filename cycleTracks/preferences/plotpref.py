@@ -4,7 +4,7 @@ Plot preferences
 
 from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
-                             QVBoxLayout, QWidget, QRadioButton, QLabel)
+                             QVBoxLayout, QWidget, QRadioButton)
 from PyQt5.QtCore import pyqtSlot as Slot
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
