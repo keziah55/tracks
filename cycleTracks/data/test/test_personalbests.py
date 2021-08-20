@@ -47,6 +47,7 @@ class TestPersonalBests:
         
         self.parent = MockParent(dct=dct)
         self.pb = PersonalBests(self.parent)
+        self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
         self.widget = QWidget()
         layout = QVBoxLayout()
         layout.addWidget(self.pb.bestMonth)

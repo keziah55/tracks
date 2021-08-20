@@ -148,8 +148,6 @@ class PBTable(QTableWidget):
         super().__init__(rows, columns)
         self.parent = parent
         
-        self.newPBdialog = NewPBDialog()
-        
         # dict of columns that can be selected and the functions used to compare values
         self.selectableColumns = {'Time':hourMinSecToFloat, 'Distance (km)':float, 
                                   'Avg. speed (km/h)':float, 'Calories':float}
