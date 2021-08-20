@@ -4,7 +4,7 @@ Plot preferences
 
 from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
-                             QVBoxLayout, QWidget, QRadioButton)
+                             QVBoxLayout, QWidget)
 from PyQt5.QtCore import pyqtSlot as Slot
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
@@ -19,15 +19,12 @@ class PlotPreferences(QWidget):
         self.settings.beginGroup("plot")
         
         plotStyleGroup = GroupWidget("Plot style")
-        self.darkStyleButton = QRadioButton("Dark")
-        self.lightStyleButton = QRadioButton("Light")
+        self.plotStyleList = QComboBox()
+        self.plotStyleList.addItems(["Dark", "Light"])
         plotStyle = self.settings.value("style", "dark")
-        button = self.darkStyleButton if plotStyle == "dark" else self.lightStyleButton
-        button.setChecked(True)
-        
-        plotStyleGroup.addWidget(self.darkStyleButton)
-        plotStyleGroup.addWidget(self.lightStyleButton)
-        
+        self.plotStyleList.setCurrentText(plotStyle.capitalize())
+        plotStyleGroup.addWidget(self.plotStyleList)
+
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
         self.plotRangeCombo = QComboBox()
@@ -80,7 +77,7 @@ class PlotPreferences(QWidget):
         
     def apply(self):
         
-        style = "dark" if self.darkStyleButton.isChecked() else "light"
+        style = self.plotStyleList.currentText().lower()
         self.mainWindow.plot.setStyle(style)
         
         customRange = self.customRangeCheckBox.isChecked()
@@ -96,10 +93,7 @@ class PlotPreferences(QWidget):
         self.mainWindow.plot.setXAxisRange(months, fromRecentSession=False)
         
         self.settings.beginGroup("plot")
-        if self.darkStyleButton.isChecked():
-            self.settings.setValue("style", "dark")
-        else:
-            self.settings.setValue("style", "light")
+        self.settings.setValue("style", style)
         
         self.settings.setValue("customRange", customRange)
         if customRange:

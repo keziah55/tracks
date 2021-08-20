@@ -3,7 +3,8 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
-from pyqtgraph import PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, setConfigOptions, getConfigOption
+from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
+                       setConfigOptions)
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
