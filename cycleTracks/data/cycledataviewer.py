@@ -9,7 +9,6 @@ from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
 import numpy as np
-from .cycledata import CycleData
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
 
@@ -180,12 +179,11 @@ class CycleDataViewer(QTreeWidget):
         """ Populate tree with data from CycleData object. """
         
         self.items = []
-        dfs = self.data.splitMonths()
+        dfs = self.data.splitMonths(returnType="CycleData")
         
-        for monthYear, df in reversed(dfs):
+        for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            data = CycleData(df) # make CycleData object for the month
             rootText = [monthYear, 
                         data.summaryString('Time (hours)'), 
                         data.summaryString('Distance (km)'),

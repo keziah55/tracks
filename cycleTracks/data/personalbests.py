@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel
                              QDialogButtonBox, QVBoxLayout, QAbstractItemView)
 from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
-from . import CycleData
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 import re
@@ -34,10 +33,16 @@ class PersonalBests(QObject):
         Emitted when the number of sessions shown in the PBTable is changed.
     """
     
-    def __init__(self, parent, numSessions=5):
+    monthCriterionChanged = Signal(str)
+    """ monthCriterionChanged(str `criterion`)
+    
+        Emitted when the criterion for calculating the best month is changed.
+    """
+    
+    def __init__(self, parent, numSessions=5, monthCriterion="distance"):
         super().__init__()
         self.newPBdialog = NewPBDialog()
-        self.bestMonth = PBMonthLabel(parent=self, mainWindow=parent)
+        self.bestMonth = PBMonthLabel(parent=self, mainWindow=parent, column=monthCriterion)
         self.bestSessions = PBTable(parent=self, mainWindow=parent, rows=numSessions)
         
     @Slot()
@@ -86,19 +91,31 @@ class PBMonthLabel(QLabel):
     def data(self):
         return self.mainWindow.data
     
+    def setColumn(self, column):
+        self.column = column
+        self.newData()
+        self.setText()
+        col = re.sub(r" +\(.*\)", "", column).lower()
+        if self.parent is not None:
+            self.parent.monthCriterionChanged.emit(col)
+        
     @Slot()
     def newData(self):
-        dfs = self.data.splitMonths()
-        totals = []
-        for monthYear, df in dfs:
-            monthData = CycleData(df)
-            summaries = [monthData.summaryString('Time (hours)'), 
-                         monthData.summaryString('Distance (km)'),
-                         monthData.summaryString('Avg. speed (km/h)', func=max),
-                         monthData.summaryString('Calories'),
-                         monthData.summaryString('Gear', func=lambda v: np.around(np.mean(v)))]
-            totals.append((monthYear, summaries))
-        totals.sort(key=lambda tup: float(tup[1][1]), reverse=True)
+        dfs = self.data.splitMonths(returnType="CycleData")
+        summaryArgs = [('Time (hours)', ),
+                       ('Distance (km)', ),
+                       ('Avg. speed (km/h)', max),
+                       ('Calories', ),
+                       ('Gear', lambda v: np.around(np.mean(v)))]
+        
+        totals = [(monthYear, [monthData.summaryString(*args) for args in summaryArgs])
+                  for monthYear, monthData in dfs]
+        idx = self._matchColumn(self.column, [item[0] for item in summaryArgs])
+        
+        try:
+            totals.sort(key=lambda tup: float(tup[1][idx]), reverse=True)
+        except ValueError:
+            totals.sort(key=lambda tup: hourMinSecToFloat(tup[1][idx]), reverse=True)
         monthYear, summaries = totals[0]
         self.time, self.distance, _, self.calories, *vals = summaries
         
@@ -108,6 +125,17 @@ class PBMonthLabel(QLabel):
             return msg
         else:
             return None
+        
+    @classmethod
+    def _matchColumn(cls, column, lst):
+        if column in lst:
+            return lst.index(column)
+        else:
+            # strip units and make all lower case
+            lst = [re.sub(r" +\(.*\)", "", item) for item in lst]
+            lst = [item.lower() for item in lst]
+            column = column.lower()
+            return cls._matchColumn(column, lst)
         
     def makeMessage(self, monthYear):
         colour = "#f7f13b"
@@ -191,7 +219,7 @@ class PBTable(QTableWidget):
     @Slot(int)
     def setNumRows(self, rows):
         self.setRowCount(rows)
-        self.setTable(n=rows, key=self.selectKey, order=self.order)
+        self.setTable(key=self.selectKey, order=self.order)
         self._setToolTip(rows)
         if self.parent is not None:
             self.parent.numSessionsChanged.emit(rows)
@@ -239,9 +267,10 @@ class PBTable(QTableWidget):
         # return only `n` values
         return pb[:n]
        
-    def setTable(self, n=5, key="Avg. speed (km/h)", order='descending',
+    def setTable(self, key="Avg. speed (km/h)", order='descending',
                  highlightNew=False):
         
+        n=self.rowCount()
         self.items = self._getBestSessions(n=n, key=key, order=order)
         
         self.selectKey = key
@@ -293,7 +322,7 @@ class PBTable(QTableWidget):
                 
     @Slot()
     def newData(self):
-        pb = self._getBestSessions(key=self.selectKey)
+        pb = self._getBestSessions(n=self.rowCount(), key=self.selectKey)
         newDates = [row['Date'] for row in pb]
         dates = [row['Date'] for row in self.items]
         if newDates != dates:

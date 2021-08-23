@@ -117,7 +117,7 @@ class TestTracks(TracksSetupTeardown):
     def test_pb_table_clicked(self, setup, qtbot, teardown):
         # similar to above, but for pb table
         item = self.pbTable.item(1, 0)
-        signals = [(self.pbTable.itemSelected, 'pbTable.itemSelected'), 
+        signals = [(self.app.pb.itemSelected, 'pbTable.itemSelected'), 
                    (self.plotWidget.currentPointChanged, 'plotWidget.currentPointChanged')]
         with qtbot.waitSignals(signals):
             self.pbTable.setCurrentItem(item)

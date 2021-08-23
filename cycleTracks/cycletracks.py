@@ -43,7 +43,9 @@ class CycleTracks(QMainWindow):
         self.dataAnalysis = CycleDataAnalysis(self.data)
 
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
-        self.pb = PersonalBests(self, numSessions=numTopSessions)
+        monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
+        self.pb = PersonalBests(self, numSessions=numTopSessions, 
+                                monthCriterion=monthCriterion)
         self.viewer = CycleDataViewer(self)
         self.addData = AddCycleData()
         plotStyle = self.settings.value("plot/style", "dark")
@@ -63,11 +65,12 @@ class CycleTracks(QMainWindow):
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
+        self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
         
-        dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, "Best month"),
+        dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, f"Best month ({monthCriterion})", "PB month"),
                        (self.pb.bestSessions, Qt.LeftDockWidgetArea, f"Top {intToStr(numTopSessions)} sessions", "PB sessions"),
-                       (self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
-                       (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
+                       (self.viewer, Qt.LeftDockWidgetArea, "Monthly data"),
+                       (self.addData, Qt.LeftDockWidgetArea, "Add data")]
         
         for args in dockWidgets:
             self.createDockWidget(*args)
@@ -138,6 +141,10 @@ class CycleTracks(QMainWindow):
     def setPbSessionsDockLabel(self, num):
         label = f"Top {intToStr(num)} sessions"
         self.dockWidgets["PB sessions"].setWindowTitle(label)
+    
+    def setPbMonthDockLabel(self, monthCriterion):
+        label = f"Best month ({monthCriterion})"
+        self.dockWidgets["PB month"].setWindowTitle(label)
         
         
     def close(self, *args, **kwargs):
