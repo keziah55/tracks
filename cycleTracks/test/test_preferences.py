@@ -78,4 +78,11 @@ class TestPreferences(TracksSetupTeardown):
     @pytest.mark.skip("test not yet written")
     def test_plot_style(self, setup, qtbot, teardown):
         plotPref = self.prefDialog.pagesWidget.widget(0)
+
+    @pytest.mark.skip("test not yet written")
+    def test_num_pb_sessions(self, setup, qtbot, teardown):
+        pbPref = self.prefDialog.pagesWidget.widget(1)
         
+    @pytest.mark.skip("test not yet written")
+    def test_pb_month(self, setup, qtbot, teardown):
+        pbPref = self.prefDialog.pagesWidget.widget(1)
