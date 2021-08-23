@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel
 from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
 from . import CycleData
-from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat
+from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 import re
 import numpy as np
@@ -28,12 +28,17 @@ class PersonalBests(QObject):
         timestamp of the selected row is passed with this signal.
     """
     
-    def __init__(self, parent):
+    numSessionsChanged = Signal(int)
+    """ numSessionsChanged(int `numSessions`)
+    
+        Emitted when the number of sessions shown in the PBTable is changed.
+    """
+    
+    def __init__(self, parent, numSessions=5):
         super().__init__()
         self.newPBdialog = NewPBDialog()
-        self.bestMonth = PBMonthLabel(parent)
-        self.bestSessions = PBTable(parent)
-        self.bestSessions.itemSelected.connect(self.itemSelected)
+        self.bestMonth = PBMonthLabel(parent=self, mainWindow=parent)
+        self.bestSessions = PBTable(parent=self, mainWindow=parent, rows=numSessions)
         
     @Slot()
     def newData(self):
@@ -61,8 +66,9 @@ class PersonalBests(QObject):
 
 class PBMonthLabel(QLabel):
     
-    def __init__(self, parent, column='Distance (km)'):
+    def __init__(self, mainWindow, parent=None, column='Distance (km)'):
         super().__init__()
+        self.mainWindow = mainWindow
         self.parent = parent
         self.column = column
         self.monthYear = self.time = self.distance = self.calories = ""
@@ -78,7 +84,7 @@ class PBMonthLabel(QLabel):
         
     @property
     def data(self):
-        return self.parent.data
+        return self.mainWindow.data
     
     @Slot()
     def newData(self):
@@ -126,8 +132,10 @@ class PBTable(QTableWidget):
     
         Parameters
         ----------
-        parent : QWidget
+        mainWindow : QWidget
             Main window/widget with :class:`CycleData` object
+        parent : QObject
+         PersonalBests object that manages this object.
         rows : int
             Number of rows to display, i.e. the number of top sessions to show.
             Default is 5.
@@ -141,11 +149,12 @@ class PBTable(QTableWidget):
         timestamp of the selected row is passed with this signal.
     """
     
-    def __init__(self, parent, rows=5):
+    def __init__(self, mainWindow, parent=None, rows=5):
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
                              'Calories', 'Gear']
         columns = len(self.headerLabels)
         super().__init__(rows, columns)
+        self.mainWindow = mainWindow
         self.parent = parent
         
         # dict of columns that can be selected and the functions used to compare values
@@ -169,19 +178,30 @@ class PBTable(QTableWidget):
         self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
         
         self.newIdx = None
-        
-        msg = "Top five sessions, by default, this is determined by fastest average speed.\n"
-        msg += "Click on 'Time', 'Distance (km)' or 'Calories' to change the metric.\n"
-        msg += "Click on a session to highlight it in the plot."
-        self.setToolTip(msg)
+        self._setToolTip(rows)
         
     @property
     def data(self):
-        return self.parent.data
+        return self.mainWindow.data
     
     @property
     def header(self):
         return self.horizontalHeader()
+    
+    @Slot(int)
+    def setNumRows(self, rows):
+        self.setRowCount(rows)
+        self.setTable(n=rows, key=self.selectKey, order=self.order)
+        self._setToolTip(rows)
+        if self.parent is not None:
+            self.parent.numSessionsChanged.emit(rows)
+        
+    def _setToolTip(self, num):
+        s = intToStr(num)
+        msg = f"Top {s} sessions, by default, this is determined by fastest average speed.\n"
+        msg += "Click on 'Time', 'Distance (km)' or 'Calories' to change the metric.\n"
+        msg += "Click on a session to highlight it in the plot."
+        self.setToolTip(msg)
     
     def _getBestSessions(self, n=5, key="Avg. speed (km/h)", order='descending'):
         validOrders = ['descending', 'ascending']
@@ -225,6 +245,7 @@ class PBTable(QTableWidget):
         self.items = self._getBestSessions(n=n, key=key, order=order)
         
         self.selectKey = key
+        self.order = order
         self.dates = [row['Date'] for row in self.items]
         
         rowNums = ['1']
@@ -288,7 +309,8 @@ class PBTable(QTableWidget):
     @Slot(int, int, int, int)
     def _cellChanged(self, row, column, previousRow, previousColumn):
         dct = self.items[row]
-        self.itemSelected.emit(dct['datetime'])
+        if self.parent is not None:
+            self.parent.itemSelected.emit(dct['datetime'])
 
     def makeMessage(self, key, idx, value):
         key = re.sub(r"\s", " ", key) # remove \n from avg speed

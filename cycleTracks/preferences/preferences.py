@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QAbstractScrollArea, QDialog, QDialogButtonBox,
                              QListWidget, QStackedWidget, QVBoxLayout, QHBoxLayout)
 
 from .plotpref import PlotPreferences
+from .pbpref import PBPreferences
 
 class PreferencesDialog(QDialog):
     def __init__(self, parent=None):
@@ -14,9 +15,12 @@ class PreferencesDialog(QDialog):
         self.pagesWidget = QStackedWidget()
         
         self.plotPref = PlotPreferences(parent)
+        self.pbPref = PBPreferences(parent)
         self.pagesWidget.addWidget(self.plotPref)
+        self.pagesWidget.addWidget(self.pbPref)
         
         self.contentsWidget.addItem("Plot")
+        self.contentsWidget.addItem("Personal bests")
         self.contentsWidget.currentItemChanged.connect(self.changePage)
         self.contentsWidget.setCurrentRow(0)
         

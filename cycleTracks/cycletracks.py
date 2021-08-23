@@ -12,6 +12,7 @@ import pandas as pd
 from .plot import CyclePlotWidget
 from .data import CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, PersonalBests
 from .preferences import PreferencesDialog
+from .util import intToStr
 from customQObjects.core import Settings
 
 
@@ -41,7 +42,8 @@ class CycleTracks(QMainWindow):
         self.backup()
         self.dataAnalysis = CycleDataAnalysis(self.data)
 
-        self.pb = PersonalBests(self)
+        numTopSessions = self.settings.value("pb/numSessions", 5, int)
+        self.pb = PersonalBests(self, numSessions=numTopSessions)
         self.viewer = CycleDataViewer(self)
         self.addData = AddCycleData()
         plotStyle = self.settings.value("plot/style", "dark")
@@ -60,14 +62,15 @@ class CycleTracks(QMainWindow):
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
+        self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, "Best month"),
-                       (self.pb.bestSessions, Qt.LeftDockWidgetArea, "Top five sessions"),
+                       (self.pb.bestSessions, Qt.LeftDockWidgetArea, f"Top {intToStr(numTopSessions)} sessions", "PB sessions"),
                        (self.viewer, Qt.LeftDockWidgetArea, "Monthly Data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add Data")]
         
-        for widget, area, title in dockWidgets:
-            self.createDockWidget(widget, area, title=title)
+        for args in dockWidgets:
+            self.createDockWidget(*args)
             
         self.setCentralWidget(self.plot)
         
@@ -121,14 +124,21 @@ class CycleTracks(QMainWindow):
         self.backup()
         self.data.setDataFrame(df)
         
-    def createDockWidget(self, widget, area, title):
+    def createDockWidget(self, widget, area, title, key=None):
         dock = QDockWidget()
         dock.setWidget(widget)
         dock.setWindowTitle(title)
         self.addDockWidget(area, dock)
         if not hasattr(self, "dockWidgets"):
             self.dockWidgets = {}
-        self.dockWidgets[title] = dock
+        if key is None:
+            key = title
+        self.dockWidgets[key] = dock
+        
+    def setPbSessionsDockLabel(self, num):
+        label = f"Top {intToStr(num)} sessions"
+        self.dockWidgets["PB sessions"].setWindowTitle(label)
+        
         
     def close(self, *args, **kwargs):
         self.backup()
