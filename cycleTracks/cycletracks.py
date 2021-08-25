@@ -74,8 +74,15 @@ class CycleTracks(QMainWindow):
         
         for args in dockWidgets:
             self.createDockWidget(*args)
-            
         self.setCentralWidget(self.plot)
+        
+        state = self.settings.value("window/state", None)
+        if state is not None:
+            self.restoreState(state)
+            
+        geometry = self.settings.value("window/geometry", None)    
+        if geometry is not None:
+            self.restoreGeometry(geometry)
         
         self.prefDialog = PreferencesDialog(self)
         
@@ -88,8 +95,9 @@ class CycleTracks(QMainWindow):
         path = os.path.join(fileDir, "..", "images/icon.png")
         icon = QIcon(path)
         self.setWindowIcon(icon)
-        self.showMaximized()
         
+    def show(self):
+        super().show()
         self.prefDialog.ok()
         
     @staticmethod
@@ -133,6 +141,7 @@ class CycleTracks(QMainWindow):
         dock = QDockWidget()
         dock.setWidget(widget)
         dock.setWindowTitle(title)
+        dock.setObjectName(title)
         self.addDockWidget(area, dock)
         if not hasattr(self, "dockWidgets"):
             self.dockWidgets = {}
@@ -148,9 +157,12 @@ class CycleTracks(QMainWindow):
         label = f"Best month ({monthCriterion})"
         self.dockWidgets["PB month"].setWindowTitle(label)
         
-        
     def close(self, *args, **kwargs):
         self.backup()
+        state = self.saveState()
+        geometry = self.saveGeometry()
+        self.settings.setValue("window/state", state)
+        self.settings.setValue("window/geometry", geometry)
         super().close()
         
     def createActions(self):
