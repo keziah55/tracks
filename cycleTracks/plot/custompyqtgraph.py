@@ -5,7 +5,7 @@ Subclasses of pyqtgraph items.
 from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem, getConfigOption, mkColor
 from pyqtgraph.graphicsItems.ButtonItem import ButtonItem
 from PyQt5.QtCore import Qt, pyqtSignal as Signal
-from PyQt5.QtGui import QPixmap, QImage, QColor, QPainter
+from PyQt5.QtGui import QPixmap
 from datetime import datetime
 import os.path
 

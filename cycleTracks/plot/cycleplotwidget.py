@@ -425,12 +425,15 @@ class Plot(PlotWidget):
         self.setPlotRange(x0, x1)
         
     @Slot(object)
-    def _highlightPoint(self, point):
+    def _highlightPoint(self, point=None):
         """ Change pen and brush of given point (and reset any previously 
             highlighted points). 
         """
         if point is None:
-            return None
+            if self.hgltPnt is not None:
+                point = self.hgltPnt
+            else:
+                return None
         
         try:
             # if other points are already highlighted, remove highlighting

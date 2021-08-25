@@ -89,7 +89,9 @@ class CycleTracks(QMainWindow):
         icon = QIcon(path)
         self.setWindowIcon(icon)
         self.showMaximized()
-            
+        
+        self.prefDialog.ok()
+        
     @staticmethod
     def getFile():
         home = os.path.expanduser('~')

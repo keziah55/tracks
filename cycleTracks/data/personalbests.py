@@ -169,14 +169,6 @@ class PBTable(QTableWidget):
             Default is 5.
     """
     
-    itemSelected = Signal(object)
-    """ itemSelected(Timestamp `ts`)
-    
-        Emitted when an item in the PB table is selected, either by 
-        clicking on it or by navigating with the up or down keys. The datetime
-        timestamp of the selected row is passed with this signal.
-    """
-    
     def __init__(self, mainWindow, parent=None, rows=5):
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
                              'Calories', 'Gear']
