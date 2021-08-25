@@ -65,7 +65,6 @@ class CyclePlotWidget(QWidget):
         
         self.plotWidget.pointSelected.connect(self.pointSelected)
         
-        
     @Slot(object)
     def newData(self, index):
         self.plotWidget.updatePlots()
@@ -87,6 +86,9 @@ class CyclePlotWidget(QWidget):
             self._makePlot(self.parent, style=style)
             self.plotWidget.setState(self.plotState)
             self.layout.insertWidget(0, self.plotWidget)
+            
+    def getStyle(self, name):
+        return self.plotWidget.style.getStyleDict(name)
         
 
 class Plot(PlotWidget):
@@ -550,4 +552,15 @@ class PlotStyle:
         if field in self.symbols:
             dct['symbol'] = self.symbols[field]
         return dct
+    
+    def getStyleDict(self, name=None):
+        if name is None:
+            name = self.name
+        style = {}
+        for field in self.colours:
+            dct = {'colour':self.colours[field][name]}
+            if field in self.symbols:
+                dct['symbol'] = self.symbols[field]
+            style[field] = dct
+        return style
     

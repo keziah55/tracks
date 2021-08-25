@@ -4,10 +4,88 @@ Plot preferences
 
 from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
-                             QVBoxLayout, QWidget)
-from PyQt5.QtCore import pyqtSlot as Slot
+                             QVBoxLayout, QWidget, QLineEdit, QPushButton,
+                             QColorDialog, QGridLayout, QLabel)
+from PyQt5.QtCore import QTimer, pyqtSlot as Slot
+from PyQt5.QtGui import QPalette, QColor
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
+
+class StyleDesigner(QWidget):
+    
+    def __init__(self, name, style, invalidNames=[]):
+        super().__init__()
+        
+        self.invalidNames = invalidNames
+        
+        self.layout = QGridLayout()
+        
+        self.nameEdit = QLineEdit()
+        self.setName(name)
+        self.layout.addWidget(self.nameEdit, 0, 0, 1, -1)
+        
+        self.colours = {}
+        row = 1
+        for key in style:
+            if key == "highlightPoint":
+                label = "Highlight point"
+            else:
+                label = key.capitalize()
+            colourName = QLabel(label)
+            colourValue = QLabel()
+            self.colours[key] = colourValue
+            self.layout.addWidget(colourName, row, 0)
+            self.layout.addWidget(colourValue, row, 1)
+            row += 1
+            
+        self.saveButton = QPushButton("Add custom theme")
+        self.layout.addWidget(self.saveButton, row, 1)
+        self.setLayout(self.layout)
+        
+        self.setStyle(style)
+        
+        self.validateTimer = QTimer()
+        self.validateTimer.setSingleShot(True)
+        self.validateTimer.setInterval(50)
+        self.validateTimer.timeout.connect(self._validate)
+        self.nameEdit.textChanged.connect(self.validateTimer.start)
+        self._validate()
+        
+    @property
+    def name(self):
+        return self.nameEdit.text()
+        
+    @property
+    def invalidNames(self):
+        return self._invalidNames
+    
+    @invalidNames.setter
+    def invalidNames(self, names):
+        names = [name.lower() for name in names]
+        self._invalidNames = names
+        
+    def appendInvalidName(self, name):
+        self.invalidNames.append(name.lower())
+        
+    def setName(self, name):
+        self.nameEdit.setText(name.lower())
+        
+    def setStyle(self, style, name=None):
+        for key, value in style.items():
+            widget = self.colours[key]
+            colour = QColor(value['colour'])
+            widget.setPalette(QPalette(colour))
+            widget.setAutoFillBackground(True)
+        
+        if name is not None:
+            self.setName(name)
+        
+    def _validate(self):
+        name = self.nameEdit.text().lower()
+        if name in self.invalidNames:
+            self.saveButton.setEnabled(False)
+        else:
+            self.saveButton.setEnabled(True)
 
 class PlotPreferences(QWidget):
     
@@ -20,10 +98,17 @@ class PlotPreferences(QWidget):
         
         plotStyleGroup = GroupWidget("Plot style")
         self.plotStyleList = QComboBox()
-        self.plotStyleList.addItems(["Dark", "Light"])
+        self.plotStyleList.addItems(["Dark", "Light", "Add custom theme..."])
         plotStyle = self.settings.value("style", "dark")
         self.plotStyleList.setCurrentText(plotStyle.capitalize())
+        
+        self.customStyle = StyleDesigner(plotStyle, self.mainWindow.plot.getStyle(plotStyle),
+                                         invalidNames=["dark", "light"])
+        self.customStyle.setEnabled(False)
+        self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
+        
         plotStyleGroup.addWidget(self.plotStyleList)
+        plotStyleGroup.addWidget(self.customStyle)
 
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
@@ -111,3 +196,14 @@ class PlotPreferences(QWidget):
         else:
             self.customRangeSpinBox.setEnabled(False)
             self.plotRangeCombo.setEnabled(True)
+            
+    def _updateCustomStyleWidget(self, name):
+        if name == "Add custom theme...":
+            self.customStyle.setEnabled(True)
+            self.customStyle.setName(name=f"custom-{self.customStyle.name}")
+        else:
+            name = name.lower()
+            style = self.mainWindow.plot.getStyle(name)
+            self.customStyle.setStyle(style, name=name)
+            self.customStyle.setEnabled(False)
+            
