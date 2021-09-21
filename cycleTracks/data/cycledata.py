@@ -32,7 +32,8 @@ class CycleData(QObject):
             a given DataFrame of cycling data.
         """
         super().__init__()
-        self.df = df
+        self.df = self._makeAvgSpeedColumn(df)
+        
         self.propertyNames = {'Distance (km)':'distance', 
                               'Date':'date',
                               'Time':'time',
@@ -132,12 +133,23 @@ class CycleData(QObject):
         if not isinstance(dct, dict):
             msg = f"Can only append dict to CycleData, not {type(dct).__name__}"
             raise TypeError(msg)
+            
+        times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
+        dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
         tmpDf = self.df.append(tmpDf, ignore_index=True)
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
         self.dataChanged.emit(index)
+        
+    def _makeAvgSpeedColumn(self, df):
+        ## Avg. speed was not always included in csv file
+        ## If user does not have this column, create it
+        if 'Avg. speed (km/h)' not in df.columns:
+            times = np.array([hourMinSecToFloat(t) for t in df['Time']])
+            df['Avg. speed (km/h)'] = df['Distance (km)'] / times
+        return df
         
     def setDataFrame(self, df):
         self.df = df
@@ -204,6 +216,11 @@ class CycleData(QObject):
         """ Return 'Gear' column as numpy array. """
         return np.array(self.df['Gear'])
     
+    @property 
+    def avgSpeed(self):
+        """ Return average speeds as numpy array. """
+        return np.array(self.df['Avg. speed (km/h)'])
+    
     @property
     def timeHours(self):
         """ Return numpy array of 'Time' column, where each value is converted
@@ -231,11 +248,6 @@ class CycleData(QObject):
         # empty time to the date, which we need to get rid of here, before
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
-    
-    @property 
-    def avgSpeed(self):
-        """ Return average speeds as numpy array. """
-        return self.distance/self.timeHours
     
     def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
         """ Split `df` into months. 
@@ -327,7 +339,7 @@ class CycleData(QObject):
         """ Combine all rows in the dataframe with the given data. """
         i0, *idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
         
-        combinable = ['Time', 'Distance (km)', 'Calories']
+        combinable = ['Time', 'Distance (km)', 'Calories', 'Avg. speed (km/h)']
         
         for i in idx:
             for name in combinable:
@@ -336,6 +348,8 @@ class CycleData(QObject):
                     t1 = hourMinSecToFloat(parseDuration(self.df.iloc[i][name]))
                     newValue = floatToHourMinSec(t0 + t1)
                     self.df.at[i0, name] = newValue
+                elif name == 'Avg. speed (km/h)':
+                    self.df.at[i0, name] = self.df['Distance (km)'][i0] / hourMinSecToFloat(self.df['Time'][i0])
                 else:
                     self.df.at[i0, name] += self.df.iloc[i][name]
                     
