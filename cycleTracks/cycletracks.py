@@ -22,6 +22,8 @@ class CycleTracks(QMainWindow):
         super().__init__()
         
         self.settings = Settings()
+        self.statusBar()
+        self.statusTimeout = 2000
         
         self.file = self.getFile()
         self.sep = ','
@@ -31,16 +33,9 @@ class CycleTracks(QMainWindow):
             with open(self.file, 'w') as fileobj:
                 fileobj.write(s+'\n')
                 
-        self.fileChangedTimer = QTimer()
-        self.fileChangedTimer.setInterval(100)
-        self.fileChangedTimer.setSingleShot(True)
-        self.fileChangedTimer.timeout.connect(self.csvFileChanged)
-        self.fileWatcher = QFileSystemWatcher([self.file])
-        self.fileWatcher.fileChanged.connect(self.startTimer)
-        
         df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
         self.data = CycleData(df)
-        self.backup()
+        self.save()
         self.dataAnalysis = CycleDataAnalysis(self.data)
 
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
@@ -60,13 +55,20 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.viewer.newData)
         self.data.dataChanged.connect(self.plot.newData)
         self.data.dataChanged.connect(self.pb.newData)
-        self.data.dataChanged.connect(self.backup)
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
+        
+        self.fileChangedTimer = QTimer()
+        self.fileChangedTimer.setInterval(100)
+        self.fileChangedTimer.setSingleShot(True)
+        self.fileChangedTimer.timeout.connect(self.csvFileChanged)
+        self.fileWatcher = QFileSystemWatcher([self.file])
+        self.fileWatcher.fileChanged.connect(self.startTimer)
+        
         
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, f"Best month ({monthCriterion})", "PB month"),
                        (self.pb.bestSessions, Qt.LeftDockWidgetArea, f"Top {intToStr(numTopSessions)} sessions", "PB sessions"),
@@ -89,8 +91,6 @@ class CycleTracks(QMainWindow):
         
         self.createActions()
         self.createMenus()
-        self.statusBar()
-        self.statusTimeout = 2000
         
         fileDir = os.path.split(__file__)[0]
         path = os.path.join(fileDir, "..", "images/icon.png")
@@ -106,12 +106,13 @@ class CycleTracks(QMainWindow):
         home = os.path.expanduser('~')
         path = os.path.join(home, '.cycletracks')
         os.makedirs(path, exist_ok=True)
-        file = os.path.join(path, 'cycletracks2.csv')
+        file = os.path.join(path, 'cycletracks.csv')
         return file
         
     @Slot()
     def save(self):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
+        self.backup()
         self.statusBar().showMessage("Data saved", msecs=self.statusTimeout)
         
     @Slot()

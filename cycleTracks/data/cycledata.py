@@ -32,7 +32,8 @@ class CycleData(QObject):
             a given DataFrame of cycling data.
         """
         super().__init__()
-        self.df = df
+        self.df = self._makeAvgSpeedColumn(df)
+        
         self.propertyNames = {'Distance (km)':'distance', 
                               'Date':'date',
                               'Time':'time',
@@ -141,6 +142,14 @@ class CycleData(QObject):
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
         self.dataChanged.emit(index)
+        
+    def _makeAvgSpeedColumn(self, df):
+        ## Avg. speed was not always included in csv file
+        ## If user does not have this column, create it
+        if 'Avg. speed (km/h)' not in df.columns:
+            times = np.array([hourMinSecToFloat(t) for t in df['Time']])
+            df['Avg. speed (km/h)'] = df['Distance (km)'] / times
+        return df
         
     def setDataFrame(self, df):
         self.df = df

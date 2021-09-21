@@ -53,7 +53,6 @@ class TestCycleData:
              
                 
     def test_combine_rows(self, setup, qtbot):
-        print()
         rng = np.random.default_rng()
         row = rng.integers(0, len(self.df))
         
