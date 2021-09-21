@@ -133,7 +133,7 @@ class CycleData(QObject):
             msg = f"Can only append dict to CycleData, not {type(dct).__name__}"
             raise TypeError(msg)
             
-        times = np.array([self._convertSecs(self._timeToSecs(t)) for t in dct['Time']])
+        times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
         dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
@@ -330,7 +330,7 @@ class CycleData(QObject):
         """ Combine all rows in the dataframe with the given data. """
         i0, *idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
         
-        combinable = ['Time', 'Distance (km)', 'Calories']
+        combinable = ['Time', 'Distance (km)', 'Calories', 'Avg. speed (km/h)']
         
         for i in idx:
             for name in combinable:
@@ -339,6 +339,8 @@ class CycleData(QObject):
                     t1 = hourMinSecToFloat(parseDuration(self.df.iloc[i][name]))
                     newValue = floatToHourMinSec(t0 + t1)
                     self.df.at[i0, name] = newValue
+                elif name == 'Avg. speed (km/h)':
+                    self.df.at[i0, name] = self.df['Distance (km)'][i0] / hourMinSecToFloat(self.df['Time'][i0])
                 else:
                     self.df.at[i0, name] += self.df.iloc[i][name]
                     

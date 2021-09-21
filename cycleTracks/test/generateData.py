@@ -7,6 +7,7 @@ Make a pandas DataFrame of random cycling data.
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, date
+from cycleTracks.util import hourMinSecToFloat
 
 def timeToSecs(t):
     msg = ''
