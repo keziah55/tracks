@@ -64,8 +64,8 @@ def makeDataFrame(size=100, path=None):
          'Calories':makeFloats(size, 50, 1200, ".1f"),
          'Gear':np.random.default_rng().integers(1, 8, size=size)}
     
-    times = np.array([convertSecs(timeToSecs(t)) for t in d['Time']])
-    d['Avg. speed (km/h)'] = d['Distance (km)'] / times
+    speed = d['Distance (km)'] / np.array([convertSecs(timeToSecs(t)) for t in d['Time']])
+    d['Avg. speed (km/h)'] = speed
     
     df = pd.DataFrame.from_dict(d)
     

@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QMes
 from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
+from pandas._testing import assert_frame_equal
 from .plot import CyclePlotWidget
 from .data import CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, PersonalBests
 from .preferences import PreferencesDialog
@@ -126,13 +127,9 @@ class CycleTracks(QMainWindow):
     @Slot()
     def csvFileChanged(self):
         df = pd.read_csv(self._fileChanged, sep=self.sep, parse_dates=['Date'])
-        if not self.data.df.equals(df):
-            
-            f = "/home/keziah/projects/cycleTracks/mainDf.csv"
-            self.data.df.to_csv(f, sep=self.sep, index=False)
-            f = "/home/keziah/projects/cycleTracks/backupDf.csv"
-            df.to_csv(f, sep=self.sep, index=False)
-            
+        try: 
+            assert_frame_equal(self.data.df, df, check_exact=False)
+        except AssertionError:
             msg = "CycleTracks csv file changed on disk. Do you want to reload?"
             btn = QMessageBox.question(self, "File changed on disk", msg)
             if btn == QMessageBox.Yes:
