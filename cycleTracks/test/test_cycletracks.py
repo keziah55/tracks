@@ -28,6 +28,10 @@ class TracksSetupTeardown:
         self.pbTable = self.app.pb.bestSessions
         self.prefDialog = self.app.prefDialog
         
+        qtbot.addWidget(self.app)
+        self.app.showMaximized()
+        self.app.prefDialog.ok() # see https://github.com/keziah55/cycleTracks/commit/9e0c05f7d19b33a61a52a959adcdc7667cd7b924
+        
     @pytest.fixture
     def teardown(self):
         yield
