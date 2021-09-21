@@ -105,7 +105,7 @@ class CycleTracks(QMainWindow):
         home = os.path.expanduser('~')
         path = os.path.join(home, '.cycletracks')
         os.makedirs(path, exist_ok=True)
-        file = os.path.join(path, 'cycletracks.csv')
+        file = os.path.join(path, 'cycletracks2.csv')
         return file
         
     @Slot()
@@ -127,6 +127,12 @@ class CycleTracks(QMainWindow):
     def csvFileChanged(self):
         df = pd.read_csv(self._fileChanged, sep=self.sep, parse_dates=['Date'])
         if not self.data.df.equals(df):
+            
+            f = "/home/keziah/projects/cycleTracks/mainDf.csv"
+            self.data.df.to_csv(f, sep=self.sep, index=False)
+            f = "/home/keziah/projects/cycleTracks/backupDf.csv"
+            df.to_csv(f, sep=self.sep, index=False)
+            
             msg = "CycleTracks csv file changed on disk. Do you want to reload?"
             btn = QMessageBox.question(self, "File changed on disk", msg)
             if btn == QMessageBox.Yes:

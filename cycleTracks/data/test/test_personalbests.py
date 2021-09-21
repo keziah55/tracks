@@ -1,8 +1,9 @@
 from cycleTracks.data import PersonalBests
 from cycleTracks.data.personalbests import NewPBDialog
 from cycleTracks.util import parseDate, parseDuration
-from cycleTracks.test import MockParent
+from cycleTracks.test import MockParent, convertSecs, timeToSecs
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDialog
+import numpy as np
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -44,6 +45,8 @@ class TestPersonalBests:
                                 25.21, 25.08, 25.12],
                'Gear':[6]*10}
         dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
+        times = np.array([convertSecs(timeToSecs(t)) for t in dct['Time']])
+        dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
         
         self.parent = MockParent(dct=dct)
         self.pb = PersonalBests(self.parent)

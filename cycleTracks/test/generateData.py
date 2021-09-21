@@ -8,6 +8,40 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, date
 
+def timeToSecs(t):
+    msg = ''
+    # don't actually need the datetime objects returned by strptime, but 
+    # this is probably the easist way to check the format
+    try:
+        datetime.strptime(t, "%H:%M:%S")
+        hr, mins, sec = [int(s) for s in t.split(':')]
+    except ValueError:
+        try:
+            datetime.strptime(t, "%M:%S")
+            mins, sec = [int(s) for s in t.split(':')]
+            hr = 0
+        except ValueError:
+            msg = f"Could not format time '{t}'"
+    if msg:
+        raise ValueError(msg)
+    
+    total = sec + (60*mins) + (60*60*hr)
+    return total
+
+def convertSecs(t, mode='hour'):
+    minutes = ['m', 'min', 'mins', 'minutes']
+    hours = ['h', 'hr', 'hour', 'hours']
+    valid = minutes + hours
+    if mode not in valid:
+        msg = f"Mode '{mode}' not in valid modes: {valid}"
+        raise ValueError(msg)
+    m = t / 60
+    if mode in minutes:
+        return m
+    h = m / 60
+    if mode in hours:
+        return h
+
 def makeDataFrame(size=100, path=None):
     """ Return DataFrame of random cycling data.
     
@@ -29,6 +63,9 @@ def makeDataFrame(size=100, path=None):
          'Distance (km)':makeFloats(size, 3, 80, ".2f"),
          'Calories':makeFloats(size, 50, 1200, ".1f"),
          'Gear':np.random.default_rng().integers(1, 8, size=size)}
+    
+    times = np.array([convertSecs(timeToSecs(t)) for t in d['Time']])
+    d['Avg. speed (km/h)'] = d['Distance (km)'] / times
     
     df = pd.DataFrame.from_dict(d)
     

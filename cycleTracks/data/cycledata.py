@@ -132,6 +132,9 @@ class CycleData(QObject):
         if not isinstance(dct, dict):
             msg = f"Can only append dict to CycleData, not {type(dct).__name__}"
             raise TypeError(msg)
+            
+        times = np.array([self._convertSecs(self._timeToSecs(t)) for t in dct['Time']])
+        dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
         tmpDf = self.df.append(tmpDf, ignore_index=True)
@@ -204,6 +207,11 @@ class CycleData(QObject):
         """ Return 'Gear' column as numpy array. """
         return np.array(self.df['Gear'])
     
+    @property 
+    def avgSpeed(self):
+        """ Return average speeds as numpy array. """
+        return np.array(self.df['Avg. speed (km/h)'])
+    
     @property
     def timeHours(self):
         """ Return numpy array of 'Time' column, where each value is converted
@@ -231,11 +239,6 @@ class CycleData(QObject):
         # empty time to the date, which we need to get rid of here, before
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
-    
-    @property 
-    def avgSpeed(self):
-        """ Return average speeds as numpy array. """
-        return self.distance/self.timeHours
     
     def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
         """ Split `df` into months. 
