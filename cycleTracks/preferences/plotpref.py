@@ -6,7 +6,7 @@ from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
                              QVBoxLayout, QWidget, QLineEdit, QPushButton,
                              QColorDialog, QGridLayout, QLabel)
-from PyQt5.QtCore import QTimer, pyqtSlot as Slot
+from PyQt5.QtCore import QTimer, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QPalette, QColor
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
@@ -32,10 +32,11 @@ class StyleDesigner(QWidget):
             else:
                 label = key.capitalize()
             colourName = QLabel(label)
-            colourValue = QLabel()
+            colourValue = ColourButton()
             self.colours[key] = colourValue
             self.layout.addWidget(colourName, row, 0)
             self.layout.addWidget(colourValue, row, 1)
+            self.colours[key].btnClicked.connect(self.setColour)
             row += 1
             
         self.saveButton = QPushButton("Add custom theme")
@@ -73,10 +74,7 @@ class StyleDesigner(QWidget):
     def setStyle(self, style, name=None):
         for key, value in style.items():
             widget = self.colours[key]
-            colour = QColor(value['colour'])
-            widget.setPalette(QPalette(colour))
-            widget.setAutoFillBackground(True)
-        
+            widget.setColour(value['colour'])
         if name is not None:
             self.setName(name)
         
@@ -86,6 +84,45 @@ class StyleDesigner(QWidget):
             self.saveButton.setEnabled(False)
         else:
             self.saveButton.setEnabled(True)
+            
+    def setColour(self, widget, initialColour):
+        colour = QColorDialog.getColor(QColor(initialColour), self)
+        if colour.isValid(): 
+            widget.setPalette(QPalette(colour))
+            # self.colorLabel.setAutoFillBackground(True)
+
+
+class ColourButton(QPushButton):
+    
+    btnClicked = Signal(object, str)
+    
+    def __init__(self, *args, colour=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._colour = None
+        if colour is not None:
+            self.setColour(colour)
+            
+        self.clicked.connect(self.emitClicked)
+        
+    @Slot(bool)
+    def emitClicked(self, checked):
+        self.btnClicked.emit(self, self.colour)
+
+    @property
+    def colour(self):
+        if self._colour is None:
+            return None
+        else:
+            return self._colour.name()
+
+    def setColour(self, colour):
+        if isinstance(colour, str):
+            colour = QColor(colour)
+        if not isinstance(colour, QColor):
+            raise TypeError()
+        self._colour = colour
+        self.setPalette(QPalette( self._colour))
+        self.setAutoFillBackground(True)
 
 class PlotPreferences(QWidget):
     
