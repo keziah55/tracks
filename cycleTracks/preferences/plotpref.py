@@ -88,8 +88,7 @@ class StyleDesigner(QWidget):
     def setColour(self, widget, initialColour):
         colour = QColorDialog.getColor(QColor(initialColour), self)
         if colour.isValid(): 
-            widget.setPalette(QPalette(colour))
-            # self.colorLabel.setAutoFillBackground(True)
+            widget.setColour(colour)
 
 
 class ColourButton(QPushButton):
