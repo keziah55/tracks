@@ -52,6 +52,11 @@ class PreferencesDialog(QDialog):
             current = previous
         self.pagesWidget.setCurrentIndex(self.contentsWidget.row(current))
         
+    def show(self):
+        for n in range(self.pagesWidget.count()):
+            self.pagesWidget.widget(n).setCurrentValues()
+        super().show()
+        
     def apply(self):
         self.pagesWidget.currentWidget().apply()
         

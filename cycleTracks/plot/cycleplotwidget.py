@@ -89,6 +89,9 @@ class CyclePlotWidget(QWidget):
             
     def getStyle(self, name):
         return self.plotWidget.style.getStyleDict(name)
+    
+    def getStyleKeys(self):
+        return self.plotWidget.style.keys()
         
 
 class Plot(PlotWidget):

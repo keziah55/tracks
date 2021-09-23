@@ -13,20 +13,27 @@ from customQObjects.core import Settings
 
 class StyleDesigner(QWidget):
     
-    def __init__(self, name, style, invalidNames=[]):
+    def __init__(self, name=None, style=None, styleKeys=None, invalidNames=[]):
         super().__init__()
         
+        if style is None and styleKeys is None:
+            raise ValueError("StyleDesigner needs either style dict or list of style keys.")
+        
+        if style is not None:
+            styleKeys = self.style.keys()
+
         self.invalidNames = invalidNames
         
         self.layout = QGridLayout()
         
         self.nameEdit = QLineEdit()
-        self.setName(name)
+        if name is not None:
+            self.setName(name)
         self.layout.addWidget(self.nameEdit, 0, 0, 1, -1)
         
         self.colours = {}
         row = 1
-        for key in style:
+        for key in styleKeys:
             if key == "highlightPoint":
                 label = "Highlight point"
             else:
@@ -43,7 +50,8 @@ class StyleDesigner(QWidget):
         self.layout.addWidget(self.saveButton, row, 1)
         self.setLayout(self.layout)
         
-        self.setStyle(style)
+        if style is not None:
+            self.setStyle(style)
         
         self.validateTimer = QTimer()
         self.validateTimer.setSingleShot(True)
@@ -143,16 +151,11 @@ class PlotPreferences(QWidget):
         super().__init__()
         self.mainWindow = mainWindow
         
-        self.settings = Settings()
-        self.settings.beginGroup("plot")
-        
         plotStyleGroup = GroupWidget("Plot style")
         self.plotStyleList = QComboBox()
         self.plotStyleList.addItems(["Dark", "Light", "Add custom theme..."])
-        plotStyle = self.settings.value("style", "dark")
-        self.plotStyleList.setCurrentText(plotStyle.capitalize())
         
-        self.customStyle = StyleDesigner(plotStyle, self.mainWindow.plot.getStyle(plotStyle),
+        self.customStyle = StyleDesigner(styleKeys=self.mainWindow.plot.getStyleKeys(),
                                          invalidNames=["dark", "light"])
         self.customStyle.setEnabled(False)
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
@@ -177,18 +180,6 @@ class PlotPreferences(QWidget):
         self.customRangeSpinBox.setRange(1, maxMonths)
         self.customRangeCheckBox.clicked.connect(self.setCustomRange)
         
-        customRange = self.settings.value("customRange", False)
-        rng = self.settings.value("range", "All")
-        
-        self.setCustomRange(customRange)
-        if customRange:
-            rng = int(rng)
-            self.customRangeSpinBox.setValue(rng)
-        else:
-            items = [self.plotRangeCombo.itemText(idx) for idx in range(self.plotRangeCombo.count())]
-            idx = items.index(rng)
-            self.plotRangeCombo.setCurrentIndex(idx)
-            
         plotRangeLayout = QHBoxLayout()
         plotRangeLayout.addWidget(self.plotRangeCombo)
         
@@ -205,10 +196,35 @@ class PlotPreferences(QWidget):
         mainLayout.addStretch(1)
 
         self.setLayout(mainLayout)
-        self.settings.endGroup()
         
+        self.setCurrentValues()
         # apply initial state
         self.apply()
+        
+    def setCurrentValues(self):
+        self.settings = Settings()
+        self.settings.beginGroup("plot")
+
+        plotStyle = self.settings.value("style", "dark")
+        self.plotStyleList.setCurrentText(plotStyle.capitalize())
+        
+        self.customStyle.setName(plotStyle)
+        self.customStyle.setStyle(self.mainWindow.plot.getStyle(plotStyle))
+        
+        customRange = self.settings.value("customRange", False)
+        rng = self.settings.value("range", "All")
+        
+        self.setCustomRange(customRange)
+        if customRange:
+            rng = int(rng)
+            self.customRangeSpinBox.setValue(rng)
+        else:
+            items = [self.plotRangeCombo.itemText(idx) for idx in range(self.plotRangeCombo.count())]
+            idx = items.index(rng)
+            self.plotRangeCombo.setCurrentIndex(idx)
+        
+        self.settings.endGroup()
+        
         
     def apply(self):
         
