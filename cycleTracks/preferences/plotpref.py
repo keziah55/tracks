@@ -36,7 +36,7 @@ class StyleDesigner(QWidget):
             self.colours[key] = colourValue
             self.layout.addWidget(colourName, row, 0)
             self.layout.addWidget(colourValue, row, 1)
-            self.colours[key].btnClicked.connect(self.setColour)
+            self.colours[key].clicked.connect(self.setColour)
             row += 1
             
         self.saveButton = QPushButton("Add custom theme")
@@ -91,9 +91,17 @@ class StyleDesigner(QWidget):
             widget.setColour(colour)
 
 
-class ColourButton(QPushButton):
+class ColourButton(QLabel):
+    """ QLabel that responds to mouse clicks by emitting a `clicked` signal.
     
-    btnClicked = Signal(object, str)
+        Created to mimic a QPushButton that does not change style when clicked.
+    """
+    
+    clicked = Signal(object, str)
+    """ clicked = Signal(ColourButton button, str colour) 
+    
+        Emitted when clicked, with the reference to the button and its current colour.
+    """
     
     def __init__(self, *args, colour=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -101,26 +109,32 @@ class ColourButton(QPushButton):
         if colour is not None:
             self.setColour(colour)
             
-        self.clicked.connect(self.emitClicked)
+    def mouseReleaseEvent(self, ev):
+        self.clicked.emit(self, self.colour)
         
-    @Slot(bool)
-    def emitClicked(self, checked):
-        self.btnClicked.emit(self, self.colour)
-
     @property
     def colour(self):
+        """ Return the current colour of the button, as a string. 
+        
+            Returns None if colour has not been set.
+        """
         if self._colour is None:
             return None
         else:
             return self._colour.name()
 
     def setColour(self, colour):
+        """ Set the colour of the ColourButton. 
+        
+            `colour` can be either a QColor instance or any valid arg to QColor.
+            See `QColor docs <https://doc.qt.io/qt-5/qcolor.html>_` for more details.
+        """
         if isinstance(colour, str):
             colour = QColor(colour)
         if not isinstance(colour, QColor):
             raise TypeError()
         self._colour = colour
-        self.setPalette(QPalette( self._colour))
+        self.setPalette(QPalette(self._colour))
         self.setAutoFillBackground(True)
 
 class PlotPreferences(QWidget):
