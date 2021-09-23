@@ -170,12 +170,8 @@ class PlotPreferences(QWidget):
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
         
         self.plotRangeCombo = QComboBox()
-        self.plotRangeCombo.addItem("1 month")
-        self.plotRangeCombo.addItem("3 months")
-        self.plotRangeCombo.addItem("6 months")
-        self.plotRangeCombo.addItem("1 year")
-        self.plotRangeCombo.addItem("Current year")
-        self.plotRangeCombo.addItem("All")
+        ranges = ["1 month", "3 months", "6 months", "1 year", "Current year", "All"]
+        self.plotRangeCombo.addItems(ranges)
         
         self.customRangeCheckBox = QCheckBox("Custom range")
         self.customRangeSpinBox = QSpinBox()
