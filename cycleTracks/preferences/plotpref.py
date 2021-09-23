@@ -152,12 +152,16 @@ class PlotPreferences(QWidget):
         self.mainWindow = mainWindow
         
         plotStyleGroup = GroupWidget("Plot style")
-        self.plotStyleList = QComboBox()
-        self.plotStyleList.addItems(["Dark", "Light", "Add custom theme..."])
-        
+        styles = self.mainWindow.plot.getValidStyles()
         self.customStyle = StyleDesigner(styleKeys=self.mainWindow.plot.getStyleKeys(),
-                                         invalidNames=["dark", "light"])
+                                         invalidNames=styles)
         self.customStyle.setEnabled(False)
+        
+        self.plotStyleList = QComboBox()
+        styles = [s.capitalize() for s in styles]
+        styles += ["Add custom theme..."]
+        self.plotStyleList.addItems(styles)
+        
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
         
         plotStyleGroup.addWidget(self.plotStyleList)
