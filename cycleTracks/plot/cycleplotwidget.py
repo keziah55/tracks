@@ -95,6 +95,9 @@ class CyclePlotWidget(QWidget):
     def getStyleKeys(self):
         return self.plotWidget.style.keys
     
+    def getStyleSymbolKeys(self):
+        return self.plotWidget.style.symbolKeys
+    
     def getValidStyles(self):
         return self.plotWidget.style.validStyles
         
@@ -513,7 +516,8 @@ class PlotStyle:
         self.settings = Settings(plotStyleFile, Settings.NativeFormat)
         
         self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
-                       'highlightPoint', 'foreground', 'background']
+                     'highlightPoint', 'foreground', 'background']
+        self.symbolKeys = ['speed', 'distance', 'time', 'calories']
         
         # make defaults
         darkDefault = ["#024aeb", "#cf0202", "#19b536", "#ff9100", "#4d4d4d",
@@ -522,7 +526,7 @@ class PlotStyle:
                         "#deb009", "#4d4d4d", "#ffffff"]
         defaults = {'dark':dict(zip(self.keys, darkDefault)),
                     'light':dict(zip(self.keys, lightDefault))}
-        defaultSymbols = {'speed':'x', 'distance':'x', 'time':'x', 'calories':'x'}
+        defaultSymbols = {key:'x' for key in self.symbolKeys}
         
         for styleName, styleDct in defaults.items():
             if styleName not in self.settings.childGroups():

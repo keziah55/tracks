@@ -7,13 +7,15 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox,
                              QVBoxLayout, QWidget, QLineEdit, QPushButton,
                              QColorDialog, QGridLayout, QLabel)
 from PyQt5.QtCore import QTimer, pyqtSlot as Slot, pyqtSignal as Signal
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtGui import QPalette, QColor, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
+from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
 
 class StyleDesigner(QWidget):
     
-    def __init__(self, name=None, style=None, styleKeys=None, invalidNames=[]):
+    def __init__(self, name=None, style=None, styleKeys=None, symbolKeys=[], 
+                 invalidNames=[]):
         super().__init__()
         
         if style is None and styleKeys is None:
@@ -43,6 +45,9 @@ class StyleDesigner(QWidget):
             self.colours[key] = colourValue
             self.layout.addWidget(colourName, row, 0)
             self.layout.addWidget(colourValue, row, 1)
+            # if key in symbolKeys:
+            #     symbolList = self._createSymbolList()
+            #     self.layout.addWidget(symbolList, row, 2)
             self.colours[key].clicked.connect(self.setColour)
             row += 1
             
@@ -97,6 +102,35 @@ class StyleDesigner(QWidget):
         colour = QColorDialog.getColor(QColor(initialColour), self)
         if colour.isValid(): 
             widget.setColour(colour)
+            
+    def _createSymbolList(self, colour=None):
+        symbols = ['o', 's', 't', 'd', '+', 't1', 't2', 't3', 'p', 'h', 'star',
+                   'x', 'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 
+                   'crosshair']
+        if colour is None:
+            colour = self.palette().color(self.foregroundRole())
+        if isinstance(colour, str):
+            colour = QColor(colour)
+        pen = QPen(colour)
+        brush = QBrush(colour)
+        size = 512
+        widget = QComboBox()
+        for symbol in symbols:
+            pixmap = QPixmap(size, size)
+            pixmap.fill(QColor("#00000000"))
+            painter = QPainter(pixmap)
+            painter.setRenderHint(painter.RenderHint.Antialiasing)
+            painter.resetTransform()
+            painter.translate(256, 256)
+            drawSymbol(painter, symbol, 128, pen, brush)
+            painter.end()
+            # pixmap = renderSymbol(symbol, size, pen, brush, device=pixmap)
+            pixmap.save(f"symbols/{symbol}.png")
+            # pixmap = QPixmap()
+            # pixmap.convertFromImage(image)
+            widget.addItem(QIcon(pixmap), symbol)
+        return widget
+        
 
 
 class ColourButton(QLabel):
@@ -154,6 +188,7 @@ class PlotPreferences(QWidget):
         plotStyleGroup = GroupWidget("Plot style")
         styles = self.mainWindow.plot.getValidStyles()
         self.customStyle = StyleDesigner(styleKeys=self.mainWindow.plot.getStyleKeys(),
+                                         symbolKeys=self.mainWindow.plot.getStyleSymbolKeys(),
                                          invalidNames=styles)
         self.customStyle.setEnabled(False)
         
