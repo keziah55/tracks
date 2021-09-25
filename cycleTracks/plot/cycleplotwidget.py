@@ -3,11 +3,13 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime
+import os
 from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
                        setConfigOptions)
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from customQObjects.core import Settings
 
 from .cycleplotlabel import CyclePlotLabel
 from .custompyqtgraph import CustomPlotItem, CustomAxisItem, CustomDateAxisItem, CustomViewBox
@@ -91,7 +93,7 @@ class CyclePlotWidget(QWidget):
         return self.plotWidget.style.getStyleDict(name)
     
     def getStyleKeys(self):
-        return self.plotWidget.style.keys()
+        return self.plotWidget.style.keys
     
     def getValidStyles(self):
         return self.plotWidget.style.validStyles
@@ -505,24 +507,33 @@ class Plot(PlotWidget):
 class PlotStyle:
     
     def __init__(self, style="dark"):
-        self.validStyles = ['dark', 'light']
-        self.style = style
         
-        self.colours = {
-            'speed':{'dark':"#024aeb", 'light':"#0981cb",},
-            'distance':{'dark':"#cf0202", 'light':'#d80d0d'},
-            'time':{'dark':"#19b536", 'light':'#2bb512'},
-            'calories':{'dark':"#ff9100", 'light':'#ff9100'},
-            'odometer':{'dark':"#4d4d4d", 'light':"#9f9f9f"},
-            'highlightPoint':{'dark':"#faed00", 'light':"#deb009"},
-            'foreground':{'dark':"#969696", 'light':"#4d4d4d"},
-            'background':{'dark':"#000000", 'light':"#ffffff"}}
+        plotStyleFile = os.path.dirname(Settings().fileName())
+        plotStyleFile = os.path.join(plotStyleFile, 'plotStyles.ini')
+        self.settings = Settings(plotStyleFile, Settings.NativeFormat)
         
-        self.symbols = {
-            'speed':'x',
-            'distance':'x',
-            'time':'x',
-            'calories':'x'}
+        self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
+                       'highlightPoint', 'foreground', 'background']
+        
+        # make defaults
+        darkDefault = ["#024aeb", "#cf0202", "#19b536", "#ff9100", "#4d4d4d",
+                       "#faed00", "#969696", "#000000"]
+        lightDefault = ["#0981cb", "#d80d0d", "#2bb512", "#ff9100", "#9f9f9f",
+                        "#deb009", "#4d4d4d", "#ffffff"]
+        defaults = {'dark':dict(zip(self.keys, darkDefault)),
+                    'light':dict(zip(self.keys, lightDefault))}
+        defaultSymbols = {'speed':'x', 'distance':'x', 'time':'x', 'calories':'x'}
+        
+        for styleName, styleDct in defaults.items():
+            if styleName not in self.settings.childGroups():
+                self.settings.beginGroup(styleName)
+                for key, colour in styleDct.items():
+                    self.settings.setValue(key, colour)
+                for key, symbol in defaultSymbols.items():
+                    self.settings.setValue(f"{key}Symbol", symbol)
+                self.settings.endGroup()
+        
+        self.name = style
         
     @property
     def name(self):
@@ -531,42 +542,45 @@ class PlotStyle:
     @name.setter 
     def name(self, name):
         if name.lower() not in self.validStyles:
-            msg = f"Plot style must be one of ', '.join(self.validStyles), not '{name}'."
+            msg = f"Plot style must be one of {', '.join(self.validStyles)}, not '{name}'."
             raise ValueError(msg)
         self._styleName = name.lower()
         
+    @property 
+    def validStyles(self):
+        return self.settings.childGroups()
+        
     def __getattr__(self, name):
-        if name in self.colours.keys():
+        if name in self.keys:
             return self._getStyle(name)
         else:
             return self.__getattribute__(name)
         
     def __getitem__(self, name):
-        if name in self.colours.keys():
+        if name in self.keys: 
             return self._getStyle(name)
         else:
             raise KeyError(f"PlotStyle has no field '{name}'")
             
-    def keys(self):
-        return self.colours.keys()
-        
     def _getStyle(self, field):
         if field in ['foreground', 'background']:
-            return self.colours[field][self.style]
+            return self.settings.value(f"{self.name}/{field}")
         
-        dct = {'colour':self.colours[field][self.style]}
-        if field in self.symbols:
-            dct['symbol'] = self.symbols[field]
+        dct = {'colour':self.settings.value(f"{self.name}/{field}")}
+        symbol = self.settings.value(f"{self.name}/{field}Symbol")
+        if symbol is not None:
+            dct['symbol'] = symbol
         return dct
     
     def getStyleDict(self, name=None):
         if name is None:
             name = self.name
         style = {}
-        for field in self.colours:
-            dct = {'colour':self.colours[field][name]}
-            if field in self.symbols:
-                dct['symbol'] = self.symbols[field]
+        for field in self.keys:
+            dct = {'colour':self.settings.value(f"{name}/{field}")}
+            symbol = self.settings.value(f"{name}/{field}Symbol")
+            if symbol is not None:
+                dct['symbol'] = symbol
             style[field] = dct
         return style
     

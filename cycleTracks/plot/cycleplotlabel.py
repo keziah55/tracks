@@ -75,7 +75,7 @@ class CyclePlotLabel(QWidget):
         
         for key in self.data:
             # make ClickableLabel with given size
-            colour = self.style[key]['colour'] if key in self.style.keys() else None
+            colour = self.style[key]['colour'] if key in self.style.keys else None
             widget = ClickableLabel(key, colour=colour, fontSize=fontSize)
             widget.setAlignment(Qt.AlignCenter)
             # connect to labelClicked signal
@@ -97,5 +97,5 @@ class CyclePlotLabel(QWidget):
     def setStyle(self, style):
         self.style = style
         for key, value in self.data.items():
-            colour = self.style[key]['colour'] if key in self.style.keys() else None
+            colour = self.style[key]['colour'] if key in self.style.keys else None
             value['widget'].colour = colour

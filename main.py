@@ -10,7 +10,7 @@ from cycleTracks.cycletracks import CycleTracks
 if __name__ == '__main__':
 
     QApplication.setApplicationName("Cycle Tracks")
-    QApplication.setOrganizationName("kzm")
+    QApplication.setOrganizationName("Tracks")
     
     app = QApplication(sys.argv)
     
