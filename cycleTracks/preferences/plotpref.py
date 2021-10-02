@@ -72,7 +72,7 @@ class StyleDesigner(QWidget):
                 item = self.layout.itemAtPosition(rowNum, 1)
                 item.widget().height = listHeight
             
-        self.saveButton = QPushButton("Add custom theme")
+        self.saveButton = QPushButton("Save theme")
         self.layout.addWidget(self.saveButton, row, 1) # use 'row' value from above
         self.setLayout(self.layout)
         
@@ -248,10 +248,17 @@ class PlotPreferences(QWidget):
         styles = [s.capitalize() for s in styles]
         styles += ["Add custom theme..."]
         self.plotStyleList.addItems(styles)
-        
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
         
-        plotStyleGroup.addWidget(self.plotStyleList)
+        self.editPlotStyleButton = QPushButton("Edit")
+        self.editPlotStyleButton.clicked.connect(lambda *args: self._updateCustomStyleWidget())
+        
+        plotStyleBox = QHBoxLayout()
+        plotStyleBox.addWidget(self.plotStyleList)
+        plotStyleBox.addWidget(self.editPlotStyleButton)
+        
+        # plotStyleGroup.addWidget(self.plotStyleList)
+        plotStyleGroup.addLayout(plotStyleBox)
         plotStyleGroup.addWidget(self.customStyle)
 
         plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
@@ -356,10 +363,14 @@ class PlotPreferences(QWidget):
             self.customRangeSpinBox.setEnabled(False)
             self.plotRangeCombo.setEnabled(True)
             
-    def _updateCustomStyleWidget(self, name):
-        if name == "Add custom theme...":
+    def _updateCustomStyleWidget(self, name=None):
+        if name is None or name == "Add custom theme...":
             self.customStyle.setEnabled(True)
-            self.customStyle.setName(name=f"custom-{self.customStyle.name}")
+            if name is None:
+                name = self.customStyle.name
+            else:
+                name = f"custom-{self.customStyle.name}"
+            self.customStyle.setName(name)
         else:
             name = name.lower()
             style = self.mainWindow.plot.getStyle(name)

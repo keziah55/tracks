@@ -80,8 +80,8 @@ class CyclePlotWidget(QWidget):
         self.plotWidget.setXAxisRange(months, fromRecentSession=fromRecentSession)
         
     @Slot(str)
-    def setStyle(self, style):
-        if self.plotWidget.style.name != style:
+    def setStyle(self, style, force=False):
+        if force or self.plotWidget.style.name != style:
             self.plotState = self.plotWidget.getState()
             self.layout.removeWidget(self.plotWidget)
             self.plotWidget.deleteLater()
@@ -91,7 +91,7 @@ class CyclePlotWidget(QWidget):
             
     def addCustomStyle(self, name, style):
         self.plotWidget.style.addStyle(name, style)
-        self.setStyle(name)
+        self.setStyle(name, force=True)
             
     def getStyle(self, name):
         return self.plotWidget.style.getStyleDict(name)
