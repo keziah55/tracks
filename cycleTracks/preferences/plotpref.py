@@ -14,6 +14,18 @@ from customQObjects.core import Settings
 
 class StyleDesigner(QWidget):
     
+    symbols = {'o':'circle', 's':'square', 't':'triangle', 'd':'diamond', 
+                '+':'plus', 't1':'triangle up', 't2':'triangle right', 
+                't3':'triangle left', 'p':'pentagon', 'h':'hexagon', 
+                'star':'star', 'x':'cross', 'arrow_up':'arrow up', 
+                'arrow_right':'arrow right', 'arrow_down':'arrow down', 
+                'arrow_left':'arrow left', 'crosshair':'crosshair'}
+    
+    @classmethod
+    @property
+    def reverseSymbolDict(cls):
+        return {value:key for key, value in cls.symbols.items()}
+ 
     def __init__(self, name=None, style=None, styleKeys=None, symbolKeys=[], 
                  invalidNames=[]):
         super().__init__()
@@ -99,6 +111,24 @@ class StyleDesigner(QWidget):
             widget.setColour(value['colour'])
         if name is not None:
             self.setName(name)
+            
+    def getStyle(self):
+        style = {}
+        for row in range(1, self.layout.rowCount()-1): # don't need first and last from layout
+            key = self.layout.itemAtPosition(row, 0).widget().text().lower()
+            colour = self.layout.itemAtPosition(row, 1).widget().colour
+            
+            # turn 'highlight point' back into 'highlightPoint'
+            first, *rest = key.split(' ')
+            key = first + ''.join([s.capitalize() for s in rest])
+            style[key] = colour
+            
+            symbol = self.layout.itemAtPosition(row, 2)
+            if symbol is not None:
+                symbol = symbol.widget().currentText().lower()
+                style[f"{key}Symbol"] = self.reverseSymbolDict[symbol]
+        return self.name, style
+            
         
     def _validate(self):
         name = self.nameEdit.text().lower()
@@ -113,19 +143,13 @@ class StyleDesigner(QWidget):
             widget.setColour(colour)
             
     def _createSymbolList(self, colour=None):
-        symbols = {'o':'circle', 's':'square', 't':'triangle', 'd':'diamond', 
-                   '+':'plus', 't1':'triangle up', 't2':'triangle right', 
-                   't3':'triangle left', 'p':'pentagon', 'h':'hexagon', 
-                   'star':'star', 'x':'cross', 'arrow_up':'arrow up', 
-                   'arrow_right':'arrow right', 'arrow_down':'arrow down', 
-                   'arrow_left':'arrow left', 'crosshair':'crosshair'}
         
-        availableSymbols = ['o', 's', 't', 'd', '+', 't1', 't2', 't3', 'p', 'h', 
-                            'star', 'x', 'crosshair']
+        availableSymbols = ['x', 'o', 's', 't', 'd', '+', 't1', 't2', 't3', 'p', 
+                            'h', 'star']
         
         widget = QComboBox()
         for name in availableSymbols:
-            widget.addItem(symbols[name].capitalize())
+            widget.addItem(self.symbols[name].capitalize())
         
         # if colour is None:
         #     colour = self.palette().color(self.foregroundRole())
@@ -291,8 +315,14 @@ class PlotPreferences(QWidget):
         
     def apply(self):
         
-        style = self.plotStyleList.currentText().lower()
-        self.mainWindow.plot.setStyle(style)
+        styleName = self.plotStyleList.currentText().lower()
+        if styleName == "add custom theme...":
+            styleName, styleDct = self.customStyle.getStyle()
+            self.mainWindow.plot.addCustomStyle(styleName, styleDct)
+            idx = self.plotStyleList.count()-1
+            self.plotStyleList.insertItem(idx, styleName.capitalize())
+        else:
+            self.mainWindow.plot.setStyle(styleName)
         
         customRange = self.customRangeCheckBox.isChecked()
         if customRange:
@@ -307,7 +337,7 @@ class PlotPreferences(QWidget):
         self.mainWindow.plot.setXAxisRange(months, fromRecentSession=False)
         
         self.settings.beginGroup("plot")
-        self.settings.setValue("style", style)
+        self.settings.setValue("style", styleName)
         
         self.settings.setValue("customRange", customRange)
         if customRange:

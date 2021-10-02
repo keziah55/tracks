@@ -89,6 +89,10 @@ class CyclePlotWidget(QWidget):
             self.plotWidget.setState(self.plotState)
             self.layout.insertWidget(0, self.plotWidget)
             
+    def addCustomStyle(self, name, style):
+        self.plotWidget.style.addStyle(name, style)
+        self.setStyle(name)
+            
     def getStyle(self, name):
         return self.plotWidget.style.getStyleDict(name)
     
@@ -587,4 +591,10 @@ class PlotStyle:
                 dct['symbol'] = symbol
             style[field] = dct
         return style
+    
+    def addStyle(self, name, style):
+        self.settings.beginGroup(name)
+        for key, value in style.items():
+            self.settings.setValue(key, value)
+        self.settings.endGroup()
     
