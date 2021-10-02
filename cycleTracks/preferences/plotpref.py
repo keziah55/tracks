@@ -6,9 +6,9 @@ from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
                              QVBoxLayout, QWidget, QLineEdit, QPushButton,
                              QColorDialog, QGridLayout, QLabel)
-from PyQt5.QtCore import QTimer, pyqtSlot as Slot, pyqtSignal as Signal
-from PyQt5.QtGui import QPalette, QColor, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
-from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
+from PyQt5.QtCore import QTimer, pyqtSlot as Slot, pyqtSignal as Signal, QSize
+from PyQt5.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
+# from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
 
@@ -33,6 +33,8 @@ class StyleDesigner(QWidget):
             self.setName(name)
         self.layout.addWidget(self.nameEdit, 0, 0, 1, -1)
         
+        listHeight = None
+        
         self.colours = {}
         row = 1
         for key in styleKeys:
@@ -45,14 +47,21 @@ class StyleDesigner(QWidget):
             self.colours[key] = colourValue
             self.layout.addWidget(colourName, row, 0)
             self.layout.addWidget(colourValue, row, 1)
-            # if key in symbolKeys:
-            #     symbolList = self._createSymbolList()
-            #     self.layout.addWidget(symbolList, row, 2)
+            if key in symbolKeys:
+                symbolList = self._createSymbolList()
+                self.layout.addWidget(symbolList, row, 2)
+                if listHeight is None:
+                    listHeight = symbolList.sizeHint().height()
             self.colours[key].clicked.connect(self.setColour)
             row += 1
             
+        if listHeight is not None:
+            for rowNum in range(self.layout.rowCount()):
+                item = self.layout.itemAtPosition(rowNum, 1)
+                item.widget().height = listHeight
+            
         self.saveButton = QPushButton("Add custom theme")
-        self.layout.addWidget(self.saveButton, row, 1)
+        self.layout.addWidget(self.saveButton, row, 1) # use 'row' value from above
         self.setLayout(self.layout)
         
         if style is not None:
@@ -104,31 +113,42 @@ class StyleDesigner(QWidget):
             widget.setColour(colour)
             
     def _createSymbolList(self, colour=None):
-        symbols = ['o', 's', 't', 'd', '+', 't1', 't2', 't3', 'p', 'h', 'star',
-                   'x', 'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 
-                   'crosshair']
-        if colour is None:
-            colour = self.palette().color(self.foregroundRole())
-        if isinstance(colour, str):
-            colour = QColor(colour)
-        pen = QPen(colour)
-        brush = QBrush(colour)
-        size = 512
+        symbols = {'o':'circle', 's':'square', 't':'triangle', 'd':'diamond', 
+                   '+':'plus', 't1':'triangle up', 't2':'triangle right', 
+                   't3':'triangle left', 'p':'pentagon', 'h':'hexagon', 
+                   'star':'star', 'x':'cross', 'arrow_up':'arrow up', 
+                   'arrow_right':'arrow right', 'arrow_down':'arrow down', 
+                   'arrow_left':'arrow left', 'crosshair':'crosshair'}
+        
+        availableSymbols = ['o', 's', 't', 'd', '+', 't1', 't2', 't3', 'p', 'h', 
+                            'star', 'x', 'crosshair']
+        
         widget = QComboBox()
-        for symbol in symbols:
-            pixmap = QPixmap(size, size)
-            pixmap.fill(QColor("#00000000"))
-            painter = QPainter(pixmap)
-            painter.setRenderHint(painter.RenderHint.Antialiasing)
-            painter.resetTransform()
-            painter.translate(256, 256)
-            drawSymbol(painter, symbol, 128, pen, brush)
-            painter.end()
-            # pixmap = renderSymbol(symbol, size, pen, brush, device=pixmap)
-            pixmap.save(f"symbols/{symbol}.png")
-            # pixmap = QPixmap()
-            # pixmap.convertFromImage(image)
-            widget.addItem(QIcon(pixmap), symbol)
+        for name in availableSymbols:
+            widget.addItem(symbols[name].capitalize())
+        
+        # if colour is None:
+        #     colour = self.palette().color(self.foregroundRole())
+        # if isinstance(colour, str):
+        #     colour = QColor(colour)
+        # pen = QPen(colour)
+        # brush = QBrush(colour)
+        # size = 512
+        # widget = QComboBox()
+        # for symbol in symbols:
+        #     pixmap = QPixmap(size, size)
+        #     pixmap.fill(QColor("#00000000"))
+        #     painter = QPainter(pixmap)
+        #     painter.setRenderHint(painter.RenderHint.Antialiasing)
+        #     painter.resetTransform()
+        #     painter.translate(256, 256)
+        #     drawSymbol(painter, symbol, 128, pen, brush)
+        #     painter.end()
+        #     # pixmap = renderSymbol(symbol, size, pen, brush, device=pixmap)
+        #     pixmap.save(f"symbols/{symbol}.png")
+        #     # pixmap = QPixmap()
+        #     # pixmap.convertFromImage(image)
+        #     widget.addItem(QIcon(pixmap), symbol)
         return widget
         
 
@@ -146,6 +166,7 @@ class ColourButton(QLabel):
     """
     
     def __init__(self, *args, colour=None, **kwargs):
+        self.height = None
         super().__init__(*args, **kwargs)
         self._colour = None
         if colour is not None:
@@ -153,6 +174,13 @@ class ColourButton(QLabel):
             
     def mouseReleaseEvent(self, ev):
         self.clicked.emit(self, self.colour)
+        
+    def sizeHint(self):
+        hint = super().sizeHint()
+        if self.height is not None:
+            return QSize(hint.width(), self.height)
+        else:
+            return hint
         
     @property
     def colour(self):
