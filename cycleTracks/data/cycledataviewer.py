@@ -3,12 +3,13 @@ QTreeWidget showing data from CycleData.
 """
 
 from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
-                             QAbstractItemView, QMessageBox)
+                             QAbstractItemView, QMessageBox, QMenu)
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics
 import re
 import numpy as np
+from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
 
@@ -120,7 +121,24 @@ class CycleDataViewer(QTreeWidget):
         msg += "Click on a session to highlight it in the plot."
         self.setToolTip(msg)
         
+        self._selectedItems = None
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._showContextMenu)
         
+    def _showContextMenu(self, pos):
+        self._selectedItems = self.selectedItems()
+        menu = QMenu()
+        menu.addAction("Edit", self._editItem)
+        menu.exec_(self.mapToGlobal(pos))
+        
+    def _editItem(self):
+        if self._selectedItems is not None:
+            editable = [s for s in self.headerLabels if "speed" not in s]
+            dialog = EditItemDialog(self._selectedItems, editable, self.headerLabels)
+            result = dialog.exec_()
+            print(result)
+        self._selectedItems = None
+    
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
         height = super().sizeHint().height()
