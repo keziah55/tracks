@@ -45,7 +45,7 @@ class PreferencesDialog(QDialog):
 
         self.setLayout(mainLayout)
 
-        self.setWindowTitle("Config Dialog")
+        self.setWindowTitle("Preferences")
 
     def changePage(self, current, previous):
         if not current:
