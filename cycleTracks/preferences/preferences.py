@@ -61,6 +61,6 @@ class PreferencesDialog(QDialog):
         self.pagesWidget.currentWidget().apply()
         
     def ok(self):
-        for idx in range(1, self.pagesWidget.count()):
+        for idx in range(self.pagesWidget.count()):
             self.pagesWidget.widget(idx).apply()
         self.accept()

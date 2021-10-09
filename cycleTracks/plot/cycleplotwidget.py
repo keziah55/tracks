@@ -306,10 +306,6 @@ class Plot(PlotWidget):
             days = self.viewMonths * 365 / 12 # number of days to go back
             td = timedelta(days=days)
             ts0 = (datetime.fromtimestamp(ts1) - td).timestamp()
-            
-            # mnth = self.data.splitMonths(includeEmpty=True)
-            # monthYear, df = mnth[-(months)]
-            # ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
         self.setPlotRange(ts0, ts1)
                
     @Slot()
