@@ -1,7 +1,7 @@
 from .test_cycletracks import TracksSetupTeardown
 import pytest
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from PyQt5.QtWidgets import QDialogButtonBox
 from PyQt5.QtCore import Qt
 
@@ -11,16 +11,8 @@ class TestPreferences(TracksSetupTeardown):
     
     @staticmethod
     def _subtractMonths(dt, months):
-        if months >= dt.month:
-            year = dt.year - 1
-        else:
-            year = dt.year
-        month = (dt.month - months) % 12
-        month += 1
+        return dt-timedelta(days=months*365/12)
         
-        d = datetime(year=year, month=month, day=1)
-        return d
-    
     def test_plot_range(self, setup, qtbot, teardown):
         self.prefDialog.show()
         
