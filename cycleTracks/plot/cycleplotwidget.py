@@ -2,7 +2,7 @@
 Widget containing plot and labels.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
                        setConfigOptions)
@@ -303,9 +303,13 @@ class Plot(PlotWidget):
         if months is None:
             ts0 = self.data.dateTimestamps[0]
         else:
-            mnth = self.data.splitMonths(includeEmpty=True)
-            monthYear, df = mnth[-(months)]
-            ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
+            days = self.viewMonths * 365 / 12 # number of days to go back
+            td = timedelta(days=days)
+            ts0 = (datetime.fromtimestamp(ts1) - td).timestamp()
+            
+            # mnth = self.data.splitMonths(includeEmpty=True)
+            # monthYear, df = mnth[-(months)]
+            # ts0 = datetime.strptime(f"01 {monthYear}", "%d %B %Y").timestamp()
         self.setPlotRange(ts0, ts1)
                
     @Slot()
