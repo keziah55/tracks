@@ -262,7 +262,7 @@ class PBTable(QTableWidget):
     def setTable(self, key="Avg. speed (km/h)", order='descending',
                  highlightNew=False):
         
-        n=self.rowCount()
+        n = self.rowCount()
         self.items = self._getBestSessions(n=n, key=key, order=order)
         
         self.selectKey = key
