@@ -1,10 +1,17 @@
-from PyQt5.QtCore import Qt, pyqtSlot as Slot, pyqtSignal as Signal
+from PyQt5.QtWidgets import QTableWidget
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QBrush, QColor
 from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 
                               parseDuration)
 from functools import partial
 
 class AddDataTableMixin(object):
+    """ Mixin providing validation and type casting for a table for adding cycle data.
+    
+        Should be used as part of a widget that has a `table` attribute. If it
+        also has a `okButton`, this will be enabled/diabled when validation 
+        is performed.
+    """
     
     invalid = Signal(int, int)
     """ **signal** invalid(int `row`, int `col`)
@@ -16,6 +23,9 @@ class AddDataTableMixin(object):
         super().__init__(*args, **kwargs)
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        self.table = QTableWidget(0, len(self.headerLabels))
+        self.table.setHorizontalHeaderLabels(self.headerLabels)
+        self.table.verticalHeader().setVisible(False)
         
         # dict of methods to validate and cast types for input data in each column
         validateMethods = [isDate, isDuration, isFloat, 
@@ -25,10 +35,23 @@ class AddDataTableMixin(object):
         self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
                       for i, name in enumerate(self.headerLabels)}
         
-        self.defaultBrush = self.table.item(0,0).background()
-        self.invalidBrush = QBrush(QColor("#910404"))
+        self.validateTimer = QTimer()
+        self.validateTimer.setInterval(100)
+        self.validateTimer.setSingleShot(True)
+        self.validateTimer.timeout.connect(self._validate)
+        self.table.cellChanged.connect(self.validateTimer.start)
         
         self.invalid.connect(self._invalid)
+        
+    @property
+    def defaultBrush(self):
+        # made this a property rather than setting in constructor as the mixin
+        # doesn't have a `table` attribute when __init__ is called
+        return self.table.item(0,0).background()
+    
+    @property
+    def invalidBrush(self):
+        return QBrush(QColor("#910404"))
         
     @Slot(int, int)
     def _invalid(self, row, col):
@@ -56,8 +79,10 @@ class AddDataTableMixin(object):
                 mthd = self.mthds[name]['validate']
                 valid = mthd(value)
                 if not valid:
-                    if (row, col) in self._clicked:
-                        self.invalid.emit(row, col)
+                    if hasattr(self, "_clicked"):
+                        if (row, col) not in self._clicked:
+                            continue
+                    self.invalid.emit(row, col)
                     allValid = False
                 elif valid and self.table.item(row, col).background() == self.invalidBrush:
                     self.table.item(row, col).setBackground(self.defaultBrush) 

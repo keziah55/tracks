@@ -33,18 +33,16 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         if itemHeader is None:
             itemHeader = header
         
-        self.headerLabels = header
-        
-        header += ["Remove"]
-        self.table = QTableWidget(len(items), len(header))
-        self.table.setHorizontalHeaderLabels(header)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.table.verticalHeader().hide()
+        
+        self.table.insertColumn(self.table.columnCount())
+        self.table.setHorizontalHeaderLabels(self.headerLabels + ["Remove"])
         
         self.buttons = []
         
         for row, item in enumerate(items):
+            self.table.insertRow(row)
             col = 0
             for idx in range(item.columnCount()):
                 if itemHeader[idx] in header:
@@ -63,8 +61,8 @@ class EditItemDialog(AddDataTableMixin, QDialog):
             
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         
-        okButton =  self.buttonBox.button(QDialogButtonBox.Ok)
-        okButton.clicked.connect(self.accept)
+        self.okButton =  self.buttonBox.button(QDialogButtonBox.Ok)
+        self.okButton.clicked.connect(self.accept)
         cancelButton = self.buttonBox.button(QDialogButtonBox.Cancel)
         cancelButton.clicked.connect(self.reject)
         
@@ -103,16 +101,5 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         self.table.removeRow(idx)
         
     def getValues(self):
-        values = {name:[] for name in self.headerLabels}
-        
-        self.table.sortItems(0, Qt.AscendingOrder)
-
-        for row in range(self.table.rowCount()):
-            for col, name in enumerate(self.headerLabels):
-                item = self.table.item(row, col)
-                value = item.text()
-                mthd = self.mthds[name]['cast']
-                value = mthd(value)
-                values[name].append(value)
-        return values
+        return self._getValues()
                 
