@@ -11,6 +11,7 @@ from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QBrush, QColor
 
+from .adddatatablemixin import AddDataTableMixin
 from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 
                               parseDuration, dayMonthYearToFloat)
 
@@ -28,7 +29,7 @@ class TableWidgetDateItem(QTableWidgetItem):
         value1 = dayMonthYearToFloat(item1)
         return value0 < value1
 
-class AddCycleData(QWidget):
+class AddCycleData(AddDataTableMixin, QWidget):
     """ QWidget containing a QTableWidget, where users can add new data. 
     
         User input is validated live; it is not possible to submit invalid data.
@@ -40,11 +41,11 @@ class AddCycleData(QWidget):
         Emitted with a dict to be appended to the DataFrame.
     """
     
-    invalid = Signal(int, int)
-    """ **signal** invalid(int `row`, int `col`)
+    # invalid = Signal(int, int)
+    # """ **signal** invalid(int `row`, int `col`)
     
-        Emitted if the data in cell `row`,`col` is invalid.
-    """
+    #     Emitted if the data in cell `row`,`col` is invalid.
+    # """
     
     rowRemoved = Signal()
     """ **signal** rowRemoved()
@@ -57,15 +58,15 @@ class AddCycleData(QWidget):
         
         self.widthSpace = widthSpace
         
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        # self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
         
-        # dict of methods to validate and cast types for input data in each column
-        validateMethods = [isDate, isDuration, isFloat, 
-                           isFloat, isInt]
-        parseDatePd = partial(parseDate, pd_timestamp=True)
-        castMethods = [parseDatePd, parseDuration, float, float, int]
-        self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
-                      for i, name in enumerate(self.headerLabels)}
+        # # dict of methods to validate and cast types for input data in each column
+        # validateMethods = [isDate, isDuration, isFloat, 
+        #                    isFloat, isInt]
+        # parseDatePd = partial(parseDate, pd_timestamp=True)
+        # castMethods = [parseDatePd, parseDuration, float, float, int]
+        # self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
+        #               for i, name in enumerate(self.headerLabels)}
         
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
@@ -73,8 +74,8 @@ class AddCycleData(QWidget):
         
         self._clicked = []
         self._makeEmptyRow()
-        self.defaultBrush = self.table.item(0,0).background()
-        self.invalidBrush = QBrush(QColor("#910404"))
+        # self.defaultBrush = self.table.item(0,0).background()
+        # self.invalidBrush = QBrush(QColor("#910404"))
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)
@@ -83,7 +84,7 @@ class AddCycleData(QWidget):
         self.table.cellChanged.connect(self.validateTimer.start)
         
         self.table.currentCellChanged.connect(self._cellClicked)
-        self.invalid.connect(self._invalid)
+        # self.invalid.connect(self._invalid)
         
         self.addLineButton = QPushButton("New line")
         self.rmvLineButton = QPushButton("Remove line")
@@ -155,37 +156,37 @@ class AddCycleData(QWidget):
         self.table.removeRow(row)
         self.rowRemoved.emit()
         
-    @Slot(int, int)
-    def _invalid(self, row, col):
-        """ Set the background of cell `row`,`col` to the `invalidBrush` and 
-            disable the 'Ok' button.
-        """
-        self.table.item(row, col).setBackground(self.invalidBrush)
-        self.okButton.setEnabled(False)
+    # @Slot(int, int)
+    # def _invalid(self, row, col):
+    #     """ Set the background of cell `row`,`col` to the `invalidBrush` and 
+    #         disable the 'Ok' button.
+    #     """
+    #     self.table.item(row, col).setBackground(self.invalidBrush)
+    #     self.okButton.setEnabled(False)
         
-    @Slot()
-    def _validate(self):
-        """ Validate all data in the table. """
-        # it would be more efficient to only validate a single cell, after its
-        # text has been changed, but this table is unlikely to ever be more 
-        # than a few rows long, so this isn't too inefficient
-        allValid = True
-        for row in range(self.table.rowCount()):
-            for col, name in enumerate(self.headerLabels):
-                item = self.table.item(row, col)
-                value = item.text()
-                mthd = self.mthds[name]['validate']
-                valid = mthd(value)
-                if not valid:
-                    if (row, col) in self._clicked:
-                        self.invalid.emit(row, col)
-                    allValid = False
-                elif valid and self.table.item(row, col).background() == self.invalidBrush:
-                    self.table.item(row, col).setBackground(self.defaultBrush) 
-        if allValid:
-            self.okButton.setEnabled(True)
+    # @Slot()
+    # def _validate(self):
+    #     """ Validate all data in the table. """
+    #     # it would be more efficient to only validate a single cell, after its
+    #     # text has been changed, but this table is unlikely to ever be more 
+    #     # than a few rows long, so this isn't too inefficient
+    #     allValid = True
+    #     for row in range(self.table.rowCount()):
+    #         for col, name in enumerate(self.headerLabels):
+    #             item = self.table.item(row, col)
+    #             value = item.text()
+    #             mthd = self.mthds[name]['validate']
+    #             valid = mthd(value)
+    #             if not valid:
+    #                 if (row, col) in self._clicked:
+    #                     self.invalid.emit(row, col)
+    #                 allValid = False
+    #             elif valid and self.table.item(row, col).background() == self.invalidBrush:
+    #                 self.table.item(row, col).setBackground(self.defaultBrush) 
+    #     if allValid:
+    #         self.okButton.setEnabled(True)
             
-        return allValid
+    #     return allValid
                 
     @Slot()
     def _addData(self):
@@ -197,18 +198,19 @@ class AddCycleData(QWidget):
         if not valid:
             return None
         
-        values = {name:[] for name in self.headerLabels}
+        # values = {name:[] for name in self.headerLabels}
         
-        self.table.sortItems(0, Qt.AscendingOrder)
+        # self.table.sortItems(0, Qt.AscendingOrder)
 
-        for row in range(self.table.rowCount()):
-            for col, name in enumerate(self.headerLabels):
-                item = self.table.item(row, col)
-                value = item.text()
-                mthd = self.mthds[name]['cast']
-                value = mthd(value)
-                values[name].append(value)
+        # for row in range(self.table.rowCount()):
+        #     for col, name in enumerate(self.headerLabels):
+        #         item = self.table.item(row, col)
+        #         value = item.text()
+        #         mthd = self.mthds[name]['cast']
+        #         value = mthd(value)
+        #         values[name].append(value)
                 
+        values = self._getValues()
         self.newData.emit(values)
             
         for row in reversed(range(self.table.rowCount())):
