@@ -108,7 +108,7 @@ class CycleTracks(QMainWindow):
         home = os.path.expanduser('~')
         path = os.path.join(home, '.cycletracks')
         os.makedirs(path, exist_ok=True)
-        file = os.path.join(path, 'cycletracks2.csv')
+        file = os.path.join(path, 'cycletracks.csv')
         return file
         
     @Slot()
