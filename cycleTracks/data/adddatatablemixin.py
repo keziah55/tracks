@@ -19,7 +19,7 @@ class AddDataTableMixin(object):
         Emitted if the data in cell `row`,`col` is invalid.
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, emptyDateValid=True, **kwargs):
         super().__init__(*args, **kwargs)
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
@@ -28,10 +28,11 @@ class AddDataTableMixin(object):
         self.table.verticalHeader().setVisible(False)
         
         # dict of methods to validate and cast types for input data in each column
-        validateMethods = [isDate, isDuration, isFloat, 
+        isDatePartial = partial(isDate, allowEmpty=emptyDateValid)
+        validateMethods = [isDatePartial, isDuration, isFloat, 
                            isFloat, isInt]
-        parseDatePd = partial(parseDate, pd_timestamp=True)
-        castMethods = [parseDatePd, parseDuration, float, float, int]
+        parseDatePartial = partial(parseDate, pd_timestamp=True)
+        castMethods = [parseDatePartial, parseDuration, float, float, int]
         self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
                       for i, name in enumerate(self.headerLabels)}
         
@@ -106,5 +107,8 @@ class AddDataTableMixin(object):
                 mthd = self.mthds[name]['cast']
                 value = mthd(value)
                 values[name].append(value)
+                
+        from pprint import pprint
+        pprint(values)
                 
         return values

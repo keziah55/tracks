@@ -107,7 +107,11 @@ def parseDate(value, pd_timestamp=False):
     # if input is empty string, return current date
     value = value.strip()
     if not value:
-        return today
+        ret = today
+        if pd_timestamp:
+            # cast to pandas.Timestamp, if requested
+            ret = pd.Timestamp(ret)
+        return ret
     
     l = re.split(r'[\s/.-]', value)
     

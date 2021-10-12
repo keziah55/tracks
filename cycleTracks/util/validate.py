@@ -18,8 +18,14 @@ def isFloat(value):
     except ValueError:
         return False
     
-def isDate(value):
-    """ Return True if `value` can be cast to a valid date. """
+def isDate(value, allowEmpty=True):
+    """ Return True if `value` can be cast to a valid date. 
+    
+        If `value` is an empty string, by default this will return True, as
+        parseDate returns the current date. To disable this, pass allowEmpty=False.
+    """
+    if not allowEmpty and not value:
+        return False
     try:
         parseDate(value)
         return True

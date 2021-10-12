@@ -28,7 +28,7 @@ class RemoveButton(QPushButton):
 class EditItemDialog(AddDataTableMixin, QDialog):
     
     def __init__(self, items, header, itemHeader=None):
-        super().__init__()
+        super().__init__(emptyDateValid=False)
         
         if itemHeader is None:
             itemHeader = header
