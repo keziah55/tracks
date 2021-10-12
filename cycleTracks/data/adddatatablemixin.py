@@ -108,7 +108,4 @@ class AddDataTableMixin(object):
                 value = mthd(value)
                 values[name].append(value)
                 
-        from pprint import pprint
-        pprint(values)
-                
         return values

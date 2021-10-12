@@ -114,7 +114,6 @@ class TestCycleData:
                 expectedDist = 0
             else:
                 row = df.iloc[dfIdx]
-                print(f"row: {row}")
                 assert row['Date'] == dt
                 expectedDist += row['Distance (km)']
                 dfIdx += 1

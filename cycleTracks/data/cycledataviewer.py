@@ -82,6 +82,20 @@ class CycleDataViewer(QTreeWidget):
         Emitted after the CycleDataViewer items have been sorted.
     """
     
+    requestRemoveData = Signal(list)
+    """ requestRemoveData(list `items`)
+    
+        When data are removed/edited, request that these items are removed from 
+        the CycleData object. `items` is a list of dates to be removed.
+    """
+    
+    requestAddData = Signal(dict)
+    """ requestAddData(dict `values`)
+    
+        When data are removed/edited, request that these new values are added  
+        to the CycleData object.
+    """
+    
     def __init__(self, parent, widthSpace=10):
         super().__init__()
         
@@ -137,12 +151,15 @@ class CycleDataViewer(QTreeWidget):
     def _editItem(self):
         items = [item for item in self.selectedItems() if item not in self.topLevelItems]
         if items:
-            editable = [s for s in self.headerLabels if "speed" not in s]
-            dialog = EditItemDialog(items, editable, self.headerLabels)
+            dialog = EditItemDialog(items, self.headerLabels)
             result = dialog.exec_()
-            
             if result == EditItemDialog.Accepted:
-                pass
+                idx = self.headerLabels.index('Date')
+                selectedDates = [item.text(idx) for item in items]
+                # TODO edit data directly instead of removing and adding
+                self.requestRemoveData.emit(selectedDates)
+                values = dialog.getValues()
+                self.requestAddData.emit(values)
     
     def sizeHint(self):
         width = self.header().length() + self.widthSpace

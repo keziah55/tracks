@@ -141,6 +141,7 @@ class CycleData(QObject):
         tmpDf = self.df.append(tmpDf, ignore_index=True)
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
+        self.df.sort_values('Date', inplace=True)
         self.dataChanged.emit(index)
         
     def _makeAvgSpeedColumn(self, df):
@@ -353,6 +354,22 @@ class CycleData(QObject):
                 else:
                     self.df.at[i0, name] += self.df.iloc[i][name]
                     
-        self.df = self.df.drop(idx)
+        self.df.drop(idx, inplace=True)
         self.dataChanged.emit(i0)
         
+    def removeRows(self, dates):
+        """ Remove row(s) from the DataFrame by date. 
+        
+            Note that this assumes dates are unique in the object.
+        """
+        if isinstance(dates, str):
+            dates = [dates]
+        if not isinstance(dates, list):
+            raise TypeError("CycleData.removeRows takes list of dates")
+            
+        idx = []
+        for date in dates:
+            idx += list(self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index)
+            
+        self.df.drop(idx, inplace=True)
+        self.dataChanged.emit(None)

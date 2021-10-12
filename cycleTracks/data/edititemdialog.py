@@ -27,11 +27,11 @@ class RemoveButton(QPushButton):
     
 class EditItemDialog(AddDataTableMixin, QDialog):
     
-    def __init__(self, items, header, itemHeader=None):
+    def __init__(self, items, itemHeader=None):
         super().__init__(emptyDateValid=False)
         
         if itemHeader is None:
-            itemHeader = header
+            itemHeader = self.headerLabels
         
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -45,7 +45,7 @@ class EditItemDialog(AddDataTableMixin, QDialog):
             self.table.insertRow(row)
             col = 0
             for idx in range(item.columnCount()):
-                if itemHeader[idx] in header:
+                if itemHeader[idx] in self.headerLabels:
                     text = item.text(idx)
                     tableItem = QTableWidgetItem(text)
                     tableItem.setTextAlignment(Qt.AlignCenter)
