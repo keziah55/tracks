@@ -98,7 +98,7 @@ class CycleData(QObject):
         widths = {key: max(max([len(str(item)) for item in values]), len(key))#+len(joinStr))
                            for key, values in columns.items()}
         size = len(self)
-        if headTail is not None:
+        if headTail is not None and size > 2*headTail:
             indices = list(range(headTail)) + list(range(size-headTail,size))
         else:
             indices = range(size)
