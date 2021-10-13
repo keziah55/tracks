@@ -113,7 +113,8 @@ class CycleData(QObject):
             if n >= 1:
                 if idx != indices[n-1] + 1:
                     rows.append("...")
-            row = [f"{idx:>{idxWidth}}"]
+            pdIdx = self.df.index[idx]
+            row = [f"{pdIdx:>{idxWidth}}"]
             for key, lst in columns.items():
                 value = lst[idx]
                 width = widths[key]

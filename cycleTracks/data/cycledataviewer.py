@@ -155,6 +155,12 @@ class CycleDataViewer(QTreeWidget):
             result = dialog.exec_()
             if result == EditItemDialog.Accepted:
                 idx = self.headerLabels.index('Date')
+                # TODO make QTreeWidgetItem subclass that stores the pandas index
+                # (does the pandas index change if rows are dropped/merged?)
+                # Add CycleData method to update rows
+                # Change CycleData.removeRows to take indices (and combineRows)
+                # Add combine rows to context menu
+                selectedIdx = [self.items[item]['index'] for item in items]
                 selectedDates = [item.text(idx) for item in items]
                 # TODO edit data directly instead of removing and adding
                 self.requestRemoveData.emit(selectedDates)
@@ -218,7 +224,7 @@ class CycleDataViewer(QTreeWidget):
     def makeTree(self):
         """ Populate tree with data from CycleData object. """
         
-        self.items = []
+        self.items = {}
         dfs = self.data.splitMonths(returnType="CycleData")
         
         for monthYear, data in reversed(dfs):
@@ -248,9 +254,9 @@ class CycleDataViewer(QTreeWidget):
                     value = self.data.fmtFuncs[col](value)
                     item.setText(idx, value)
                     item.setTextAlignment(idx, Qt.AlignCenter)
-                dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
-                       'item':item}
-                self.items.append(dct)
+                dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,#'item':item, 
+                       'index':data.df.index[rowIdx]}
+                self.items[item] = dct
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
         
