@@ -5,6 +5,7 @@ Main window for cycleTracks.
 """
 
 import os
+from datetime import datetime
 from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QMessageBox
 from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
@@ -23,7 +24,6 @@ class CycleTracks(QMainWindow):
         
         self.settings = Settings()
         self.statusBar()
-        self.statusTimeout = 2000
         
         self.file = self.getFile()
         self.sep = ','
@@ -115,7 +115,8 @@ class CycleTracks(QMainWindow):
     def save(self):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
         self.backup()
-        self.statusBar().showMessage("Data saved", msecs=self.statusTimeout)
+        saveTime = datetime.now().strftime("%H:%M:%S")
+        self.statusBar().showMessage(f"Last saved at {saveTime}")
         
     @Slot()
     def backup(self):
