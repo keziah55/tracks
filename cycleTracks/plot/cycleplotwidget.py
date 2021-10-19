@@ -92,6 +92,11 @@ class CyclePlotWidget(QWidget):
     def addCustomStyle(self, name, style):
         self.plotWidget.style.addStyle(name, style)
         self.setStyle(name, force=True)
+        
+    def removeCustomStyle(self, name):
+        # TODO remove style from file
+        # and update current?
+        self.plotWidget.style.removeStyle(name)
             
     def getStyle(self, name):
         return self.plotWidget.style.getStyleDict(name)
@@ -104,6 +109,9 @@ class CyclePlotWidget(QWidget):
     
     def getValidStyles(self):
         return self.plotWidget.style.validStyles
+    
+    def getDefaultStyles(self):
+        return self.plotWidget.style.defaultStyles
         
 
 class Plot(PlotWidget):
@@ -513,6 +521,8 @@ class Plot(PlotWidget):
 
 class PlotStyle:
     
+    defaultStyles = ["dark", "light"]
+    
     def __init__(self, style="dark"):
         
         plotStyleFile = os.path.dirname(Settings().fileName())
@@ -598,3 +608,5 @@ class PlotStyle:
             self.settings.setValue(key, value)
         self.settings.endGroup()
     
+    def removeStyle(self, name):
+        self.settings.remove(name)

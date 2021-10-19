@@ -5,13 +5,13 @@ Plot preferences
 from datetime import date
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
                              QVBoxLayout, QWidget, QLineEdit, QPushButton,
-                             QColorDialog, QGridLayout, QLabel)
+                             QColorDialog, QGridLayout, QLabel, QSizePolicy)
 from PyQt5.QtCore import QTimer, pyqtSlot as Slot, pyqtSignal as Signal, QSize
 from PyQt5.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
-from cycleTracks import getIcon
+from cycleTracks import makeForegroundIcon 
 
 class StyleDesigner(QWidget):
     
@@ -73,8 +73,12 @@ class StyleDesigner(QWidget):
                 item = self.layout.itemAtPosition(rowNum, 1)
                 item.widget().height = listHeight
             
+        # TODO both save and cancel buttons currently don't do anything
         self.saveButton = QPushButton("Save theme")
+        self.cancelButton = QPushButton("Cancel")
+        self.cancelButton.setVisible(False)
         self.layout.addWidget(self.saveButton, row, 1) # use 'row' value from above
+        self.layout.addWidget(self.cancelButton, row, 2)
         self.setLayout(self.layout)
         
         if style is not None:
@@ -251,15 +255,26 @@ class PlotPreferences(QWidget):
         self.plotStyleList.addItems(styles)
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
         
-        icon = getIcon("edit")
+        foregroundColour = self.palette().windowText().color()
+        icon = makeForegroundIcon("edit", foregroundColour)
         self.editPlotStyleButton = QPushButton(icon, "")
+        self.editPlotStyleButton.setToolTip("Edit theme")
         self.editPlotStyleButton.clicked.connect(lambda *args: self._updateCustomStyleWidget())
+        
+        icon = makeForegroundIcon("trash", foregroundColour)
+        self.deletePlotStyleButton = QPushButton(icon, "")
+        self.deletePlotStyleButton.setToolTip("Delete theme")
+        self.deletePlotStyleButton.clicked.connect(self._deleteTheme)
+        
+        self.plotStyleList.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.editPlotStyleButton.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.deletePlotStyleButton.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         
         plotStyleBox = QHBoxLayout()
         plotStyleBox.addWidget(self.plotStyleList)
         plotStyleBox.addWidget(self.editPlotStyleButton)
+        plotStyleBox.addWidget(self.deletePlotStyleButton)
         
-        # plotStyleGroup.addWidget(self.plotStyleList)
         plotStyleGroup.addLayout(plotStyleBox)
         plotStyleGroup.addWidget(self.customStyle)
 
@@ -303,7 +318,9 @@ class PlotPreferences(QWidget):
 
         plotStyle = self.settings.value("style", "dark")
         self.plotStyleList.setCurrentText(plotStyle.capitalize())
-        
+        # does setCurrentText not emit currentTextChanged signal?
+        self._enableDisableDeleteButton(plotStyle)
+    
         self.customStyle.setName(plotStyle)
         self.customStyle.setStyle(self.mainWindow.plot.getStyle(plotStyle))
         
@@ -378,4 +395,19 @@ class PlotPreferences(QWidget):
             style = self.mainWindow.plot.getStyle(name)
             self.customStyle.setStyle(style, name=name)
             self.customStyle.setEnabled(False)
+            self._enableDisableDeleteButton(name)
+                
+    def _enableDisableDeleteButton(self, plotStyle):
+        if plotStyle in self.mainWindow.plot.getDefaultStyles():
+            self.deletePlotStyleButton.setEnabled(False)
+            self.deletePlotStyleButton.setToolTip("Cannot delete default theme")
+        else:
+            self.deletePlotStyleButton.setEnabled(True)
+            self.deletePlotStyleButton.setToolTip("Delete theme")
             
+    def _deleteTheme(self):
+        styleName = self.plotStyleList.currentText()
+        items = [self.plotStyleList.itemText(idx) for idx in range(self.plotStyleList.count())]
+        idx = items.index(styleName)
+        self.plotStyleList.removeItem(idx)
+        self.mainWindow.plot.removeCustomStyle(styleName.lower())
