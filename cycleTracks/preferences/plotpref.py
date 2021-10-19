@@ -11,6 +11,7 @@ from PyQt5.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage,
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
+from cycleTracks import getIcon
 
 class StyleDesigner(QWidget):
     
@@ -250,7 +251,8 @@ class PlotPreferences(QWidget):
         self.plotStyleList.addItems(styles)
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
         
-        self.editPlotStyleButton = QPushButton("Edit")
+        icon = getIcon("edit")
+        self.editPlotStyleButton = QPushButton(icon, "")
         self.editPlotStyleButton.clicked.connect(lambda *args: self._updateCustomStyleWidget())
         
         plotStyleBox = QHBoxLayout()

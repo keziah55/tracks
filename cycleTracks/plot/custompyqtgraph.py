@@ -4,10 +4,9 @@ Subclasses of pyqtgraph items.
 
 from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem, getConfigOption, mkColor
 from pyqtgraph.graphicsItems.ButtonItem import ButtonItem
-from PyQt5.QtCore import Qt, pyqtSignal as Signal
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import pyqtSignal as Signal
 from datetime import datetime
-import os.path
+from cycleTracks import makeForegroundIcon
 
 class CustomAxisItem(AxisItem):
     """ Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.
@@ -167,7 +166,6 @@ class CustomPlotItem(PlotItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.imgDir = os.path.join(os.path.dirname(__file__), '..', '..', 'images')
         self.buttonSize = 24
         self.buttonPad = 6
         
@@ -189,20 +187,12 @@ class CustomPlotItem(PlotItem):
             button.setParent(None)
             button = None
             
-    @staticmethod
-    def _makeIconPixmap(file, colour):
-        px0 = QPixmap(file)
-        px1 = QPixmap(px0.size())
-        px1.fill(colour)
-        px1.setMask(px0.createMaskFromColor(Qt.transparent))
-        return px1
-    
     def _getPixmap(self, mode):
         foregroundColour = mkColor(getConfigOption('foreground'))
         if mode == "all":
-            pixmap = self._makeIconPixmap(os.path.join(self.imgDir, "view_all.png"), foregroundColour)
+            pixmap = makeForegroundIcon("view_all", foregroundColour, ext="png", returnType="pixmap")
         elif mode == "range":
-            pixmap = self._makeIconPixmap(os.path.join(self.imgDir, "view_range.png"), foregroundColour)
+            pixmap = makeForegroundIcon("view_range", foregroundColour, ext="png", returnType="pixmap")
         return pixmap
     
     def setButtonPixmaps(self):
