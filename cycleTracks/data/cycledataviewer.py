@@ -224,7 +224,7 @@ class CycleDataViewer(QTreeWidget):
     def makeTree(self):
         """ Populate tree with data from CycleData object. """
         
-        self.items = {}
+        self.items = []
         dfs = self.data.splitMonths(returnType="CycleData")
         
         for monthYear, data in reversed(dfs):
@@ -254,9 +254,10 @@ class CycleDataViewer(QTreeWidget):
                     value = self.data.fmtFuncs[col](value)
                     item.setText(idx, value)
                     item.setTextAlignment(idx, Qt.AlignCenter)
-                dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,#'item':item, 
+                dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
+                       'item':item, 
                        'index':data.df.index[rowIdx]}
-                self.items[item] = dct
+                self.items.append(dct)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
         
