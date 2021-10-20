@@ -15,6 +15,8 @@ from cycleTracks import makeForegroundIcon
 
 class StyleDesigner(QWidget):
     
+    saveStyle = Signal(str, dict)
+    
     symbols = {'o':'circle', 's':'square', 't':'triangle', 'd':'diamond', 
                 '+':'plus', 't1':'triangle up', 't2':'triangle right', 
                 't3':'triangle left', 'p':'pentagon', 'h':'hexagon', 
@@ -38,6 +40,7 @@ class StyleDesigner(QWidget):
             styleKeys = self.style.keys()
 
         self.invalidNames = invalidNames
+        # self.editing = False
         
         self.layout = QGridLayout()
         
@@ -76,10 +79,13 @@ class StyleDesigner(QWidget):
         # TODO both save and cancel buttons currently don't do anything
         self.saveButton = QPushButton("Save theme")
         self.cancelButton = QPushButton("Cancel")
-        self.cancelButton.setVisible(False)
+        # self.cancelButton.setVisible(False)
         self.layout.addWidget(self.saveButton, row, 1) # use 'row' value from above
         self.layout.addWidget(self.cancelButton, row, 2)
         self.setLayout(self.layout)
+        
+        self.saveButton.clicked.connect(self._saveStyle)
+        self.setEditMode(False)
         
         if style is not None:
             self.setStyle(style)
@@ -133,14 +139,27 @@ class StyleDesigner(QWidget):
                 symbol = symbol.widget().currentText().lower()
                 style[f"{key}Symbol"] = self.reverseSymbolDict[symbol]
         return self.name, style
-            
+    
+    def _saveStyle(self):
+        self.saveStyle.emit(*self.getStyle())
+        self.setEditMode(False)
         
     def _validate(self):
-        name = self.nameEdit.text().lower()
-        if name in self.invalidNames:
-            self.saveButton.setEnabled(False)
-        else:
+        if not self.editing:
+            name = self.nameEdit.text().lower()
+            if name in self.invalidNames:
+                self.saveButton.setEnabled(False)
+            else:
+                self.saveButton.setEnabled(True)
+                
+    def setEditMode(self, edit=None):
+        if edit is not None:
+            self.editing = edit
+        if self.editing:
             self.saveButton.setEnabled(True)
+            self.cancelButton.setVisible(True)
+        else:
+            self.cancelButton.setVisible(False)
             
     def setColour(self, widget, initialColour):
         colour = QColorDialog.getColor(QColor(initialColour), self)
@@ -248,6 +267,7 @@ class PlotPreferences(QWidget):
                                          symbolKeys=self.mainWindow.plot.getStyleSymbolKeys(),
                                          invalidNames=styles)
         self.customStyle.setEnabled(False)
+        self.customStyle.saveStyle.connect(self._saveStyle)
         
         self.plotStyleList = QComboBox()
         styles = [s.capitalize() for s in styles]
@@ -258,8 +278,9 @@ class PlotPreferences(QWidget):
         foregroundColour = self.palette().windowText().color()
         icon = makeForegroundIcon("edit", foregroundColour)
         self.editPlotStyleButton = QPushButton(icon, "")
+        self.editPlotStyleButton.setCheckable(True)
         self.editPlotStyleButton.setToolTip("Edit theme")
-        self.editPlotStyleButton.clicked.connect(lambda *args: self._updateCustomStyleWidget())
+        self.editPlotStyleButton.toggled.connect(self._editStyle)
         
         icon = makeForegroundIcon("trash", foregroundColour)
         self.deletePlotStyleButton = QPushButton(icon, "")
@@ -338,15 +359,22 @@ class PlotPreferences(QWidget):
         
         self.settings.endGroup()
         
+    def _saveStyle(self, name, style, setStyle=False):
+        self.mainWindow.plot.addCustomStyle(name, style, setStyle=setStyle)
+        idx = self.plotStyleList.count()-1
+        self.plotStyleList.insertItem(idx, name.capitalize())
+        self.plotStyleList.setCurrentIndex(idx)
+        
+    def _editStyle(self, edit):
+        self.customStyle.setEditMode(edit)
+        self._updateCustomStyleWidget()
         
     def apply(self):
         
         styleName = self.plotStyleList.currentText().lower()
         if styleName == "add custom theme...":
             styleName, styleDct = self.customStyle.getStyle()
-            self.mainWindow.plot.addCustomStyle(styleName, styleDct)
-            idx = self.plotStyleList.count()-1
-            self.plotStyleList.insertItem(idx, styleName.capitalize())
+            self._saveStyle(styleName, styleDct, setStyle=True)
         else:
             self.mainWindow.plot.setStyle(styleName)
         

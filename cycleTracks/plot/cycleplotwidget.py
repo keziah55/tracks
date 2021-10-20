@@ -89,9 +89,10 @@ class CyclePlotWidget(QWidget):
             self.plotWidget.setState(self.plotState)
             self.layout.insertWidget(0, self.plotWidget)
             
-    def addCustomStyle(self, name, style):
+    def addCustomStyle(self, name, style, setStyle=True):
         self.plotWidget.style.addStyle(name, style)
-        self.setStyle(name, force=True)
+        if setStyle:
+            self.setStyle(name, force=True)
         
     def removeCustomStyle(self, name):
         # TODO remove style from file
