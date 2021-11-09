@@ -271,11 +271,18 @@ class PlotPreferences(QWidget):
         
         self.plotStyleList = QComboBox()
         styles = [s.capitalize() for s in styles]
-        styles += ["Add custom theme..."]
+        # styles += ["Add custom theme..."]
         self.plotStyleList.addItems(styles)
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
         
         foregroundColour = self.palette().windowText().color()
+        
+        icon = makeForegroundIcon("add", foregroundColour, ext="png")
+        self.addPlotStyleButton = QPushButton(icon, "")
+        self.addPlotStyleButton.setCheckable(True)
+        self.addPlotStyleButton.setToolTip("Add theme")
+        self.addPlotStyleButton.toggled.connect(self._addStyle)
+        
         icon = makeForegroundIcon("edit", foregroundColour)
         self.editPlotStyleButton = QPushButton(icon, "")
         self.editPlotStyleButton.setCheckable(True)
@@ -293,6 +300,7 @@ class PlotPreferences(QWidget):
         
         plotStyleBox = QHBoxLayout()
         plotStyleBox.addWidget(self.plotStyleList)
+        plotStyleBox.addWidget(self.addPlotStyleButton)
         plotStyleBox.addWidget(self.editPlotStyleButton)
         plotStyleBox.addWidget(self.deletePlotStyleButton)
         
@@ -365,6 +373,9 @@ class PlotPreferences(QWidget):
         self.plotStyleList.insertItem(idx, name.capitalize())
         self.plotStyleList.setCurrentIndex(idx)
         
+        self.addPlotStyleButton.setChecked(False)
+        self.editPlotStyleButton.setChecked(False)
+        
     def _editStyle(self, edit):
         self.customStyle.setEditMode(edit)
         self._updateCustomStyleWidget()
@@ -410,13 +421,22 @@ class PlotPreferences(QWidget):
             self.customRangeSpinBox.setEnabled(False)
             self.plotRangeCombo.setEnabled(True)
             
+    def _addStyle(self):
+        self.customStyle.setEnabled(True)
+        styleNames = [self.plotStyleList.itemText(idx).lower() 
+                      for idx in range(self.plotStyleList.count())]
+        name = f"custom-{self.customStyle.name}"
+        while name.lower() in styleNames:
+            name = f"custom-{name}"
+        self.customStyle.setName(name)
+            
     def _updateCustomStyleWidget(self, name=None):
-        if name is None or name == "Add custom theme...":
+        if name is None:# or name == "Add custom theme...":
             self.customStyle.setEnabled(True)
-            if name is None:
-                name = self.customStyle.name
-            else:
-                name = f"custom-{self.customStyle.name}"
+            # if name is None:
+            name = self.customStyle.name
+            # else:
+            #     name = f"custom-{self.customStyle.name}"
             self.customStyle.setName(name)
         else:
             name = name.lower()
