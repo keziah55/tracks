@@ -84,7 +84,7 @@ class StyleDesigner(QWidget):
         self.layout.addWidget(self.cancelButton, row, 2)
         self.setLayout(self.layout)
         
-        self.saveButton.clicked.connect(self._saveStyle)
+        # self.saveButton.clicked.connect(self._saveStyle)
         self.setEditMode(False)
         
         if style is not None:
@@ -372,21 +372,25 @@ class PlotPreferences(QWidget):
         idx = self.plotStyleList.count()-1
         self.plotStyleList.insertItem(idx, name.capitalize())
         self.plotStyleList.setCurrentIndex(idx)
-        
         self.addPlotStyleButton.setChecked(False)
         self.editPlotStyleButton.setChecked(False)
+        self.customStyle.setEnabled(False)
         
     def _editStyle(self, edit):
         self.customStyle.setEditMode(edit)
-        self._updateCustomStyleWidget()
+        if edit:
+            self._updateCustomStyleWidget()
+        else:
+            # TODO call _saveStyle here?
+            self.customStyle.setEnabled(False)  
         
     def apply(self):
         
-        styleName = self.plotStyleList.currentText().lower()
-        if styleName == "add custom theme...":
+        if self.addPlotStyleButton.isChecked() or self.editPlotStyleButton.isChecked():
             styleName, styleDct = self.customStyle.getStyle()
             self._saveStyle(styleName, styleDct, setStyle=True)
         else:
+            styleName = self.plotStyleList.currentText().lower()
             self.mainWindow.plot.setStyle(styleName)
         
         customRange = self.customRangeCheckBox.isChecked()
@@ -431,12 +435,9 @@ class PlotPreferences(QWidget):
         self.customStyle.setName(name)
             
     def _updateCustomStyleWidget(self, name=None):
-        if name is None:# or name == "Add custom theme...":
+        if name is None:
             self.customStyle.setEnabled(True)
-            # if name is None:
             name = self.customStyle.name
-            # else:
-            #     name = f"custom-{self.customStyle.name}"
             self.customStyle.setName(name)
         else:
             name = name.lower()
