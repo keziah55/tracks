@@ -6,13 +6,15 @@ Main window for cycleTracks.
 
 import os
 from datetime import datetime
-from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QMessageBox
+from PyQt5.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
+                             QMessageBox)
 from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from .plot import CyclePlotWidget
-from .data import CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, PersonalBests
+from .data import (CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, 
+                   PersonalBests)
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
@@ -72,8 +74,10 @@ class CycleTracks(QMainWindow):
         self.fileWatcher.fileChanged.connect(self.startTimer)
         
         
-        dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, f"Best month ({monthCriterion})", "PB month"),
-                       (self.pb.bestSessions, Qt.LeftDockWidgetArea, f"Top {intToStr(numTopSessions)} sessions", "PB sessions"),
+        dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
+                        f"Best month ({monthCriterion})", "PB month"),
+                       (self.pb.bestSessions, Qt.LeftDockWidgetArea, 
+                        f"Top {intToStr(numTopSessions)} sessions", "PB sessions"),
                        (self.viewer, Qt.LeftDockWidgetArea, "Monthly data"),
                        (self.addData, Qt.LeftDockWidgetArea, "Add data")]
         
