@@ -42,17 +42,33 @@ class StyleDesigner(QWidget):
         self.invalidNames = invalidNames
         # self.editing = False
         
-        self.layout = QGridLayout()
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         
         self.nameEdit = QLineEdit()
         if name is not None:
             self.setName(name)
-        self.layout.addWidget(self.nameEdit, 0, 0, 1, -1)
+            
+        foregroundColour = self.palette().windowText().color()
+        icon = makeForegroundIcon("accept", foregroundColour, ext="png")
+        self.saveButton = QPushButton(icon, "")
+        self.saveButton.setToolTip("Save theme")
+        icon = makeForegroundIcon("cancel", foregroundColour, ext="png")
+        self.cancelButton = QPushButton(icon, "")
+        self.cancelButton.setToolTip("Discard changes")
+        self.saveButton.clicked.connect(self._saveStyle)
+        self.cancelButton.clicked.connect(self._resetLastSaved)
+        
+        topLayout = QHBoxLayout()
+        topLayout.addWidget(self.nameEdit)
+        topLayout.addWidget(self.saveButton)
+        topLayout.addWidget(self.cancelButton)
+        topLayout.setContentsMargins(0, 0, 0, 0)
         
         listHeight = None
         
         self.colours = {}
-        row = 1
+        row = 0
         for key in styleKeys:
             if key == "highlightPoint":
                 label = "Highlight point"
@@ -61,34 +77,33 @@ class StyleDesigner(QWidget):
             colourName = QLabel(label)
             colourValue = ColourButton()
             self.colours[key] = colourValue
-            self.layout.addWidget(colourName, row, 0)
-            self.layout.addWidget(colourValue, row, 1)
+            self.gridLayout.addWidget(colourName, row, 0)
+            self.gridLayout.addWidget(colourValue, row, 1)
             if key in symbolKeys:
                 symbolList = self._createSymbolList()
-                self.layout.addWidget(symbolList, row, 2)
+                self.gridLayout.addWidget(symbolList, row, 2)
                 if listHeight is None:
                     listHeight = symbolList.sizeHint().height()
             self.colours[key].clicked.connect(self.setColour)
             row += 1
             
         if listHeight is not None:
-            for rowNum in range(self.layout.rowCount()):
-                item = self.layout.itemAtPosition(rowNum, 1)
+            for rowNum in range(self.gridLayout.rowCount()):
+                item = self.gridLayout.itemAtPosition(rowNum, 1)
                 item.widget().height = listHeight
+                item.widget().width = 2*listHeight
             
-        # TODO both save and cancel buttons currently don't do anything
-        self.saveButton = QPushButton("Save theme")
-        self.cancelButton = QPushButton("Cancel")
-        # self.cancelButton.setVisible(False)
-        self.layout.addWidget(self.saveButton, row, 1) # use 'row' value from above
-        self.layout.addWidget(self.cancelButton, row, 2)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        layout.addLayout(topLayout)
+        layout.addLayout(self.gridLayout)
         
-        # self.saveButton.clicked.connect(self._saveStyle)
+        self.setLayout(layout)
+        
         self.setEditMode(False)
         
         if style is not None:
             self.setStyle(style)
+        self._lastSavedName, self._lastSavedStyle = self.getStyle()
         
         self.validateTimer = QTimer()
         self.validateTimer.setSingleShot(True)
@@ -125,24 +140,28 @@ class StyleDesigner(QWidget):
             
     def getStyle(self):
         style = {}
-        for row in range(1, self.layout.rowCount()-1): # don't need first and last from layout
-            key = self.layout.itemAtPosition(row, 0).widget().text().lower()
-            colour = self.layout.itemAtPosition(row, 1).widget().colour
+        for row in range(1, self.gridLayout.rowCount()-1): # don't need first and last from layout
+            key = self.gridLayout.itemAtPosition(row, 0).widget().text().lower()
+            colour = self.gridLayout.itemAtPosition(row, 1).widget().colour
             
             # turn 'highlight point' back into 'highlightPoint'
             first, *rest = key.split(' ')
             key = first + ''.join([s.capitalize() for s in rest])
             style[key] = colour
             
-            symbol = self.layout.itemAtPosition(row, 2)
+            symbol = self.gridLayout.itemAtPosition(row, 2)
             if symbol is not None:
                 symbol = symbol.widget().currentText().lower()
                 style[f"{key}Symbol"] = self.reverseSymbolDict[symbol]
         return self.name, style
     
     def _saveStyle(self):
-        self.saveStyle.emit(*self.getStyle())
+        self._lastSavedName, self._lastSavedStyle = self.getStyle()
+        self.saveStyle.emit(self._lastSavedName, self._lastSavedStyle)
         self.setEditMode(False)
+        
+    def _resetLastSaved(self):
+        self.setStyle(self._lastSavedStyle, self._lastSavedName)
         
     def _validate(self):
         if not self.editing:
@@ -157,9 +176,9 @@ class StyleDesigner(QWidget):
             self.editing = edit
         if self.editing:
             self.saveButton.setEnabled(True)
-            self.cancelButton.setVisible(True)
+            self.cancelButton.setEnabled(True)
         else:
-            self.cancelButton.setVisible(False)
+            self.cancelButton.setEnabled(False)
             
     def setColour(self, widget, initialColour):
         colour = QColorDialog.getColor(QColor(initialColour), self)
@@ -215,6 +234,7 @@ class ColourButton(QLabel):
     
     def __init__(self, *args, colour=None, **kwargs):
         self.height = None
+        self.width = None
         super().__init__(*args, **kwargs)
         self._colour = None
         if colour is not None:
@@ -225,10 +245,13 @@ class ColourButton(QLabel):
         
     def sizeHint(self):
         hint = super().sizeHint()
-        if self.height is not None:
-            return QSize(hint.width(), self.height)
-        else:
-            return hint
+        height = self.height if self.height is not None else hint.height()
+        width = self.width if self.width is not None else hint.width()
+        return QSize(width, height)
+        # if self.height is not None:
+        #     return QSize(hint.width(), self.height)
+        # else:
+        #     return hint
         
     @property
     def colour(self):
@@ -271,7 +294,6 @@ class PlotPreferences(QWidget):
         
         self.plotStyleList = QComboBox()
         styles = [s.capitalize() for s in styles]
-        # styles += ["Add custom theme..."]
         self.plotStyleList.addItems(styles)
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
         
