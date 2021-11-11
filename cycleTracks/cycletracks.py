@@ -168,13 +168,12 @@ class CycleTracks(QMainWindow):
         label = f"Best month ({monthCriterion})"
         self.dockWidgets["PB month"].setWindowTitle(label)
         
-    def close(self, *args, **kwargs):
+    def closeEvent(self, *args, **kwargs):
         self.backup()
         state = self.saveState()
         geometry = self.saveGeometry()
         self.settings.setValue("window/state", state)
         self.settings.setValue("window/geometry", geometry)
-        super().close()
         
     def createActions(self):
         
