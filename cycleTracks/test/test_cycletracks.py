@@ -2,7 +2,7 @@ from cycleTracks.cycletracks import CycleTracks
 from PyQt5.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
-import tempfile, os
+import tempfile, os, datetime
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -37,10 +37,10 @@ class TracksSetupTeardown:
         yield
         self.app.close()
         
-        # can't do this with a fixture in confile, as it's called when this method is called
+        # can't do this with a fixture in conf file, as it's called when this method is called
         # presumably, qt has a lock on the file, so wouldn't be deleted in that case
         appName = "Cycle Tracks"
-        orgName = "kzm"
+        orgName = "Tracks"
         d = os.path.dirname(__file__)
         confFile = os.path.join(d, ".config", orgName, appName+".conf")
         if os.path.exists(confFile):
@@ -55,7 +55,8 @@ class TestTracks(TracksSetupTeardown):
         pts = self.plotWidget.dataItem.scatter.data
         
         row = 0
-        values = ["5 Jan 2022", "40:23", "24.22", "361.2", "7"]
+        year = datetime.date.today().year + 1
+        values = [f"5 Jan {year}", "40:23", "24.22", "361.2", "7"]
         for col in range(self.addData.table.columnCount()):
             value = values[col]
             self.addData.table.item(row, col).setText(str(value))
@@ -64,7 +65,7 @@ class TestTracks(TracksSetupTeardown):
             qtbot.mouseClick(self.addData.okButton, Qt.LeftButton)
             
         assert len(self.viewer.topLevelItems) == numTopLevelItems + 1 
-        expected = ["05 Jan 2022", "00:40:23", "24.22", "35.99", "361.2", "7"]
+        expected = [f"05 Jan {year}", "00:40:23", "24.22", "35.99", "361.2", "7"]
         item = self.viewer.topLevelItems[0].child(0)
         for idx in range(item.columnCount()):
             assert item.text(idx) == expected[idx]
@@ -95,6 +96,7 @@ class TestTracks(TracksSetupTeardown):
             def scenePos(self):
                 return self.sp
             
+        qtbot.wait(100)
         with qtbot.waitSignal(self.plotWidget.currentPointChanged):
             qtbot.mouseMove(self.plot, pos=pos, delay=50)
             

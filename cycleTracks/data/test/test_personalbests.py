@@ -28,7 +28,7 @@ def getNewData(key):
                        'Time':[parseDuration("00:42:15")], 
                        'Distance (km)':[25.1], 'Calories':[375.4], 'Gear':[6]},
                       "<center><span>New #2 avg. speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br><span>Congratulations!</span></center>",
-                      "<b>April 2021</b>: <b>130.83</b> km, <b>03:44:48</b> hours, <b>1956.7</b> calories")}
+                      "<b>April 2021</b>: <b>155.93</b> km, <b>04:27:03</b> hours, <b>2332.1</b> calories")}
     return newDataParams[key]
     
 class TestPersonalBests:
