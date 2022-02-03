@@ -154,8 +154,6 @@ class CycleDataViewer(QTreeWidget):
             dialog = EditItemDialog(items, self.headerLabels)
             result = dialog.exec_()
             if result == EditItemDialog.Accepted:
-                # Change CycleData.removeRows to take indices (and combineRows)
-                # Add combine rows to context menu
                 values, removed = dialog.getValues()
                 self.data.update(values)
                 if removed:
