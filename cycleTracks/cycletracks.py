@@ -182,9 +182,9 @@ class CycleTracks(QMainWindow):
         self.saveAct = QAction("&Save", self, shortcut="Ctrl+S", 
                                statusTip="Save data", triggered=self.save)
         
-        self.combineAct = QAction("&Combine", self, shortcut="Ctrl+Shift+C", 
-                                  statusTip="Combine the selected rows in the viewer",
-                                  triggered=self.viewer.combineRows)
+        # self.combineAct = QAction("&Combine", self, shortcut="Ctrl+Shift+C", 
+        #                           statusTip="Combine the selected rows in the viewer",
+        #                           triggered=self.viewer.combineRows)
         
         self.preferencesAct = QAction("&Preferences", self, shortcut="F12",
                                       statusTip="Edit preferences",
@@ -197,8 +197,8 @@ class CycleTracks(QMainWindow):
         self.fileMenu.addAction(self.exitAct)
         
         self.editMenu = self.menuBar().addMenu("&Edit")
-        self.editMenu.addAction(self.combineAct)
-        self.editMenu.addSeparator()
+        # self.editMenu.addAction(self.combineAct)
+        # self.editMenu.addSeparator()
         self.editMenu.addAction(self.preferencesAct)
         
         self.viewMenu = self.menuBar().addMenu("&View")

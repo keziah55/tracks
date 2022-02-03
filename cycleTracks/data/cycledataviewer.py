@@ -140,12 +140,18 @@ class CycleDataViewer(QTreeWidget):
         self.editAction.triggered.connect(self._editItem)
         self.addAction(self.editAction)
         
+        self.mergeAction = QAction("Merge")
+        self.mergeAction.setShortcut(QKeySequence("Ctrl+M"))
+        self.mergeAction.triggered.connect(self.combineRows)
+        self.addAction(self.mergeAction)
+        
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._showContextMenu)
         
     def _showContextMenu(self, pos):
         menu = QMenu()
         menu.addAction(self.editAction)
+        menu.addAction(self.mergeAction)
         menu.exec_(self.mapToGlobal(pos))
         
     def _editItem(self):
