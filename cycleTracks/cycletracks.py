@@ -60,8 +60,6 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
-        self.viewer.requestRemoveData.connect(self.data.removeRows)
-        self.viewer.requestAddData.connect(self.data.append)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)

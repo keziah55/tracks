@@ -39,11 +39,13 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         self.table.insertColumn(self.table.columnCount())
         self.table.setHorizontalHeaderLabels(self.headerLabels + ["Remove"])
         
-        self.buttons = []
+        self.removed = []
+        self.rows = {}
         
         for row, item in enumerate(items):
             self.table.insertRow(row)
             col = 0
+            tableItems = {}
             for idx in range(item.columnCount()):
                 if itemHeader[idx] in self.headerLabels:
                     text = item.text(idx)
@@ -51,12 +53,15 @@ class EditItemDialog(AddDataTableMixin, QDialog):
                     tableItem.setTextAlignment(Qt.AlignCenter)
                     tableItem.setFlags(Qt.ItemIsEditable|Qt.ItemIsEnabled)
                     self.table.setItem(row, col, tableItem)
+                    tableItems[itemHeader[idx]] = tableItem
                     col += 1
             
             button = RemoveButton()
-            self.buttons.append(button)
             button.buttonClicked.connect(self.removeRow)
             self.table.setCellWidget(row, col, button)
+            
+            self.rows[item.index] = {'tableItems':tableItems, 'button':button, 'rowNum':row}
+            
             col += 1
             
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
@@ -96,10 +101,30 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         self.setWindowTitle("Edit or remove data")
         
     def removeRow(self, button):
-        idx = self.buttons.index(button)
-        self.buttons.pop(idx)
-        self.table.removeRow(idx)
+        """ Remove the row where `button` is. """
+        for index, dct in self.rows.items():
+            if dct['button'] == button:
+                # remove row from table and store index                
+                self.table.removeRow(dct['rowNum'])
+                self.removed.append(index)
+        for index in self.removed:
+            # update `rows` dict, so it is correct when getting values
+            self.rows.pop(index)
         
     def getValues(self):
-        return self._getValues()
+        """ Return dict of index: row dict pairs, and list of removed indices. """
+        
+        values = {}
+        
+        for index, dct in self.rows.items():
+            tableItems = dct['tableItems']
+            rowDct = {}
+            for key, tableItem in tableItems.items():
+                value = tableItem.text()
+                mthd = self.mthds[key]['cast']
+                value = mthd(value)
+                rowDct[key] = value
+            values[index] = rowDct
+        
+        return values, self.removed
                 
