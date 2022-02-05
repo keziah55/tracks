@@ -11,10 +11,16 @@ class TracksSetupTeardown:
     
     @pytest.fixture
     def setup(self, qtbot, monkeypatch, patchSettings):
+        self._setup(qtbot, monkeypatch, patchSettings, random=True)
         
+    @pytest.fixture 
+    def setupKnownData(self, qtbot, monkeypatch, patchSettings):
+        self._setup(qtbot, monkeypatch, patchSettings, random=False)
+        
+    def _setup(self, qtbot, monkeypatch, patchSettings, random):
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.size = 100
-        makeDataFrame(self.size, path=self.tmpfile.name)
+        makeDataFrame(random=random, size=self.size, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
             return self.tmpfile.name
@@ -27,6 +33,7 @@ class TracksSetupTeardown:
         self.plotWidget = self.plot.plotWidget
         self.pbTable = self.app.pb.bestSessions
         self.prefDialog = self.app.prefDialog
+        self.data = self.app.data
         
         qtbot.addWidget(self.app)
         self.app.showMaximized()

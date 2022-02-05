@@ -1,6 +1,7 @@
 from .test_cycletracks import TracksSetupTeardown
 import pytest
 import random
+import re
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import QDialogButtonBox
 from PyQt5.QtCore import Qt
@@ -80,10 +81,34 @@ class TestPreferences(TracksSetupTeardown):
     def test_plot_style(self, setup, qtbot, teardown):
         plotPref = self.prefDialog.pagesWidget.widget(0)
 
-    @pytest.mark.skip("test not yet written")
-    def test_num_pb_sessions(self, setup, qtbot, teardown):
+    def test_num_pb_sessions(self, setupKnownData, qtbot, teardown):
+        self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         
-    @pytest.mark.skip("test not yet written")
-    def test_pb_month(self, setup, qtbot, teardown):
+        num = random.randrange(0, len(self.data))
+        while num == pbPref.numSessionsBox.value():
+            num = random.randrange(2, len(self.app.data))
+        pbPref.numSessionsBox.setValue(num)
+        
+        button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
+        with qtbot.waitSignal(button.clicked, timeout=10000):
+            qtbot.mouseClick(button, Qt.LeftButton)
+        
+        df = self.data.df.sort_values('Avg. speed (km/h)', ascending=False)[:num]
+        
+        for row in range(self.pbTable.rowCount()):
+            for colNum, colName in enumerate(self.pbTable.headerLabels):
+                colName = re.sub(r"\s", " ", colName) # remove \n from avg speed
+                text = self.pbTable.item(row, colNum).text()
+                
+                expected = df.iloc[row][colName]
+                expected = self.data.fmtFuncs[colName](expected)
+                expected = str(expected)
+                
+                assert text == expected
+        
+    def test_pb_month(self, setupKnownData, qtbot, teardown):
+        self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
+        
+        qtbot.wait(2500)

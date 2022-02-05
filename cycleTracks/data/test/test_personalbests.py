@@ -35,7 +35,7 @@ class TestPersonalBests:
     @pytest.fixture
     def setup(self, qtbot):
         # make CycleData object with known data
-        self.parent = MockParent(known=True)
+        self.parent = MockParent(random=False)
         self.pb = PersonalBests(self.parent)
         self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
         self.widget = QWidget()

@@ -43,11 +43,14 @@ def convertSecs(t, mode='hour'):
     if mode in hours:
         return h
 
-def makeDataFrame(size=100, path=None):
+def makeDataFrame(random=True, size=100, path=None):
     """ Return DataFrame of random cycling data.
     
         Parameters
         ----------
+        random : bool
+            If True, generate random data. Otherwise use pre-set data. Default 
+            is True.
         size : int, optional
             Length of DataFrame to generate. The default is 100.
         path : str, optional
@@ -59,6 +62,19 @@ def makeDataFrame(size=100, path=None):
         df : pandas.DataFrame
             DataFrame of random data
     """
+    if random:
+        d = randomData(size)
+    else:
+        d = knownData()
+    
+    df = pd.DataFrame.from_dict(d)
+    
+    if path is not None:
+        df.to_csv(path, index=False)
+    
+    return df
+    
+def randomData(size):
     d = {'Date':makeDates(size),
          'Time':makeTimes(size),
          'Distance (km)':makeFloats(size, 3, 80, ".2f"),
@@ -68,14 +84,22 @@ def makeDataFrame(size=100, path=None):
     speed = d['Distance (km)'] / np.array([convertSecs(timeToSecs(t)) for t in d['Time']])
     d['Avg. speed (km/h)'] = speed
     
-    df = pd.DataFrame.from_dict(d)
-    
-    if path is not None:
-        df.to_csv(path, index=False)
-    
-    return df
-    
-    
+    return d
+
+def knownData():
+    dates = [f"2021-04-{i:02}" for i in range(26, 31)]
+    dates += [f"2021-05-{i:02}" for i in range(1, 6)] 
+    dct = {'Date':dates,
+           'Time':["00:53:27", "00:43:04", "00:42:40", "00:43:09", "00:42:28",
+                   "00:43:19", "00:42:21", "00:43:04", "00:42:11", "00:43:25"],
+           'Distance (km)':[30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 
+                            25.21, 25.08, 25.12],
+           'Gear':[6]*10}
+    dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
+    times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
+    dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
+    return dct
+
 def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):
     """ Return list of `size` random dates, between `startDate` and `endDate`.
     

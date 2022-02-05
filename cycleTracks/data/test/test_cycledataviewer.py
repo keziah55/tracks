@@ -22,7 +22,7 @@ class TestCycleDataViewer:
         
     @pytest.fixture 
     def setupKnownData(self, qtbot):
-        self.parent = MockParent(known=True)
+        self.parent = MockParent(random=False)
         self._setup(qtbot)
         
         for item in self.widget.topLevelItems:
