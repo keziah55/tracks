@@ -137,7 +137,7 @@ class CycleDataViewer(QTreeWidget):
         
         self.editAction = QAction("Edit")
         self.editAction.setShortcut(QKeySequence("Ctrl+E"))
-        self.editAction.triggered.connect(self._editItem)
+        self.editAction.triggered.connect(self._editItems)
         self.addAction(self.editAction)
         
         self.mergeAction = QAction("Merge")
@@ -154,16 +154,16 @@ class CycleDataViewer(QTreeWidget):
         menu.addAction(self.mergeAction)
         menu.exec_(self.mapToGlobal(pos))
         
-    def _editItem(self):
+    def _editItems(self):
         items = [item for item in self.selectedItems() if item not in self.topLevelItems]
         if items:
-            dialog = EditItemDialog(items, self.headerLabels)
-            result = dialog.exec_()
+            self.dialog = EditItemDialog(items, self.headerLabels)
+            result = self.dialog.exec_()
             if result == EditItemDialog.Accepted:
-                values, removed = dialog.getValues()
+                values, remove = self.dialog.getValues()
                 self.data.update(values)
-                if removed:
-                    self.data.removeRows(index=removed)
+                if remove:
+                    self.data.removeRows(index=remove)
                 
     def sizeHint(self):
         width = self.header().length() + self.widthSpace

@@ -93,7 +93,6 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         layout = QVBoxLayout()
         layout.addWidget(scrollArea)
         layout.addWidget(self.buttonBox)
-
         self.setLayout(layout)
         
         # set the table size
