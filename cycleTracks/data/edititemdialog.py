@@ -1,8 +1,8 @@
 """
-Dialog box when users can edit rows from the CycleDataViewer.
+Dialog box where users can edit rows from the CycleDataViewer.
 """
 from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
-                             QTableWidgetItem, QSizePolicy, QCheckBox)
+                             QTableWidgetItem, QCheckBox, QScrollArea)
 from PyQt5.QtCore import Qt
 from .adddatatablemixin import AddDataTableMixin
 from dataclasses import dataclass
@@ -87,15 +87,17 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         cancelButton = self.buttonBox.button(QDialogButtonBox.Cancel)
         cancelButton.clicked.connect(self.reject)
         
+        scrollArea = QScrollArea()
+        scrollArea.setWidget(self.table)
+        
         layout = QVBoxLayout()
-        layout.addWidget(self.table)
+        layout.addWidget(scrollArea)
         layout.addWidget(self.buttonBox)
 
         self.setLayout(layout)
         
-        # make the QDialog the same size as the table widget
+        # set the table size
         # i don't know why this is such a faff
-        # the dialog will always be the size of the table and there will be no scroll bars
         pad = 2
         self.table.resizeRowsToContents()
         self.table.resizeColumnsToContents() 
@@ -105,14 +107,16 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         width = pad
         for i in range(self.table.columnCount()):
             width += self.table.columnWidth(i)
+        # add some extra width, in case there's a vertical scroll bar 
+        # (scrollArea.verticalScrollBar().width() is too much...)
+        width += 30
         # start with one row height for the header
         # directly getting the header height is completely wrong
         height = self.table.rowHeight(0) + pad 
         for i in range(self.table.rowCount()):
             height += self.table.rowHeight(i)
-        # then set the table's minimum size and the dialog's size policy
+        # then set the table's minimum size
         self.table.setMinimumSize(width, height)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         self.setWindowTitle("Edit or remove data")
         
