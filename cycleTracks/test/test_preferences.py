@@ -87,9 +87,9 @@ class TestPreferences(TracksSetupTeardown):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         
-        num = random.randrange(0, len(self.data))
+        num = random.randrange(2, len(self.data))
         while num == pbPref.numSessionsBox.value():
-            num = random.randrange(2, len(self.app.data))
+            num = random.randrange(2, len(self.data))
         pbPref.numSessionsBox.setValue(num)
         
         button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
