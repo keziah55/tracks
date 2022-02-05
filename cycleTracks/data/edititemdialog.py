@@ -9,9 +9,10 @@ from dataclasses import dataclass
     
 @dataclass
 class BaseRow:
-    index: int
-    tableItems: list
-    checkBox: QCheckBox
+    """ Data class for a row in the table. """
+    index: int          # pandas index being represented here
+    tableItems: dict    # dict of name:QTableWidgetItem pairs
+    checkBox: QCheckBox # check box
     
     @property
     def checked(self):
