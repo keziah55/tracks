@@ -388,7 +388,7 @@ class PlotPreferences(QWidget):
             elif text == "Current year":
                 text = f"{date.today().month} months"
             months = None if text == 'All' else int(text.strip(' months'))
-        self.mainWindow.plot.setXAxisRange(months, fromRecentSession=False)
+        self.mainWindow.plot.setXAxisRange(months)
         
         self.settings.beginGroup("plot")
         self.settings.setValue("style", styleName)

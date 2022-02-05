@@ -9,12 +9,17 @@ pytest_plugin = "pytest-qt"
 
 class TestPreferences(TracksSetupTeardown):
     
+    def extraSetup(self):
+        self.prefDialog.show()
+    
+    def extraTeardown(self):
+        self.prefDialog.close()
+    
     @staticmethod
     def _subtractMonths(dt, months):
         return dt-timedelta(days=months*365/12)
         
     def test_plot_range(self, setup, qtbot, teardown):
-        self.prefDialog.show()
         
         plotPref = self.prefDialog.pagesWidget.widget(0)
         plotPref.customRangeCheckBox.setChecked(False)
@@ -70,7 +75,6 @@ class TestPreferences(TracksSetupTeardown):
         qtbot.wait(100)
         assert axis.tickTimestamps[0] <= dt.timestamp()
         
-        self.prefDialog.close()
         
     @pytest.mark.skip("test not yet written")
     def test_plot_style(self, setup, qtbot, teardown):

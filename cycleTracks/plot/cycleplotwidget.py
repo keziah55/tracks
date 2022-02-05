@@ -316,7 +316,7 @@ class Plot(PlotWidget):
             td = timedelta(days=days)
             ts0 = (datetime.fromtimestamp(ts1) - td).timestamp()
         self.setPlotRange(ts0, ts1)
-               
+        
     @Slot()
     def updatePlots(self):
         self.plotSeries(self.ySeries, mode='set')

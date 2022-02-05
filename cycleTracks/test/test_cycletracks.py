@@ -32,9 +32,12 @@ class TracksSetupTeardown:
         self.app.showMaximized()
         self.app.prefDialog.ok() # see https://github.com/keziah55/cycleTracks/commit/9e0c05f7d19b33a61a52a959adcdc7667cd7b924
         
+        self.extraSetup()
+        
     @pytest.fixture
     def teardown(self):
         yield
+        self.extraTeardown()
         self.app.close()
         
         # can't do this with a fixture in conf file, as it's called when this method is called
@@ -46,6 +49,11 @@ class TracksSetupTeardown:
         if os.path.exists(confFile):
             os.remove(confFile)
     
+    def extraSetup(self):
+        pass
+    
+    def extraTeardown(self):
+        pass
     
 class TestTracks(TracksSetupTeardown):
     
@@ -76,6 +84,8 @@ class TestTracks(TracksSetupTeardown):
     def test_plot_clicked(self, setup, qtbot, teardown):
         # test that clicking on the plot highlights the nearest plot in the viewer
         
+        self.plotWidget.setXAxisRange(None) # ensure all points visible in plotting area
+        
         pts = self.plotWidget.dataItem.scatter.points()
         idx = random.randint(0, len(pts)-1)
         
@@ -99,6 +109,7 @@ class TestTracks(TracksSetupTeardown):
         qtbot.wait(100)
         with qtbot.waitSignal(self.plotWidget.currentPointChanged):
             qtbot.mouseMove(self.plot, pos=pos, delay=50)
+        qtbot.wait(100)
             
         event = MockMouseEvent(scenePos)
         signals = [(self.plotWidget.pointSelected, 'pointSelected'),
