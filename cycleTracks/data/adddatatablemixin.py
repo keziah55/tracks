@@ -23,6 +23,7 @@ class AddDataTableMixin(object):
         super().__init__(*args, **kwargs)
         
         self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        self.headerLabelColumnOffset = 0
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
         self.table.verticalHeader().setVisible(False)
@@ -53,7 +54,7 @@ class AddDataTableMixin(object):
     @property
     def invalidBrush(self):
         return QBrush(QColor("#910404"))
-        
+    
     @Slot(int, int)
     def _invalid(self, row, col):
         """ Set the background of cell `row`,`col` to the `invalidBrush` and 
@@ -75,6 +76,7 @@ class AddDataTableMixin(object):
         allValid = True
         for row in range(self.table.rowCount()):
             for col, name in enumerate(self.headerLabels):
+                col += self.headerLabelColumnOffset
                 item = self.table.item(row, col)
                 value = item.text()
                 mthd = self.mthds[name]['validate']

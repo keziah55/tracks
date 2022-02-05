@@ -82,7 +82,14 @@ class CycleData(QObject):
          
     def __repr__(self):
         return self.toString(headTail=5)
-        
+    
+    def row(self, idx, formatted=False):
+        row = {key:self[key][idx] for key in self.propertyNames}
+        if formatted:
+            for key, value in row.items():
+                row[key] = self.fmtFuncs[key](value)
+        return row
+    
     def toString(self, headTail=None):
         """ Return CycleData object as a string.
         
@@ -144,6 +151,35 @@ class CycleData(QObject):
         self.df = tmpDf
         self.df.sort_values('Date', inplace=True)
         self.dataChanged.emit(index)
+        
+    def update(self, values):
+        """ Update items in the underlying DataFrame. 
+        
+            `values` should be a dict; the keys should be indices and values 
+            should be dicts of column:value. If the value currently at the 
+            given column and index is different from that supplied in the 
+            dictionary, it will be updated.
+            
+            If changes are made, `dataChanged` is emitted.
+            
+            Example `values` structure:
+                {10: {'Distance (km)':25, 'Calories':375}}
+        """
+        changed = []
+        for index, dct in values.items():
+            for col, value in dct.items():
+                if self.df.at[index, col] != value:
+                    self.df.at[index, col] = value
+                    changed.append(index)
+        if changed:
+            for index in changed:
+                # update the avg speed for the changed indices
+                # (simpler to do this for all changed indices than also track whether
+                # distance and/or time have changed)
+                distance = self.df['Distance (km)'][index]
+                time = hourMinSecToFloat(self.df['Time'][index])
+                self.df.at[index, 'Avg. speed (km/h)'] = distance / time
+            self.dataChanged.emit(changed)
         
     def _makeAvgSpeedColumn(self, df):
         ## Avg. speed was not always included in csv file
@@ -358,19 +394,28 @@ class CycleData(QObject):
         self.df.drop(idx, inplace=True)
         self.dataChanged.emit(i0)
         
-    def removeRows(self, dates):
-        """ Remove row(s) from the DataFrame by date. 
+    def removeRows(self, **kwargs):
+        """ Remove row(s) from the DataFrame by date or index. 
+        
+            Pass either 'dates' or 'index' kwarg.
         
             Note that this assumes dates are unique in the object.
         """
-        if isinstance(dates, str):
-            dates = [dates]
-        if not isinstance(dates, list):
-            raise TypeError("CycleData.removeRows takes list of dates")
-            
-        idx = []
-        for date in dates:
-            idx += list(self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index)
-            
-        self.df.drop(idx, inplace=True)
-        self.dataChanged.emit(None)
+        dates = kwargs.get("dates", None)
+        if dates is not None:
+            if isinstance(dates, str):
+                dates = [dates]
+            if not isinstance(dates, list):
+                raise TypeError("CycleData.removeRows takes list of dates")
+                
+            idx = []
+            for date in dates:
+                idx += list(self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index)
+                
+            self.df.drop(idx, inplace=True)
+            self.dataChanged.emit(None)
+        
+        index = kwargs.get("index", None)
+        if index is not None:
+            self.df.drop(index, inplace=True)
+            self.dataChanged.emit(None)

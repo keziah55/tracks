@@ -119,6 +119,8 @@ class PBMonthLabel(QLabel):
         monthYear, summaries = totals[0]
         self.time, self.distance, _, self.calories, *vals = summaries
         
+        self.setText()
+        
         if monthYear != self.monthYear:
             self.monthYear = monthYear
             msg = self.makeMessage(monthYear)

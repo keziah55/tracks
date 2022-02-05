@@ -1,29 +1,36 @@
 """
-Dialog box when users can edit rows from the CycleDataViewer.
+Dialog box where users can edit rows from the CycleDataViewer.
 """
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QPushButton, QVBoxLayout, 
-                             QTableWidget, QTableWidgetItem,
-                             QSizePolicy)
-from PyQt5.QtCore import Qt, pyqtSignal as Signal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
+                             QTableWidgetItem, QCheckBox, QScrollArea)
+from PyQt5.QtCore import Qt
 from .adddatatablemixin import AddDataTableMixin
-
-class RemoveButton(QPushButton):
+from dataclasses import dataclass
     
-    buttonClicked = Signal(QPushButton)
-    """ **signal** buttonClicked(QPushButton self)
+@dataclass
+class BaseRow:
+    """ Data class for a row in the table. """
+    index: int          # pandas index being represented here
+    tableItems: dict    # dict of name:QTableWidgetItem pairs
+    checkBox: QCheckBox # check box
     
-        When clicked, emit signal with reference to self.
-    """
+    @property
+    def checked(self):
+        return self.checkBox.isChecked()
     
-    def __init__(self):
-        icon = QIcon.fromTheme("list-remove")
-        super().__init__(icon, "")
-        self.clicked.connect(self._emitButtonClicked)
-        
-    def _emitButtonClicked(self):
-        self.buttonClicked.emit(self)
+    def enable(self, state):
+        if state:
+            flags = Qt.ItemIsEditable|Qt.ItemIsEnabled
+        else:
+            flags = Qt.ItemIsSelectable
+        for item in self.tableItems.values():
+            item.setFlags(flags)
     
+class Row(BaseRow):
+    # inherit dataclass BaseRow and connect the checkBox to enable
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, *kwargs)
+        self.checkBox.clicked.connect(self.enable)
     
 class EditItemDialog(AddDataTableMixin, QDialog):
     
@@ -37,26 +44,40 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
         self.table.insertColumn(self.table.columnCount())
-        self.table.setHorizontalHeaderLabels(self.headerLabels + ["Remove"])
+        self.table.setHorizontalHeaderLabels([""] + self.headerLabels)
+        self.headerLabelColumnOffset = 1
         
-        self.buttons = []
+        self.rows = []
         
-        for row, item in enumerate(items):
-            self.table.insertRow(row)
+        for rowNum, item in enumerate(items):
+            self.table.insertRow(rowNum)
             col = 0
+            
+            checkBox = QCheckBox()
+            checkBox.setChecked(True)
+            checkBox.setToolTip("Uncheck to remove this data")
+            # have to make a widget with a layout and add the check box to 
+            # the layout in order to have the check box centred...
+            widget = QWidget()
+            layout = QVBoxLayout()
+            layout.addWidget(checkBox)
+            layout.setAlignment(Qt.AlignCenter)
+            widget.setLayout(layout)
+            self.table.setCellWidget(rowNum, col, widget)
+            col += 1
+            
+            tableItems = {}
             for idx in range(item.columnCount()):
                 if itemHeader[idx] in self.headerLabels:
                     text = item.text(idx)
                     tableItem = QTableWidgetItem(text)
                     tableItem.setTextAlignment(Qt.AlignCenter)
                     tableItem.setFlags(Qt.ItemIsEditable|Qt.ItemIsEnabled)
-                    self.table.setItem(row, col, tableItem)
+                    self.table.setItem(rowNum, col, tableItem)
+                    tableItems[itemHeader[idx]] = tableItem
                     col += 1
             
-            button = RemoveButton()
-            self.buttons.append(button)
-            button.buttonClicked.connect(self.removeRow)
-            self.table.setCellWidget(row, col, button)
+            self.rows.append(Row(item.index, tableItems, checkBox))
             col += 1
             
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
@@ -66,15 +87,17 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         cancelButton = self.buttonBox.button(QDialogButtonBox.Cancel)
         cancelButton.clicked.connect(self.reject)
         
+        scrollArea = QScrollArea()
+        scrollArea.setWidget(self.table)
+        
         layout = QVBoxLayout()
-        layout.addWidget(self.table)
+        layout.addWidget(scrollArea)
         layout.addWidget(self.buttonBox)
 
         self.setLayout(layout)
         
-        # make the QDialog the same size as the table widget
+        # set the table size
         # i don't know why this is such a faff
-        # the dialog will always be the size of the table and there will be no scroll bars
         pad = 2
         self.table.resizeRowsToContents()
         self.table.resizeColumnsToContents() 
@@ -84,22 +107,37 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         width = pad
         for i in range(self.table.columnCount()):
             width += self.table.columnWidth(i)
+        # add some extra width, in case there's a vertical scroll bar 
+        # (scrollArea.verticalScrollBar().width() is too much...)
+        width += 30
         # start with one row height for the header
         # directly getting the header height is completely wrong
         height = self.table.rowHeight(0) + pad 
         for i in range(self.table.rowCount()):
             height += self.table.rowHeight(i)
-        # then set the table's minimum size and the dialog's size policy
+        # then set the table's minimum size
         self.table.setMinimumSize(width, height)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         self.setWindowTitle("Edit or remove data")
         
-    def removeRow(self, button):
-        idx = self.buttons.index(button)
-        self.buttons.pop(idx)
-        self.table.removeRow(idx)
         
     def getValues(self):
-        return self._getValues()
+        """ Return dict of index: row dict pairs, and list of indices to be removed. """
+        
+        values = {}
+        remove = []
+        
+        for row in self.rows:
+            if not row.checked:
+                remove.append(row.index)
+            else:
+                dct = {}
+                for key, tableItem in row.tableItems.items():
+                    value = tableItem.text()
+                    mthd = self.mthds[key]['cast']
+                    value = mthd(value)
+                    dct[key] = value
+                values[row.index] = dct
+        
+        return values, remove
                 

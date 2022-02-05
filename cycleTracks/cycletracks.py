@@ -60,8 +60,6 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
-        self.viewer.requestRemoveData.connect(self.data.removeRows)
-        self.viewer.requestAddData.connect(self.data.append)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
@@ -184,10 +182,6 @@ class CycleTracks(QMainWindow):
         self.saveAct = QAction("&Save", self, shortcut="Ctrl+S", 
                                statusTip="Save data", triggered=self.save)
         
-        self.combineAct = QAction("&Combine", self, shortcut="Ctrl+Shift+C", 
-                                  statusTip="Combine the selected rows in the viewer",
-                                  triggered=self.viewer.combineRows)
-        
         self.preferencesAct = QAction("&Preferences", self, shortcut="F12",
                                       statusTip="Edit preferences",
                                       triggered=self.prefDialog.show)
@@ -199,8 +193,6 @@ class CycleTracks(QMainWindow):
         self.fileMenu.addAction(self.exitAct)
         
         self.editMenu = self.menuBar().addMenu("&Edit")
-        self.editMenu.addAction(self.combineAct)
-        self.editMenu.addSeparator()
         self.editMenu.addAction(self.preferencesAct)
         
         self.viewMenu = self.menuBar().addMenu("&View")
