@@ -1,7 +1,9 @@
 from .test_cycletracks import TracksSetupTeardown
+from cycleTracks.util import hourMinSecToFloat, parseDuration
 import pytest
 import random
 import re
+import numpy as np
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import QDialogButtonBox
 from PyQt5.QtCore import Qt
@@ -81,7 +83,7 @@ class TestPreferences(TracksSetupTeardown):
     def test_plot_style(self, setup, qtbot, teardown):
         plotPref = self.prefDialog.pagesWidget.widget(0)
 
-    def test_num_pb_sessions(self, setupKnownData, qtbot, teardown):
+    def test_num_pb_sessions(self, setup, qtbot, teardown):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         
@@ -107,8 +109,39 @@ class TestPreferences(TracksSetupTeardown):
                 
                 assert text == expected
         
-    def test_pb_month(self, setupKnownData, qtbot, teardown):
+    def test_pb_month_criterion(self, setup, qtbot, teardown):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         
-        qtbot.wait(2500)
+        indices = list(range(pbPref.bestMonthCriteria.count()))
+        random.shuffle(indices)
+        if indices[0] == pbPref.bestMonthCriteria.currentIndex():
+            val = indices.pop(0)
+            indices.append(val)
+            
+        keys = {"Distance":"Distance (km)", "Avg. speed":"Avg. speed (km/h)"}
+        
+        for idx in indices:
+            pbPref.bestMonthCriteria.setCurrentIndex(idx)
+            
+            button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
+            with qtbot.waitSignal(button.clicked, timeout=10000):
+                qtbot.mouseClick(button, Qt.LeftButton)
+                
+            criterion = pbPref.bestMonthCriteria.currentText()
+            column = keys.get(criterion, criterion)
+            
+            months = self.data.splitMonths()
+            if column in ["Distance (km)", "Calories"]:
+                values = [(monthYear, sum(df[column])) for monthYear, df in months]
+            elif column == "Time":
+                values = [(monthYear, sum([hourMinSecToFloat(parseDuration(t)) for t in df[column]])) for monthYear, df in months]
+            elif column == "Avg. speed (km/h)":
+                values = [(monthYear, max(df[column])) for monthYear, df in months]
+            else:
+                values = [(monthYear, np.around(np.mean(df[column]))) for monthYear, df in months]
+                
+            values.sort(key=lambda item: item[1], reverse=True)
+            best = values[0]
+            
+            assert self.app.pb.bestMonth.monthYear == best[0]
