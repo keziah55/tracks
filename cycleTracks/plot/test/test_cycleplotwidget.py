@@ -16,6 +16,9 @@ class Click:
     
     def pos(self):
         return self._pos
+    
+    def button(self):
+        return Qt.LeftButton
 
 
 class TestCyclePlotWidget:
