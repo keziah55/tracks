@@ -14,7 +14,7 @@ import pandas as pd
 from pandas._testing import assert_frame_equal
 from .plot import CyclePlotWidget
 from .data import (CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, 
-                   PersonalBests)
+                   PersonalBests, Summary)
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
@@ -43,6 +43,8 @@ class CycleTracks(QMainWindow):
         self.data = CycleData(df)
         self.save()
         self.dataAnalysis = CycleDataAnalysis(self.data)
+        
+        self.summary = Summary()
 
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
@@ -57,6 +59,8 @@ class CycleTracks(QMainWindow):
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
+        self.summary.valueChanged.connect(self.viewer.newData)
+        self.summary.valueChanged.connect(self.pb.newData)
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self.viewer.newData)
         self.data.dataChanged.connect(self.plot.newData)

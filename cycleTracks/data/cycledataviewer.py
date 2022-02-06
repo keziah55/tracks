@@ -12,7 +12,6 @@ from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
 from . import CycleData
-from .summaryArgs import summaryArgs
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
@@ -237,7 +236,7 @@ class CycleDataViewer(QTreeWidget):
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            summaries = [data.summaryString(*args) for args in summaryArgs]
+            summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
             rootText = [monthYear] + summaries
             
             rootItem = CycleTreeWidgetItem(self)
@@ -302,7 +301,7 @@ class CycleDataViewer(QTreeWidget):
             df = self.data.df.loc[idx]
             data = CycleData(df)
             
-            summary = {args[0]: data.summaryString(*args) for args in summaryArgs}
+            summary = {args[0]: data.summaryString(*args) for args in self.parent.summary.summaryArgs}
             
             s = f"{len(idx)} sessions selected: "
             lst = []

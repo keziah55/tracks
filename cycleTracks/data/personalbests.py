@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel
                              QDialogButtonBox, QVBoxLayout, QAbstractItemView)
 from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
-from .summaryArgs import summaryArgs
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 import re
@@ -103,9 +102,9 @@ class PBMonthLabel(QLabel):
     def newData(self):
         dfs = self.data.splitMonths(returnType="CycleData")
         
-        totals = [(monthYear, [monthData.summaryString(*args) for args in summaryArgs])
+        totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
                   for monthYear, monthData in dfs]
-        idx = self._matchColumn(self.column, [item[0] for item in summaryArgs])
+        idx = self._matchColumn(self.column, [item[0] for item in self.mainWindow.summary.summaryArgs])
         
         try:
             totals.sort(key=lambda tup: float(tup[1][idx]), reverse=True)

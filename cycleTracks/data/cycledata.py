@@ -48,12 +48,12 @@ class CycleData(QObject):
         
         sigFigs = {'Distance (km)':2, 
                    'Calories':1,
-                   'Avg. speed (km/h)':2,
-                   'Gear':0}
+                   'Avg. speed (km/h)':2}
         self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sigFigs.items()}
         self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
         self.fmtFuncs['Time'] = lambda t: t
         self.fmtFuncs['Time (hours)'] = floatToHourMinSec
+        self.fmtFuncs['Gear'] = lambda value: self._formatFloat(np.around(value), 0)
         
     @staticmethod
     def _formatFloat(value, digits=2):
