@@ -1,9 +1,8 @@
 """
-Personal bests preferences
+Preferences for personal bests and data viewer.
 """
 
 from PyQt5.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget
-from PyQt5.QtCore import pyqtSlot as Slot
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
 

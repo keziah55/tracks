@@ -1,5 +1,5 @@
 """
-QTableWidget showing the top sessions.
+Single `PersonalBests` object to manage the two widgets that display personal bests.
 """
 
 from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 

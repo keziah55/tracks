@@ -1,3 +1,4 @@
 #!/bin/bash
 
-python3 -m pytest -v --cov=cycleTracks --cov-report term-missing $@
+python3 -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg
+$@
