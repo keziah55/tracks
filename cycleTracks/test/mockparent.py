@@ -35,4 +35,3 @@ class MockParent:
         self.data = CycleData(self.df)
         self.dataAnalysis = None
         self.summary = Summary()
-        
