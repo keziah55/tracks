@@ -5,9 +5,8 @@ User input will be validated live; if data is invalid, the 'Ok' button cannot
 be clicked.
 """
 
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
-                             QVBoxLayout, QHBoxLayout)
-from PyQt5.QtCore import QSize, Qt, QTimer
+from PyQt5.QtWidgets import QTableWidgetItem, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 
 from .adddatatablemixin import AddDataTableMixin
@@ -48,10 +47,6 @@ class AddCycleData(AddDataTableMixin, QWidget):
         super().__init__()
         
         self.widthSpace = widthSpace
-        
-        # self.table = QTableWidget(0, len(self.headerLabels))
-        # self.table.setHorizontalHeaderLabels(self.headerLabels)
-        # self.table.verticalHeader().setVisible(False)
         
         self._clicked = []
         self._makeEmptyRow()

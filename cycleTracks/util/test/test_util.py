@@ -134,7 +134,6 @@ def test_convert_to_float(convert_func,check_func,values,expected_idx):
         assert check_func(value) is valid
         
         if valid:
-            print(f"value: {value}, converted: {convert_func(value)}, expected: {expected}")
             if convert_func(value) % 1 == 0 and expected % 1 == 0:
                 assert convert_func(value) == expected
             else:

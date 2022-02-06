@@ -2,7 +2,7 @@ from PyQt5.QtCore import QCoreApplication
 import os
 import pytest
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def patchSettings(monkeypatch):
     appName = "Cycle Tracks"
     orgName = "Tracks"
@@ -15,4 +15,4 @@ def patchSettings(monkeypatch):
     monkeypatch.setenv("HOME", d)
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
-    
+        
