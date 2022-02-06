@@ -6,10 +6,10 @@ from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel
                              QDialogButtonBox, QVBoxLayout, QAbstractItemView)
 from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
 from PyQt5.QtGui import QFontMetrics
+from .summaryArgs import summaryArgs
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 import re
-import numpy as np
 
 
 class PersonalBests(QObject):
@@ -102,11 +102,6 @@ class PBMonthLabel(QLabel):
     @Slot()
     def newData(self):
         dfs = self.data.splitMonths(returnType="CycleData")
-        summaryArgs = [('Time (hours)', ),
-                       ('Distance (km)', ),
-                       ('Avg. speed (km/h)', max),
-                       ('Calories', ),
-                       ('Gear', lambda v: np.around(np.mean(v)))]
         
         totals = [(monthYear, [monthData.summaryString(*args) for args in summaryArgs])
                   for monthYear, monthData in dfs]

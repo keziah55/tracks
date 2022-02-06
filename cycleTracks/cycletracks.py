@@ -7,7 +7,7 @@ Main window for cycleTracks.
 import os
 from datetime import datetime
 from PyQt5.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
-                             QMessageBox)
+                             QMessageBox, QLabel)
 from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 import pandas as pd
@@ -25,7 +25,11 @@ class CycleTracks(QMainWindow):
         super().__init__()
         
         self.settings = Settings()
-        self.statusBar()
+        
+        self._saveLabel = QLabel()
+        self._summaryLabel = QLabel()
+        self.statusBar().addWidget(self._saveLabel)
+        self.statusBar().addWidget(self._summaryLabel)
         
         self.file = self.getFile()
         self.sep = ','
@@ -60,6 +64,7 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
+        self.viewer.selectedSummary.connect(self._summaryLabel.setText)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
@@ -118,7 +123,7 @@ class CycleTracks(QMainWindow):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
         self.backup()
         saveTime = datetime.now().strftime("%H:%M:%S")
-        self.statusBar().showMessage(f"Last saved at {saveTime}")
+        self._saveLabel.setText(f"Last saved at {saveTime}")
         
     @Slot()
     def backup(self):

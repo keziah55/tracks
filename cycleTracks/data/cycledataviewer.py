@@ -8,10 +8,11 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 from PyQt5.QtGui import QFontMetrics, QKeySequence
 import re
-import numpy as np
 from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
+from . import CycleData
+from .summaryArgs import summaryArgs
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
@@ -96,6 +97,12 @@ class CycleDataViewer(QTreeWidget):
         Emitted after the CycleDataViewer items have been sorted.
     """
     
+    selectedSummary = Signal(str)
+    """ selectedSummary(str `summaryString`)
+    
+        Emitted with a string summarising selected items.
+    """
+    
     def __init__(self, parent, widthSpace=10):
         super().__init__()
         
@@ -127,6 +134,8 @@ class CycleDataViewer(QTreeWidget):
         self.header().sectionClicked.connect(self.sortTree)
         
         self.currentItemChanged.connect(self._itemChanged)
+        
+        self.itemSelectionChanged.connect(self._summariseSelected)
         
         self.sortTree(0)
         
@@ -228,12 +237,8 @@ class CycleDataViewer(QTreeWidget):
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            rootText = [monthYear, 
-                        data.summaryString('Time (hours)'), 
-                        data.summaryString('Distance (km)'),
-                        data.summaryString('Avg. speed (km/h)', func=max),
-                        data.summaryString('Calories'),
-                        data.summaryString('Gear', func=lambda v: np.around(np.mean(v)))]
+            summaries = [data.summaryString(*args) for args in summaryArgs]
+            rootText = [monthYear] + summaries
             
             rootItem = CycleTreeWidgetItem(self)
             for idx, text in enumerate(rootText):
@@ -249,12 +254,10 @@ class CycleDataViewer(QTreeWidget):
                                            headerLabels=self.headerLabels,
                                            row=data.row(rowIdx, formatted=True))
                 dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
-                       'item':item}#, 
-                       # 'index':data.df.index[rowIdx]}
+                       'item':item}
                 self.items.append(dct)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
-        
     
     @Slot()
     def combineRows(self):
@@ -289,3 +292,24 @@ class CycleDataViewer(QTreeWidget):
         for item in self.items:
             if item['item'] == currentItem:
                 self.itemSelected.emit(item['datetime'])
+
+    @Slot()
+    def _summariseSelected(self):
+        idx = [item.index for item in self.selectedItems() if item not in self.topLevelItems]
+        if len(idx) <= 1:
+            s = ""
+        else:
+            df = self.data.df.loc[idx]
+            data = CycleData(df)
+            
+            summary = {args[0]: data.summaryString(*args) for args in summaryArgs}
+            
+            s = f"{len(idx)} sessions selected: "
+            lst = []
+            lst.append(f"{summary['Time (hours)']}")
+            lst.append(f"{summary['Distance (km)']} km")
+            lst.append(f"{summary['Avg. speed (km/h)']} km/h")
+            lst.append(f"{summary['Calories']} cal")
+            s += "; ".join(lst)
+        
+        self.selectedSummary.emit(s)
