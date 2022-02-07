@@ -22,7 +22,7 @@ class TestPreferences(TracksSetupTeardown):
     def _subtractMonths(dt, months):
         return dt-timedelta(days=months*365/12)
         
-    def test_plot_range(self, setup, qtbot, teardown):
+    def test_plot_range(self, setup, qtbot):
         
         plotPref = self.prefDialog.pagesWidget.widget(0)
         plotPref.customRangeCheckBox.setChecked(False)
@@ -80,10 +80,10 @@ class TestPreferences(TracksSetupTeardown):
         
         
     @pytest.mark.skip("test not yet written")
-    def test_plot_style(self, setup, qtbot, teardown):
+    def test_plot_style(self, setup, qtbot):
         plotPref = self.prefDialog.pagesWidget.widget(0)
 
-    def test_num_pb_sessions(self, setup, qtbot, teardown):
+    def test_num_pb_sessions(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         
@@ -117,7 +117,7 @@ class TestPreferences(TracksSetupTeardown):
                 
                 assert text == expected
         
-    def test_pb_month_criterion(self, setup, qtbot, teardown):
+    def test_pb_month_criterion(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         

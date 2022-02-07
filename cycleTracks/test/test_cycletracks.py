@@ -34,8 +34,6 @@ class TracksSetupTeardown:
         
         self.extraSetup()
         
-    @pytest.fixture
-    def teardown(self):
         yield
         self.extraTeardown()
         self.app.close()
@@ -57,7 +55,7 @@ class TracksSetupTeardown:
     
 class TestTracks(TracksSetupTeardown):
     
-    def test_add_data(self, setup, qtbot, teardown):
+    def test_add_data(self, setup, qtbot):
         
         numTopLevelItems = len(self.viewer.topLevelItems)
         pts = self.plotWidget.dataItem.scatter.data
@@ -81,7 +79,7 @@ class TestTracks(TracksSetupTeardown):
         assert len(self.plotWidget.dataItem.scatter.data) == len(pts) + 1
         
 
-    def test_plot_clicked(self, setup, qtbot, teardown):
+    def test_plot_clicked(self, setup, qtbot):
         # test that clicking on the plot highlights the nearest plot in the viewer
         
         self.plotWidget.setXAxisRange(None) # ensure all points visible in plotting area
@@ -118,7 +116,7 @@ class TestTracks(TracksSetupTeardown):
         with qtbot.waitSignals(signals):
             self.plotWidget.plotClicked(event)
 
-    def test_viewer_clicked(self, setup, qtbot, teardown):
+    def test_viewer_clicked(self, setup, qtbot):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
         item = self.viewer.topLevelItems[0]
         with qtbot.waitSignal(self.viewer.itemExpanded):
@@ -131,7 +129,7 @@ class TestTracks(TracksSetupTeardown):
         assert self.plotWidget.currentPoint['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
     
-    def test_pb_table_clicked(self, setup, qtbot, teardown):
+    def test_pb_table_clicked(self, setup, qtbot):
         # similar to above, but for pb table
         item = self.pbTable.item(1, 0)
         signals = [(self.app.pb.itemSelected, 'pbTable.itemSelected'), 
@@ -144,6 +142,6 @@ class TestTracks(TracksSetupTeardown):
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
         
     @pytest.mark.skip("test not yet written")
-    def test_plot_update(self, setup, qtbot, teardown):
+    def test_plot_update(self, setup, qtbot):
         # test that, when new data added, the plot auto-rescales so the new points are visible
         pass
