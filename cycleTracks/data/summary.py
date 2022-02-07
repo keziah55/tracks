@@ -63,9 +63,22 @@ class Summary(QObject):
         return getattr(self.summary, name)
     
     def setFunc(self, *args):
-        if len(args) == 1 and isinstance(args, dict):
-            for name, funcName in args.items():
-                self.summary.__setattr__(name, funcName)
+        """ Set the function name for a give summary field. """
+        changed = False
+        if len(args) == 1 and isinstance(args[0], dict):
+            _changed = []
+            for name, funcName in args[0].items():
+                c = self._setFunc(name, funcName)
+                _changed.append(c)
+            changed = any(_changed)
         elif len(args) == 2:
-            self.summary.__setattr__(*args)
-        self.valueChanged.emit() # only emit once
+            changed = self._setFunc(*args)
+        if changed:
+            self.valueChanged.emit() # only emit once
+            
+    def _setFunc(self, name, funcName):
+        changed = False
+        if getattr(self.summary, name) != funcName:
+            self.summary.__setattr__(name, funcName)
+            changed = True
+        return changed

@@ -87,10 +87,13 @@ class DataPreferences(QWidget):
         self.settings.setValue("bestMonthCriterion", bestMonthCriterion)
         self.settings.setValue("numSessions", numSessions)
         
+        # make dict to pass to `setFunc` so it doesn't remake the viewer five times
+        summaryFuncs = {}
         for name, widget in self.summaryComboBoxes.items():
             funcName = widget.currentText()
-            self.mainWindow.summary.setFunc(name, funcName)
             self.settings.setValue(f"summary/{name}", funcName)
+            summaryFuncs[name] = funcName
+        self.mainWindow.summary.setFunc(summaryFuncs)
         
         self.settings.endGroup()
     
