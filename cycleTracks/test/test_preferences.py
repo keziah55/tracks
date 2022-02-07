@@ -96,7 +96,15 @@ class TestPreferences(TracksSetupTeardown):
         with qtbot.waitSignal(button.clicked, timeout=10000):
             qtbot.mouseClick(button, Qt.LeftButton)
         
-        df = self.data.df.sort_values(by=['Avg. speed (km/h)', 'Date'], ascending=False)[:num]
+        def sortKey(item):
+            # round Avg Speed to two decimal places when sorting
+            if isinstance(item, float):
+                return np.around(item, decimals=2)
+            else:
+                # if it's a Date (pd.Timestamp) return directly
+                return item
+        
+        df = self.data.df.sort_values(by=['Avg. speed (km/h)', 'Date'], ascending=False, key=sortKey)[:num]
         
         for row in range(self.pbTable.rowCount()):
             for colNum, colName in enumerate(self.pbTable.headerLabels):
