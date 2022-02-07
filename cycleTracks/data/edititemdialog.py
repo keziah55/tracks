@@ -1,9 +1,9 @@
 """
 Dialog box where users can edit rows from the CycleDataViewer.
 """
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
+from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
                              QTableWidgetItem, QCheckBox, QScrollArea)
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 from .adddatatablemixin import AddDataTableMixin
 from dataclasses import dataclass
     

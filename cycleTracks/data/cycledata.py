@@ -1,8 +1,8 @@
 """
 Object providing convenient access to the contents of a DataFrame of cycling data.
 """
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+from qtpy.QtCore import QObject
+from qtpy.QtCore import Signal, Slot
 from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
                               floatToHourMinSec)
 from functools import partial

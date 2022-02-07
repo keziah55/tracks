@@ -1,5 +1,5 @@
 from cycleTracks.data import AddCycleData
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 from datetime import date
 import random
 import pandas as pd

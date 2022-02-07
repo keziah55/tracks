@@ -2,7 +2,7 @@
 Preferences for personal bests and data viewer.
 """
 
-from PyQt5.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings
 

@@ -6,10 +6,10 @@ Main window for cycleTracks.
 
 import os
 from datetime import datetime
-from PyQt5.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
+from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
                              QMessageBox, QLabel)
-from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
-from PyQt5.QtGui import QIcon
+from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
+from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from .plot import CyclePlotWidget

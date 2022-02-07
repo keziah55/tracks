@@ -1,7 +1,7 @@
 """
 Preferences dialog
 """
-from PyQt5.QtWidgets import (QAbstractScrollArea, QDialog, QDialogButtonBox, 
+from qtpy.QtWidgets import (QAbstractScrollArea, QDialog, QDialogButtonBox, 
                              QListWidget, QStackedWidget, QVBoxLayout, QHBoxLayout)
 
 from .plotpref import PlotPreferences

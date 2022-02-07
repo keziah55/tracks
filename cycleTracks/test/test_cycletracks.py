@@ -1,5 +1,5 @@
 from cycleTracks.cycletracks import CycleTracks
-from PyQt5.QtCore import Qt, QPoint
+from qtpy.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
 import tempfile, os, datetime

@@ -2,8 +2,8 @@ from cycleTracks.data import CycleDataViewer, CycleData
 from cycleTracks.data.edititemdialog import EditItemDialog
 from cycleTracks.util import monthYearToFloat, hourMinSecToFloat
 from cycleTracks.test import makeDataFrame, MockParent
-from PyQt5.QtWidgets import QMessageBox, QDialog
-from PyQt5.QtCore import Qt
+from qtpy.QtWidgets import QMessageBox, QDialog
+from qtpy.QtCore import Qt
 import random
 from datetime import datetime
 import tempfile

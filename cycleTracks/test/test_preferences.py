@@ -5,8 +5,8 @@ import random
 import re
 import numpy as np
 from datetime import datetime, timedelta
-from PyQt5.QtWidgets import QDialogButtonBox
-from PyQt5.QtCore import Qt
+from qtpy.QtWidgets import QDialogButtonBox
+from qtpy.QtCore import Qt
 
 pytest_plugin = "pytest-qt"
 

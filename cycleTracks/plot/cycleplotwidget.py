@@ -7,8 +7,8 @@ import os
 from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
                        setConfigOptions)
 import numpy as np
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
-from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtCore import Signal, Slot
+from qtpy.QtWidgets import QVBoxLayout, QWidget
 from customQObjects.core import Settings
 
 from .cycleplotlabel import CyclePlotLabel

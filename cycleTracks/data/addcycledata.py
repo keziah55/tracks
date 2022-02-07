@@ -5,9 +5,9 @@ User input will be validated live; if data is invalid, the 'Ok' button cannot
 be clicked.
 """
 
-from PyQt5.QtWidgets import QTableWidgetItem, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+from qtpy.QtWidgets import QTableWidgetItem, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import Signal, Slot
 
 from .adddatatablemixin import AddDataTableMixin
 from cycleTracks.util import dayMonthYearToFloat, parseDate

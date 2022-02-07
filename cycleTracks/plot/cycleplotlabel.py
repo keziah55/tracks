@@ -2,9 +2,9 @@
 QWidget containing QLabels for each data series in the CyclePlotWidget.
 """
 
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QWidget
-from PyQt5.QtCore import pyqtSignal as Signal
-from PyQt5.QtCore import Qt
+from qtpy.QtWidgets import QLabel, QHBoxLayout, QWidget
+from qtpy.QtCore import Signal
+from qtpy.QtCore import Qt
 
 class ClickableLabel(QLabel):
     """ QLabel that emits `clicked` signal. 

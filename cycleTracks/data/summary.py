@@ -5,7 +5,7 @@ The `Summary` object stores the functions used to summarise each category.
 """
 
 from dataclasses import dataclass
-from PyQt5.QtCore import QObject, pyqtSignal as Signal
+from qtpy.QtCore import QObject, Signal
 import numpy as np
 
 @dataclass

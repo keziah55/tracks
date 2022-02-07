@@ -1,6 +1,6 @@
 from cycleTracks.plot import CyclePlotWidget
 from cycleTracks.test import MockParent
-from PyQt5.QtCore import Qt, QPoint
+from qtpy.QtCore import Qt, QPoint
 import random
 import pytest
 

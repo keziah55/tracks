@@ -2,10 +2,10 @@
 Single `PersonalBests` object to manage the two widgets that display personal bests.
 """
 
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
+from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
                              QDialogButtonBox, QVBoxLayout, QAbstractItemView)
-from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
-from PyQt5.QtGui import QFontMetrics
+from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
+from qtpy.QtGui import QFontMetrics
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 import re

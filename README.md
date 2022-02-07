@@ -29,6 +29,7 @@ plots of my cycling stats.
 
 - [NumPy](https://numpy.org/)
 - [Pandas](https://pandas.pydata.org/)
-- [PyQt5](https://pypi.org/project/PyQt5/)
-- [PyQtGraph](https://pypi.org/project/pyqtgraph/) >= 0.11.0
+- [QtPy](https://pypi.org/project/QtPy/)
+- [PyQt5](https://pypi.org/project/PyQt5/) or [PySide2](https://doc.qt.io/qtforpython-5/index.html)
+- [PyQtGraph](https://pypi.org/project/pyqtgraph/)
 - [customQObjects](https://github.com/keziah55/CustomPyQtObjects)

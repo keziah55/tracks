@@ -4,7 +4,7 @@
 Run Cycle Tracks.
 """
 import sys
-from PyQt5.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 from cycleTracks.cycletracks import CycleTracks
 
 if __name__ == '__main__':

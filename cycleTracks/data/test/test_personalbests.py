@@ -2,7 +2,7 @@ from cycleTracks.data import PersonalBests
 from cycleTracks.data.personalbests import NewPBDialog
 from cycleTracks.util import parseDate, parseDuration
 from cycleTracks.test import MockParent
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDialog
+from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
 
 pytest_plugin = "pytest-qt"

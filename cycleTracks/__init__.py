@@ -1,6 +1,6 @@
 import os.path
-from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtCore import Qt
+from qtpy.QtGui import QIcon, QPixmap, QColor
+from qtpy.QtCore import Qt
 
 def getIconPath(name, ext="svg"):
     d = os.path.dirname(__file__)

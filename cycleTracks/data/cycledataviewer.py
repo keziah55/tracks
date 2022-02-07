@@ -2,11 +2,11 @@
 QTreeWidget showing data from CycleData.
 """
 
-from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
+from qtpy.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
                              QAbstractItemView, QMessageBox, QMenu, QAction)
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
-from PyQt5.QtGui import QFontMetrics, QKeySequence
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import Signal, Slot
+from qtpy.QtGui import QFontMetrics, QKeySequence
 import re
 from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
