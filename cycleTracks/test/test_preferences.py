@@ -115,9 +115,6 @@ class TestPreferences(TracksSetupTeardown):
                 expected = self.data.fmtFuncs[colName](expected)
                 expected = str(expected)
                 
-                if text != expected:
-                    df.to_csv("testFailData.csv")
-                
                 assert text == expected
         
     def test_pb_month_criterion(self, setup, qtbot, teardown):
