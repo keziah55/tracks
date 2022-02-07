@@ -96,7 +96,7 @@ class TestPreferences(TracksSetupTeardown):
         with qtbot.waitSignal(button.clicked, timeout=10000):
             qtbot.mouseClick(button, Qt.LeftButton)
         
-        df = self.data.df.sort_values('Avg. speed (km/h)', ascending=False)[:num]
+        df = self.data.df.sort_values(by=['Avg. speed (km/h)', 'Date'], ascending=False)[:num]
         
         for row in range(self.pbTable.rowCount()):
             for colNum, colName in enumerate(self.pbTable.headerLabels):
@@ -106,6 +106,9 @@ class TestPreferences(TracksSetupTeardown):
                 expected = df.iloc[row][colName]
                 expected = self.data.fmtFuncs[colName](expected)
                 expected = str(expected)
+                
+                if text != expected:
+                    df.to_csv("testFailData.csv")
                 
                 assert text == expected
         
