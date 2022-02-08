@@ -153,3 +153,7 @@ class TestPreferences(TracksSetupTeardown):
             best = values[0]
             
             assert self.app.pb.bestMonth.monthYear == best[0]
+            
+    @pytest.mark.skip("test not yet written")
+    def test_set_summary_criteria(self, setup, qtbot):
+        pass
