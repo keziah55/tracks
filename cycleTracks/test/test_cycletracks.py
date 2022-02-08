@@ -4,7 +4,7 @@ from qtpy.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
 import tempfile, os, datetime
-from dateutil.relativedelta import relativedelta
+import pandas as pd
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -22,18 +22,6 @@ class TracksSetupTeardown:
         monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
         
         self.app = CycleTracks()
-        
-        from pytestqt.qt_compat import qt_api
-        from qtpy.QtWidgets import QWidget 
-        import os
-        print()
-        print(self.app)
-        print(os.environ["QT_API"])
-        print(qt_api._guess_qt_api())
-        print(isinstance(self.app, QWidget))
-        print(qt_api.QtWidgets.QWidget)
-        print(isinstance(self.app, qt_api.QtWidgets.QWidget))        
-        
         self.addData = self.app.addData
         self.viewer = self.app.viewer
         self.plot = self.app.plot
@@ -161,8 +149,15 @@ class TestTracks(TracksSetupTeardown):
         self.plot.setXAxisRange(months=6)
         
         lastDate = self.data['Date'][-1]
+        year = lastDate.year
+        month = lastDate.month
+        day = lastDate.day
+        if month == 12:
+            month = 0
+            year += 1
+        newDate = pd.Timestamp(year=year, month=month+1, day=day)
         
-        newData = {'Date':[lastDate + relativedelta(months=1)],
+        newData = {'Date':[newDate],
                    'Time':[parseDuration("40:20")],
                    'Distance (km)':[25.08],
                    'Calories':[375.1],

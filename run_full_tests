@@ -22,8 +22,15 @@ source bin/activate
 
 pip -V
 
-#pip install -r requirements.txt
-#pip install pytest pytest-qt pytest-cov pytest-profiling
-#./run_tests
+# test with pyside 2, then pyqt5
+export QT_API=pyside2
+pip install -r requirements.txt
+pip install pytest pytest-qt pytest-cov pytest-profiling
+./run_tests
+
+export QT_API=pyqt5
+pip install -r requirements.txt
+pip install pytest pytest-qt pytest-cov pytest-profiling
+./run_tests
 
 deactivate

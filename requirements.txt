@@ -3,5 +3,4 @@ pandas
 qtpy
 PyQt5
 pyqtgraph
-python-dateutil
 git+https://github.com/keziah55/CustomPyQtObjects.git
