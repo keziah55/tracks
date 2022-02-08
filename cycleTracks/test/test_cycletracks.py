@@ -22,6 +22,18 @@ class TracksSetupTeardown:
         monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
         
         self.app = CycleTracks()
+        
+        from pytestqt.qt_compat import qt_api
+        from qtpy.QtWidgets import QWidget 
+        import os
+        print()
+        print(self.app)
+        print(os.environ["QT_API"])
+        print(qt_api._guess_qt_api())
+        print(isinstance(self.app, QWidget))
+        print(qt_api.QtWidgets.QWidget)
+        print(isinstance(self.app, qt_api.QtWidgets.QWidget))        
+        
         self.addData = self.app.addData
         self.viewer = self.app.viewer
         self.plot = self.app.plot

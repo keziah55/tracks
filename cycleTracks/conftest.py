@@ -16,7 +16,7 @@ def patchSettings(monkeypatch):
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
         
-@pytest.fixture(params=["pyqt5", "pyside2"], autouse=True)
+@pytest.fixture(params=["pyqt5", "pyside2"])#, autouse=True)
 def qtBinding(request):
     os.environ["QT_API"] = request.param
     

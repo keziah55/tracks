@@ -2,20 +2,28 @@
 
 testDir="../cycleTracksTest"
 
-if [ -d "$DIRECTORY" ]; then
-    rm -rf $testDir/
+if [ -d "$testDir" ]; then
+    rm -rf $testDir/*
 else
     mkdir -p $testDir
 fi
 
 cd $testDir
 
+echo "cd $testDir"
+
 git clone git@github.com:keziah55/cycleTracks.git
+
+cd cycleTracks
 
 python3 -m venv .
 
 source bin/activate
 
+pip -V
 
+#pip install -r requirements.txt
+#pip install pytest pytest-qt pytest-cov pytest-profiling
+#./run_tests
 
 deactivate

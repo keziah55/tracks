@@ -8,6 +8,7 @@ be clicked.
 from qtpy.QtWidgets import QTableWidgetItem, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtCore import Signal, Slot
+from qtpy.QtGui import QKeySequence
 
 from .adddatatablemixin import AddDataTableMixin
 from cycleTracks.util import dayMonthYearToFloat, parseDate
@@ -57,7 +58,10 @@ class AddCycleData(AddDataTableMixin, QWidget):
         self.rmvLineButton = QPushButton("Remove line")
         self.rmvLineButton.setToolTip("Remove currently selected line")
         self.okButton = QPushButton("Ok")
-        self.okButton.setShortcut(Qt.Key_Enter)
+        try:
+            self.okButton.setShortcut(Qt.Key_Enter)
+        except:
+            self.okButton.setShortcut(QKeySequence(Qt.Key_Enter))
         
         self.addLineButton.clicked.connect(self._makeEmptyRow)
         self.rmvLineButton.clicked.connect(self._removeSelectedRow)
