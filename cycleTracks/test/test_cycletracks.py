@@ -1,8 +1,10 @@
 from cycleTracks.cycletracks import CycleTracks
+from cycleTracks.util import parseDuration
 from qtpy.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
 import tempfile, os, datetime
+from dateutil.relativedelta import relativedelta
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -141,7 +143,28 @@ class TestTracks(TracksSetupTeardown):
         assert self.plotWidget.currentPoint['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
         
-    @pytest.mark.skip("test not yet written")
     def test_plot_update(self, setup, qtbot):
         # test that, when new data added, the plot auto-rescales so the new points are visible
-        pass
+        
+        self.plot.setXAxisRange(months=6)
+        
+        lastDate = self.data['Date'][-1]
+        
+        newData = {'Date':[lastDate + relativedelta(months=1)],
+                   'Time':[parseDuration("40:20")],
+                   'Distance (km)':[25.08],
+                   'Calories':[375.1],
+                   'Gear':[6]}
+        
+        oldXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
+        
+        with qtbot.waitSignal(self.data.dataChanged):
+            self.data.append(newData)
+            
+        newXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
+        
+        assert oldXRange != newXRange
+        oldMonth = datetime.datetime.fromtimestamp(oldXRange).month
+        if oldMonth == 12:
+            oldMonth = 0
+        assert oldMonth + 1 == datetime.datetime.fromtimestamp(newXRange).month
