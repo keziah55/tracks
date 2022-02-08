@@ -1,0 +1,7 @@
+numpy
+pandas
+qtpy
+pyqt5
+pyside2
+pyqtgraph
+git+https://github.com/keziah55/CustomPyQtObjects.git
