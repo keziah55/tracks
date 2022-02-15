@@ -20,17 +20,20 @@ python3 -m venv .
 
 source bin/activate
 
-pip -V
+python -m pip -V
 
-
-pip install -r requirements.txt
-pip install pytest==6.2.5 pytest-qt pytest-cov pytest-profiling
+python -m pip install -r requirements.txt --no-cache-dir
+python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir
 
 # test with pyside2, then pyqt5
 export QT_API=pyside2
-./run_tests
+export PYTEST_QT_API=pyside2
+python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg $@
+mv prof prof-pyside2
 
 export QT_API=pyqt5
-./run_tests
+export PYTEST_QT_API=pyqt5
+python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg $@
+mv prof prof-pyqt5
 
 deactivate
