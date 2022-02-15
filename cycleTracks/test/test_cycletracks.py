@@ -59,6 +59,8 @@ class TestTracks(TracksSetupTeardown):
     
     def test_add_data(self, setup, qtbot):
         
+        assert 1 == 2
+        
         numTopLevelItems = len(self.viewer.topLevelItems)
         pts = self.plotWidget.dataItem.scatter.data
         

@@ -26,14 +26,15 @@ echo "cd cycleTracks"
 ../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
 ../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
 
-# test with pyside2, then pyqt5
+mkdir results
 
+# test with pyside2, then pyqt5
 for qt_api in pyside2 pyqt5; do
     export QT_API=$qt_api
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../bin/python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg
+    ../bin/python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg --junitxml="./results/$qt_api.xml"
     mv prof "prof-$qt_api"
 done
 
