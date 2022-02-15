@@ -14,26 +14,26 @@ echo "cd $testDir"
 
 git clone git@github.com:keziah55/cycleTracks.git
 
-cd cycleTracks
-
+# make venv in cycleTracksTest, not cycleTracks, because pytest was picking up
+# conftest.py files from modules installed in the venv (e.g. numpy)
 python3 -m venv .
 
-source bin/activate
+cd cycleTracks
+echo "cd cycleTracks"
 
-python -m pip -V
+../bin/python -m pip -V
 
-python -m pip install -r requirements.txt --no-cache-dir
-python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir
+../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
+../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
 
 # test with pyside2, then pyqt5
-export QT_API=pyside2
-export PYTEST_QT_API=pyside2
-python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg $@
-mv prof prof-pyside2
 
-export QT_API=pyqt5
-export PYTEST_QT_API=pyqt5
-python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg $@
-mv prof prof-pyqt5
+for qt_api in pyside2 pyqt5; do
+    export QT_API=$qt_api
+    export PYTEST_QT_API=$qt_api
+    echo "QT_API: $QT_API"
+    echo "PYTEST_QT_API: $PYTEST_QT_API"
+    ../bin/python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg
+    mv prof "prof-$qt_api"
+done
 
-deactivate
