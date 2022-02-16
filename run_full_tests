@@ -1,5 +1,6 @@
 #!/bin/bash
 
+origDir="$PWD"
 testDir="../cycleTracksTest"
 
 if [ -d "$testDir" ]; then
@@ -26,7 +27,8 @@ echo "cd cycleTracks"
 ../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
 ../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
 
-mkdir results
+resultsDir="results"
+mkdir "$resultsDir"
 
 # test with pyside2, then pyqt5
 for qt_api in pyside2 pyqt5; do
@@ -34,7 +36,8 @@ for qt_api in pyside2 pyqt5; do
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../bin/python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg --junitxml="./results/$qt_api.xml"
-    mv prof "prof-$qt_api"
+    ../bin/python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml"
+    mv prof "$resultsDir/$qt_api-prof"
 done
 
+mv "$resultsDir" "$origDir"
