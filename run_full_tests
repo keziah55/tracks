@@ -40,4 +40,6 @@ for qt_api in pyside2 pyqt5; do
     mv prof "$resultsDir/$qt_api-prof"
 done
 
+../bin/python makeTestReport.py --out "$resultsDir/report.html"
+
 mv "$resultsDir" "$origDir"
