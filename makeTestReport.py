@@ -232,7 +232,6 @@ class ReportWriter:
         return html
     
     def _makeWarningsSection(self):
-        html = []
         # get 'warnings summary' section from logs
         summaries = []
         for api in self.qtApisLower:
@@ -277,12 +276,17 @@ class ReportWriter:
                     mainWarn[msg] += other[msg]
                     
         # make html list of file and warning message
-        html += ['<h1 id="warnings">Warnings</h1>']
+        html = []
+        num = 0
         for msg, files in mainWarn.items():
             html += ["<ul>"]
-            for file in sorted(set(files)):
+            f = sorted(set(files))
+            num += len(f)
+            for file in f:
                 html += [f"<li>{file}</li>"]
             html += ["</ul>", f"<span class=traceback>{msg}</span>"]
+            
+        html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
             
         return html
             
