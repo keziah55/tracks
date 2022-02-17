@@ -244,6 +244,9 @@ class ReportWriter:
         return html
     
     def _makeWarningsSection(self):
+        """ Read warnings summaries from test logs and return list of html strings. """
+        html = []
+        
         # get 'warnings summary' section from logs
         summaries = []
         for api in self.qtApisLower:
@@ -280,25 +283,25 @@ class ReportWriter:
                     prevIndent = True        
             warnInfo.append(dict(zip(msg, files)))
         
-        # combine file lists that correspond to the same warning
-        mainWarn, *otherWarn = warnInfo
-        for msg, files in mainWarn.items():
-            for other in otherWarn:
-                if msg in other:
-                    mainWarn[msg] += other[msg]
-                    
-        # make html list of file and warning message
-        html = []
-        num = 0
-        for msg, files in mainWarn.items():
-            html += ["<ul>"]
-            f = sorted(set(files))
-            num += len(f)
-            for file in f:
-                html += [f"<li>{file}</li>"]
-            html += ["</ul>", f"<span class=traceback>{msg}</span>"]
-            
-        html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
+        if warnInfo:
+            # combine file lists that correspond to the same warning
+            mainWarn, *otherWarn = warnInfo
+            for msg, files in mainWarn.items():
+                for other in otherWarn:
+                    if msg in other:
+                        mainWarn[msg] += other[msg]
+                        
+            # make html list of file and warning message
+            num = 0
+            for msg, files in mainWarn.items():
+                html += ["<ul>"]
+                f = sorted(set(files))
+                num += len(f)
+                for file in f:
+                    html += [f"<li>{file}</li>"]
+                html += ["</ul>", f"<span class=traceback>{msg}</span>"]
+                
+            html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
             
         return html
             
