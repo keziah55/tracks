@@ -189,6 +189,31 @@ class ReportWriter:
         
         return html
     
+    @classmethod
+    def _makeTracebackMessage(cls, name, lst):
+        """ From list of (qtApi, testcase) pairs, and child `name`, make summary html. """
+        html = []
+        for qtApi, testcase in lst:
+            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+            element = testcase.find(name)
+            message = cls._escapeHtml(element.attrib['message'])
+            traceback = cls._escapeHtml(element.text)
+            html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
+                     f"<span class=traceback>{message}</span>", 
+                     "<h4>Traceback:</h4>", 
+                     f"<span class=traceback>{traceback}</span>"]
+        return html
+    
+    @classmethod 
+    def _makeMessage(cls, name, lst):
+        html = []
+        for qtApi, testcase in lst:
+            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+            element = testcase.find(name)
+            message = cls. _escapeHtml(element.attrib['message'])
+            html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
+                     f"<span class=traceback>{message}</span>"]
+        return html
     
     def _makeNotPassedSection(self):
         """ Make sections detailing errors, failures and skipped tests. 
@@ -196,43 +221,14 @@ class ReportWriter:
             Return list of html strings.
         """
         html = []
-        error = self.notPassed["error"]
-        failed = self.notPassed["failed"]
-        skipped = self.notPassed["skipped"]
-        if len(error) > 0:
-            html += [f'<h1 id="errorTests">Errors ({len(error)})</h1>']
-            for qtApi, testcase in error:
-                testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
-                element = testcase.find("error")
-                message = self._escapeHtml(element.attrib['message'])
-                traceback = self._escapeHtml(element.text)
-                html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
-                         f"<span class=traceback>{message}</span>", 
-                         "<h4>Traceback:</h4>", 
-                         f"<span class=traceback>{traceback}</span>"]
-        
-        if len(failed) > 0:
-            html += [f'<h1 id="failedTests">Failed ({len(failed)})</h1>']
-            for qtApi, testcase in failed:
-                testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
-                element = testcase.find("failure")
-                message = self._escapeHtml(element.attrib['message'])
-                traceback = self._escapeHtml(element.text)
-                html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
-                         f"<span class=traceback>{message}</span>", 
-                         "<h4>Traceback:</h4>", 
-                         f"<span class=traceback>{traceback}</span>"]
-        
-        if len(skipped) > 0:
-            html += [f'<h1 id="skippedTests">Skipped ({len(skipped)})</h1>']
-            for qtApi, testcase in skipped:
-                testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
-                element = testcase.find("skipped")
-                message =self. _escapeHtml(element.attrib['message'])
-                html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
-                         f"<span class=traceback>{message}</span>"]
+        for name, lst in self.notPassed.items():
+            if len(lst) > 0:
+                 html += [f'<h1 id="{name}Tests">{name.capitalize()} ({len(lst)})</h1>']
+                 if name == "skipped":
+                     html += self._makeMessage(name, lst)
+                 else:
+                     html += self._makeTracebackMessage(name, lst)
         return html
-    
     
     def makeReport(self):
         """ Return string of html detailing the test results. """
