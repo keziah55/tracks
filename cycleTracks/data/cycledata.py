@@ -146,7 +146,7 @@ class CycleData(QObject):
         dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
-        tmpDf = self.df.append(tmpDf, ignore_index=True)
+        tmpDf = pd.concat([self.df, tmpDf], ignore_index=True)
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
         self.df.sort_values('Date', inplace=True)
