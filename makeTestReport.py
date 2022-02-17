@@ -309,12 +309,13 @@ class ReportWriter:
     
         # make html header and begin body
         html = self._makeHtmlHeader()
+        
+        s = f"<p>Tests started at {self.ts}"
+        if self.duration is not None:
+            s += f"; Duration: {self.duration}"
         html += ["<body>", 
                  '<h1 id="summary">Summary</h1>', 
-                 f"<p>Tests started at {self.ts}"]
-        if self.duration is not None:
-            html += [f"; duration: {self.duration}"]
-        html += ["</p>"]
+                 s, "</p>"]
         
         # summarise test results
         html += self._makeSummaryTable()
