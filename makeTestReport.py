@@ -35,6 +35,7 @@ class ReportWriter:
         self.resultsDir = results
         self.out = out
         self.cssFile = css
+        ts = float(ts) if ts is not None else ts
         self.ts = self._getTimestamp(ts)
         self.duration = self._getDuration(ts)
         self.qtApis = qt if qt is not None else ["PyQt5", "PySide2"]
