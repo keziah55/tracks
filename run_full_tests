@@ -36,7 +36,7 @@ for qt_api in pyside2 pyqt5; do
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../bin/python -m pytest -v --cov=cycleTracks --cov-report term-missing --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml"
+    ../bin/python -m pytest -v --cov=cycleTracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml"
     mv prof "$resultsDir/$qt_api-prof"
 done
 
