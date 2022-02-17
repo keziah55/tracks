@@ -3,6 +3,7 @@
 origDir="$PWD"
 testDir="../cycleTracksTest"
 resultsDir="results"
+ts=`date +%s%6N` # timestamp in ms
 
 # remove resutlsDir from current directory, so the results can be moved over at the end of this script
 if [ -d "$resultsDir" ]; then
@@ -45,7 +46,7 @@ for qt_api in pyside2 pyqt5; do
     mv prof "$resultsDir/$qt_api-prof"
 done
 
-../bin/python makeTestReport.py --out "$resultsDir/report.html"
+../bin/python makeTestReport.py --out "$resultsDir/report.html" --ts ts
 
 cp report-styles.css "$resultsDir"
 

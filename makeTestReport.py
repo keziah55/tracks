@@ -27,10 +27,8 @@ class ReportWriter:
             If not supplied, current time will be used.
         qt : list, optional
             List of Qt APIs. If not provided, this defaults to ["PyQt5", "PySide2"]
-    
     """
     
-    isoFmt = "%Y-%m-%dT%H:%M:%S.%f"
     fmt = "%d %b %Y, %H:%M:%S"
         
     def __init__(self, results=None, out=None, css=None, ts=None, qt=None):
@@ -38,10 +36,33 @@ class ReportWriter:
         self.out = out
         self.cssFile = css
         self.ts = self._getTimestamp(ts)
+        self.duration = self._getDuration(ts)
         self.qtApis = qt if qt is not None else ["PyQt5", "PySide2"]
         self.qtApisLower = [s.lower() for s in self.qtApis]
         
-
+    @classmethod
+    def _getTimestamp(cls, ts):
+        """ Return formatted timestamp string, either from current time (ms) or given time. """
+        if ts is None:
+            ts = datetime.now()
+        else:
+            ts = datetime.fromtimestamp(ts/1e6)
+        ts = ts.strftime(cls.fmt)
+        return ts
+    
+    @classmethod 
+    def _getDuration(cls, ts):
+        if ts is None:
+            return None
+        td = datetime.now() - datetime.fromtimestamp(ts/1e6)
+        mins = td.seconds // 60
+        secs = td.seconds % 60
+        s = f"{secs}s"
+        if mins > 0:
+            s = f"{mins}m {s}"
+        return s
+        
+    
     @staticmethod
     def _getTestCaseStatus(testcase):
         """ Check if a `testcase` element has a "skipped", "failure" or "error" child. """
@@ -121,16 +142,6 @@ class ReportWriter:
             html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
                      f"<span class=traceback>{message}</span>"]
         return html
-    
-    @classmethod
-    def _getTimestamp(cls, ts):
-        """ Return formatted timestamp string, either from current time or given time. """
-        if ts is None:
-            ts = datetime.now()
-        else:
-            ts = datetime.strptime(ts, cls.isoFmt)
-        ts = ts.strftime(cls.fmt)
-        return ts
     
     def _getTestSuites(self):
         resultsFiles = [os.path.join(self.resultsDir, f"{api}-results.xml") for api in self.qtApisLower]
@@ -299,7 +310,10 @@ class ReportWriter:
         html = self._makeHtmlHeader()
         html += ["<body>", 
                  '<h1 id="summary">Summary</h1>', 
-                 f"<p>Tests executed at {self.ts}</p>"]
+                 f"<p>Tests started at {self.ts}"]
+        if self.duration is not None:
+            html += [f"; duration: {self.duration}"]
+        html += ["</p>"]
         
         # summarise test results
         html += self._makeSummaryTable()
