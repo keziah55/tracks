@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import os.path
 from datetime import datetime
 import re
+import pkg_resources
 
 def getTestCaseStatus(testcase):
     if testcase.find("skipped") is not None:
@@ -23,28 +24,7 @@ def getTestCaseStatus(testcase):
     return status
 
 def getDependencyVersions():
-    import numpy, pandas, qtpy, PyQt5, PySide2, pyqtgraph, customQObjects, pytest, pytestqt, pytest_cov, pytest_profiling
-    imported = ["numpy", "pandas", "qtpy", "PyQt5", "pyqtgraph", 
-                "pytest", "pytest_cov", "pytest_profiling"]
-    import pkg_resources
-    dct = {}
-    for name in imported:
-        metadata = pkg_resources.get_distribution(name)
-        dct[metadata.key] = metadata.version
-    # manually do the ones pkg_resources doesn't like
-    dct['pyside2'] = PySide2.__version__ 
-    dct['customQObjects'] = customQObjects.__version__
-    dct['pytest-qt'] = pytestqt.__version__
-    
-    deps, testDeps = {}, {}
-    for key, value in sorted(dct.items()):
-        if key.startswith("pytest"):
-            testDeps[key] = value
-        else:
-            deps[key] = value
-    
-    return deps, testDeps
-
+    return {p.project_name: p.version for p in pkg_resources.working_set}
 
 def escapeHtml(html):
     html = re.sub(r"<", "&lt;", html)
@@ -77,13 +57,7 @@ ts = ts.strftime(fmt)
 
 html += ['<h1 id="summary">Summary</h1>', f"<p>{ts}</p>"]
 
-html += ["<h2>Dependencies</h2>", "<table class=dependencyTable>"]
-deps, testDeps = getDependencyVersions()
-for dct in [deps, testDeps]:
-    for key, value in dct.items():
-        html += ["<tr>", f"<td>{key}</td>", f"<td>{value}</td>", "</tr>"]
-html += ["</table>"]  
-
+## summarise test results
 html += ["<h2>Test results</h2>", "<table class=summaryTable>", "<tr>"]
 tableHeader = ["Qt API", "Tests", "Passed", "Skipped", "Failed", "Errors", "Time"]
 html += [f"<th>{header}</th>" for header in tableHeader]
@@ -100,6 +74,12 @@ for n, testsuite in enumerate(testsuites):
     html += ["<tr>"] + tableRow + ["</tr>"]
 html += ["</table>"]    
     
+## list dependencies and versions
+html += ["<h2>Dependencies</h2>", "<table class=dependencyTable>"]
+deps = getDependencyVersions()
+for key, value in sorted(deps.items(), key=lambda item: item[0].lower()):
+    html += ["<tr>", f"<td>{key}</td>", f"<td>{value}</td>", "</tr>"]
+html += ["</table>"]  
     
 ## test result breakdown
 html += ['<h1 id="breakdown">Breakdown</h1>', "<table class=breakdownTable>"]
