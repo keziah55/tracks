@@ -10,17 +10,40 @@ import os.path
 import re
 import pkg_resources
 import argparse
-import sys
 
 class ReportWriter:
-    def __init__(self, results, out, qt=["PyQt5", "PySide2"]):
+    """ Object to summarise pytest results in an html document.
+    
+        Parameters
+        ----------
+        results : str
+            Directory containing results
+        out : str
+            Path to write html file to
+        css : str
+            Location of css file
+        ts : str, optional
+            Timestamp of beginning of tests, as string in ISO format.
+            If not supplied, current time will be used.
+        qt : list, optional
+            List of Qt APIs. If not provided, this defaults to ["PyQt5", "PySide2"]
+    
+    """
+    
+    isoFmt = "%Y-%m-%dT%H:%M:%S.%f"
+    fmt = "%d %b %Y, %H:%M:%S"
+        
+    def __init__(self, results=None, out=None, css=None, ts=None, qt=None):
         self.resultsDir = results
         self.out = out
-        self.qtApis = qt
+        self.cssFile = css
+        self.ts = self._getTimestamp(ts)
+        self.qtApis = qt if qt is not None else ["PyQt5", "PySide2"]
         self.qtApisLower = [s.lower() for s in self.qtApis]
+        
 
     @staticmethod
-    def __getTestCaseStatus(testcase):
+    def _getTestCaseStatus(testcase):
         """ Check if a `testcase` element has a "skipped", "failure" or "error" child. """
         if testcase.find("skipped") is not None:
             status = "skipped"
@@ -82,19 +105,23 @@ class ReportWriter:
         testsuites = [root.findall("testsuite")[0] for root in roots]
         return testsuites
     
-    @staticmethod
-    def _getTimestamp(ts=None):
-        isoFmt = "%Y-%m-%dT%H:%M:%S.%f"
-        fmt = "%d %b %Y, %H:%M:%S.%f"
+    @classmethod
+    def _getTimestamp(cls, ts):
+        """ Return formatted timestamp string, either from current time or given time. """
         if ts is None:
             ts = datetime.now()
         else:
-            ts = datetime.strptime(ts, isoFmt)
-        ts = ts.strftime(fmt)
+            ts = datetime.strptime(ts, cls.isoFmt)
+        ts = ts.strftime(cls.fmt)
         return ts
     
+    def _makeHtmlHeader(self):
+        html= ["<!DOCTYPE html>", "<html>", "<head>", 
+               f'<link rel="stylesheet" href="{self.cssFile}">', "</head>"]
+        return html
     
     def _makeSummaryTable(self):
+        """ Make html table summarising test results and return as list of strings. """
         html = []
         html = ['<h2 id="test-results">Test results</h2>', "<table class=summaryTable>", "<tr>"]
         tableHeader = ["Qt API", "Tests", "Passed", "Skipped", "Failed", "Errors", "Time"]
@@ -115,6 +142,7 @@ class ReportWriter:
     
     
     def _makeDependencyTable(self):
+        """ Make html table of dependency versions and return as list of strings. """
         html = ['<h2 id="dependencies">Dependencies</h2>', "<table class=dependencyTable>"]
         deps = self._getDependencyVersions()
         for key, value in sorted(deps.items(), key=lambda item: item[0].lower()):
@@ -124,6 +152,7 @@ class ReportWriter:
     
     
     def _makeBreakdownTable(self):
+        """ Make html table of test results and return as list of strings. """
         html = ['<h1 id="breakdown">Breakdown</h1>', "<table class=breakdownTable>"]
         tableHeader = ["Test"] + self.qtApis
         html += [f"<th>{header}</th>" for header in tableHeader]
@@ -162,13 +191,25 @@ class ReportWriter:
     
     
     def _makeNotPassedSection(self):
+        """ Make sections detailing errors, failures and skipped tests. 
+        
+            Return list of html strings.
+        """
         html = []
         error = self.notPassed["error"]
         failed = self.notPassed["failed"]
         skipped = self.notPassed["skipped"]
         if len(error) > 0:
             html += [f'<h1 id="errorTests">Errors ({len(error)})</h1>']
-            # TODO
+            for qtApi, testcase in error:
+                testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+                element = testcase.find("error")
+                message = self._escapeHtml(element.attrib['message'])
+                traceback = self._escapeHtml(element.text)
+                html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
+                         f"<span class=traceback>{message}</span>", 
+                         "<h4>Traceback:</h4>", 
+                         f"<span class=traceback>{traceback}</span>"]
         
         if len(failed) > 0:
             html += [f'<h1 id="failedTests">Failed ({len(failed)})</h1>']
@@ -194,13 +235,15 @@ class ReportWriter:
     
     
     def makeReport(self):
-        """ Return string of html. """
+        """ Return string of html detailing the test results. """
         
-        ts = self._getTimestamp()
         self.testsuites = self._getTestSuites()
     
-        html = ["<!DOCTYPE html>", "<html>", "<head>", '<link rel="stylesheet" href="report-styles.css">' "</head>", "<body>"]
-        html += ['<h1 id="summary">Summary</h1>', f"<p>{ts}</p>"]
+        # make html header and begin body
+        html = self._makeHtmlHeader()
+        html += ["<body>", 
+                 '<h1 id="summary">Summary</h1>', 
+                 f"<p>{self.ts}</p>"]
         
         # summarise test results
         html += self._makeSummaryTable()
@@ -216,6 +259,7 @@ class ReportWriter:
         
         # make table of contents
         toc = self._makeToc(html)
+        # insert toc at beginning of body
         idx = html.index("<body>")
         html = html[:idx+1] + toc + ['<div class="main">'] + html[idx+1:] + ["</div>", "</body>", "</html>"]
         
@@ -231,6 +275,18 @@ class ReportWriter:
     
 if __name__ == "__main__":
     
-    writer = ReportWriter("results", "report.html")
+    parser = argparse.ArgumentParser(description='Write html report of pytest results.')
+    parser.add_argument('--results', default='./results',
+                        help='directory to read results. Default is "./results"')
+    parser.add_argument('--out', default='./report.html',
+                        help='path to write output html to. Default is "./report.html"')
+    parser.add_argument('--css', default='./report-styles.css',
+                        help='location of css file. Default is "./report-styles.css"')
+    parser.add_argument('--ts', default=None,
+                        help='Timestamp of beginning of test execution. If not provided, current date and time will be used')
+    
+    args = parser.parse_args()
+    
+    writer = ReportWriter(args.results, args.out, args.css, args.ts)
     writer.writeReport()
     
