@@ -96,14 +96,31 @@ class ReportWriter:
         toc += ['</ul>', "</div>"]
         return  toc
         
+    @classmethod
+    def _makeTracebackMessage(cls, name, lst):
+        """ From list of (qtApi, testcase) pairs, and child `name`, make summary html. """
+        html = []
+        for qtApi, testcase in lst:
+            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+            element = testcase.find(name)
+            message = cls._escapeHtml(element.attrib['message'])
+            traceback = cls._escapeHtml(element.text)
+            html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
+                     f"<span class=traceback>{message}</span>", 
+                     "<h4>Traceback:</h4>", 
+                     f"<span class=traceback>{traceback}</span>"]
+        return html
     
-    def _getTestSuites(self):
-        resultsFiles = [os.path.join(self.resultsDir, f"{api}-results.xml") for api in self.qtApisLower]
-        resultsFiles = [file for file in resultsFiles if os.path.exists(file)]
-        trees = [ET.parse(file) for file in resultsFiles]
-        roots = [tree.getroot() for tree in trees]
-        testsuites = [root.findall("testsuite")[0] for root in roots]
-        return testsuites
+    @classmethod 
+    def _makeMessage(cls, name, lst):
+        html = []
+        for qtApi, testcase in lst:
+            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+            element = testcase.find(name)
+            message = cls. _escapeHtml(element.attrib['message'])
+            html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
+                     f"<span class=traceback>{message}</span>"]
+        return html
     
     @classmethod
     def _getTimestamp(cls, ts):
@@ -114,6 +131,14 @@ class ReportWriter:
             ts = datetime.strptime(ts, cls.isoFmt)
         ts = ts.strftime(cls.fmt)
         return ts
+    
+    def _getTestSuites(self):
+        resultsFiles = [os.path.join(self.resultsDir, f"{api}-results.xml") for api in self.qtApisLower]
+        resultsFiles = [file for file in resultsFiles if os.path.exists(file)]
+        trees = [ET.parse(file) for file in resultsFiles]
+        roots = [tree.getroot() for tree in trees]
+        testsuites = [root.findall("testsuite")[0] for root in roots]
+        return testsuites
     
     def _makeHtmlHeader(self):
         html= ["<!DOCTYPE html>", "<html>", "<head>", 
@@ -189,32 +214,6 @@ class ReportWriter:
         
         return html
     
-    @classmethod
-    def _makeTracebackMessage(cls, name, lst):
-        """ From list of (qtApi, testcase) pairs, and child `name`, make summary html. """
-        html = []
-        for qtApi, testcase in lst:
-            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
-            element = testcase.find(name)
-            message = cls._escapeHtml(element.attrib['message'])
-            traceback = cls._escapeHtml(element.text)
-            html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
-                     f"<span class=traceback>{message}</span>", 
-                     "<h4>Traceback:</h4>", 
-                     f"<span class=traceback>{traceback}</span>"]
-        return html
-    
-    @classmethod 
-    def _makeMessage(cls, name, lst):
-        html = []
-        for qtApi, testcase in lst:
-            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
-            element = testcase.find(name)
-            message = cls. _escapeHtml(element.attrib['message'])
-            html += [f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>', "<h4>Message:</h4>", 
-                     f"<span class=traceback>{message}</span>"]
-        return html
-    
     def _makeNotPassedSection(self):
         """ Make sections detailing errors, failures and skipped tests. 
         
@@ -232,6 +231,51 @@ class ReportWriter:
                      html += self._makeTracebackMessage(name, lst)
         return html
     
+    def _makeWarningsSection(self):
+        html = []
+        summaries = []
+        for api in self.qtApisLower:
+            file = os.path.join(self.resultsDir, f"{api}-output.log")
+            with open(file) as fileobj:
+                text = fileobj.read()
+            m = re.search(r"=+ warnings summary =+\n(?P<summary>.*)\n-- Docs", 
+                          text, flags=re.DOTALL)
+            if m is not None:
+                summaries.append(m.group('summary'))
+        summaries = set(summaries)
+        warnInfo = []
+        for summary in summaries:
+            files = []
+            msg = []
+            prevIndent = True
+            for line in summary.split("\n"):
+                if re.match(r"\s", line) is None:
+                    if prevIndent:
+                        files.append([])
+                    files[-1].append(line)
+                    prevIndent = False
+                else:
+                    if not prevIndent:
+                        msg.append("")
+                    msg[-1] += line + "\n"
+                    prevIndent = True        
+            warnInfo.append(dict(zip(msg, files)))
+        
+        mainWarn, *otherWarn = warnInfo
+        for msg, files in mainWarn.items():
+            for other in otherWarn:
+                if msg in other:
+                    mainWarn[msg] += other[msg]
+                    
+        html += ['<h1 id="warnings">Warnings</h1>']
+        for msg, files in mainWarn.items():
+            html += ["<ul>"]
+            for file in set(files):
+                html += [f"<li>{file}</li>"]
+            html += ["</ul>", f"<span class=traceback>{msg}</span>"]
+            
+        return html
+            
     def makeReport(self):
         """ Return string of html detailing the test results. """
         
@@ -254,6 +298,8 @@ class ReportWriter:
         
         # list errors, failures and skipped tests
         html += self._makeNotPassedSection()
+        
+        html += self._makeWarningsSection()
         
         # make table of contents
         toc = self._makeToc(html)

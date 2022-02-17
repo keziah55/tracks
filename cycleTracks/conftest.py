@@ -15,4 +15,3 @@ def patchSettings(monkeypatch):
     monkeypatch.setenv("HOME", d)
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
-        

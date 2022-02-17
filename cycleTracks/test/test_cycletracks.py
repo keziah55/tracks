@@ -151,7 +151,7 @@ class TestTracks(TracksSetupTeardown):
         lastDate = self.data['Date'][-1]
         year = lastDate.year
         month = lastDate.month
-        day = lastDate.day
+        day = 28 # latest date that appears in all months
         if month == 12:
             month = 0
             year += 1

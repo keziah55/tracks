@@ -66,7 +66,7 @@ class TestCyclePlotWidget:
                 axisLabel = axis.labelText
                 assert axisLabel == self.parent.data.quickNames[key]
                 
-                
+    @pytest.mark.skip("test incomplete")
     def test_month_zoom(self, setup, qtbot):
     
         axis = self.widget.plotWidget.plotItem.getAxis('bottom')

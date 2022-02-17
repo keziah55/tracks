@@ -2,6 +2,12 @@
 
 origDir="$PWD"
 testDir="../cycleTracksTest"
+resultsDir="results"
+
+# remove resutlsDir from current directory, so the results can be moved over at the end of this script
+if [ -d "$resultsDir" ]; then
+    rm -rf $resultsDir/*
+fi
 
 if [ -d "$testDir" ]; then
     rm -rf $testDir/*
@@ -27,7 +33,6 @@ echo "cd cycleTracks"
 ../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
 ../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
 
-resultsDir="results"
 mkdir "$resultsDir"
 
 # test with pyside2, then pyqt5
@@ -36,10 +41,12 @@ for qt_api in pyside2 pyqt5; do
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../bin/python -m pytest -v --cov=cycleTracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml"
+    ../bin/python -m pytest -v --cov=cycleTracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
     mv prof "$resultsDir/$qt_api-prof"
 done
 
 ../bin/python makeTestReport.py --out "$resultsDir/report.html"
+
+cp report-styles.css "$resultsDir"
 
 mv "$resultsDir" "$origDir"
