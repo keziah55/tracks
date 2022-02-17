@@ -233,6 +233,7 @@ class ReportWriter:
     
     def _makeWarningsSection(self):
         html = []
+        # get 'warnings summary' section from logs
         summaries = []
         for api in self.qtApisLower:
             file = os.path.join(self.resultsDir, f"{api}-output.log")
@@ -242,13 +243,20 @@ class ReportWriter:
                           text, flags=re.DOTALL)
             if m is not None:
                 summaries.append(m.group('summary'))
+        # ideally, they're both the same, but not necessarily
+        # e.g. if a test fails with one api, it might not raise the warning
         summaries = set(summaries)
+        
+        # make list of dictionaries, collating warnings strings with the list of files
+        # for each warning summary
         warnInfo = []
         for summary in summaries:
             files = []
             msg = []
             prevIndent = True
             for line in summary.split("\n"):
+                if not line:
+                    continue
                 if re.match(r"\s", line) is None:
                     if prevIndent:
                         files.append([])
@@ -261,16 +269,18 @@ class ReportWriter:
                     prevIndent = True        
             warnInfo.append(dict(zip(msg, files)))
         
+        # combine file lists that correspond to the same warning
         mainWarn, *otherWarn = warnInfo
         for msg, files in mainWarn.items():
             for other in otherWarn:
                 if msg in other:
                     mainWarn[msg] += other[msg]
                     
+        # make html list of file and warning message
         html += ['<h1 id="warnings">Warnings</h1>']
         for msg, files in mainWarn.items():
             html += ["<ul>"]
-            for file in set(files):
+            for file in sorted(set(files)):
                 html += [f"<li>{file}</li>"]
             html += ["</ul>", f"<span class=traceback>{msg}</span>"]
             
