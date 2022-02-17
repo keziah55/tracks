@@ -227,6 +227,8 @@ class ReportWriter:
                  if name == "skipped":
                      html += self._makeMessage(name, lst)
                  else:
+                     if name == "failed":
+                         name = "failure"
                      html += self._makeTracebackMessage(name, lst)
         return html
     
@@ -239,7 +241,7 @@ class ReportWriter:
         html = self._makeHtmlHeader()
         html += ["<body>", 
                  '<h1 id="summary">Summary</h1>', 
-                 f"<p>{self.ts}</p>"]
+                 f"<p>Tests executed at {self.ts}</p>"]
         
         # summarise test results
         html += self._makeSummaryTable()
