@@ -13,6 +13,7 @@ import re
 import pkg_resources
 
 def getTestCaseStatus(testcase):
+    """ Check if a `testcase` element has a "skipped", "failure" or "error" child. """
     if testcase.find("skipped") is not None:
         status = "skipped"
     elif testcase.find("failure") is not None:
@@ -24,19 +25,46 @@ def getTestCaseStatus(testcase):
     return status
 
 def getDependencyVersions():
+    """ Get names and version numbers of installed packages. """
     return {p.project_name: p.version for p in pkg_resources.working_set}
 
 def escapeHtml(html):
+    """ Replace "<" or ">" in html string with "&lt;" and "&gt;" """
     html = re.sub(r"<", "&lt;", html)
     html = re.sub(r">", "&gt;", html)
     return html
+    
+def makeToc(lst, depth=2):
+    """ From list of html tags, find headers up to `depth`. """
+
+    toc = ['<div class="sidenav">', '<ul>']
+    level = 1
+    for tag in lst:
+        m = re.match(r"<h(?P<n>\d+)", tag)
+        if m is not None and int(m.group('n')) <= depth:
+            m = re.match(r'<h(?P<n>\d+)( id="(?P<id>\S+)")?>(?P<name>.*)</h\d+>', tag)
+            data = m.group('name')
+            if m.group('id') is not None:
+                href = f"#{m.group('id')}"
+                data = f'<a href="{href}">{data}</a>'
+            data = f"<li>{data}</li>"
+            n = int(m.group('n'))
+            if n > level:
+                data = f'<ul>{data}'
+                level = n
+            elif n < level:
+                data = f"</ul>{data}"
+                level = n
+            toc += [data]
+    toc += ['</ul>', "</div>"]
+    return  toc
     
 
 ts = None
 isoFmt = "%Y-%m-%dT%H:%M:%S.%f"
 fmt = "%d %b %Y, %H:%M:%S.%f"
 
-html = ["<html>", "<head>", '<link rel="stylesheet" href="styles.css">' "</head>", "<body>"]
+html = ["<!DOCTYPE html>", "<html>", "<head>", '<link rel="stylesheet" href="report-styles.css">' "</head>", "<body>"]
 
 resultsDir = "results"
 qtApis = ["PyQt5", "PySide2"]
@@ -58,7 +86,7 @@ ts = ts.strftime(fmt)
 html += ['<h1 id="summary">Summary</h1>', f"<p>{ts}</p>"]
 
 ## summarise test results
-html += ["<h2>Test results</h2>", "<table class=summaryTable>", "<tr>"]
+html += ['<h2 id="test-results">Test results</h2>', "<table class=summaryTable>", "<tr>"]
 tableHeader = ["Qt API", "Tests", "Passed", "Skipped", "Failed", "Errors", "Time"]
 html += [f"<th>{header}</th>" for header in tableHeader]
 for n, testsuite in enumerate(testsuites):
@@ -75,7 +103,7 @@ for n, testsuite in enumerate(testsuites):
 html += ["</table>"]    
     
 ## list dependencies and versions
-html += ["<h2>Dependencies</h2>", "<table class=dependencyTable>"]
+html += ['<h2 id="dependencies">Dependencies</h2>', "<table class=dependencyTable>"]
 deps = getDependencyVersions()
 for key, value in sorted(deps.items(), key=lambda item: item[0].lower()):
     html += ["<tr>", f"<td>{key}</td>", f"<td>{value}</td>", "</tr>"]
@@ -143,7 +171,13 @@ if len(notPassed["skipped"]) > 0:
                  f"<span class=traceback>{message}</span>"]
 
     
-html += ["<body>", "<html>"]
+toc = makeToc(html)
+
+idx = html.index("<body>")
+html = html[:idx+1] + toc + ['<div class="main">'] + html[idx+1:] + ["</div>", "</body>", "</html>"]
+
+# html += ["</body>", "</html>"]
+
 html = "\n".join(html)
 with open("report.html", "w") as fileobj:
     fileobj.write(html)
