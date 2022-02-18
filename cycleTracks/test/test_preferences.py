@@ -176,7 +176,6 @@ class TestPreferences(TracksSetupTeardown):
             
             assert self.app.pb.bestMonth.monthYear == best[0]
             
-    # @pytest.mark.skip("test not yet written")
     def test_set_summary_criteria(self, setupKnownData, qtbot, variables):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
@@ -220,4 +219,3 @@ class TestPreferences(TracksSetupTeardown):
                 
                 assert self.viewer.topLevelItems[idx].text(col) == expected
                 idx += 1
-                
