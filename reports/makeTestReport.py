@@ -10,6 +10,7 @@ import os.path
 import re
 import pkg_resources
 import argparse
+import platform
 
 class ReportWriter:
     """ Object to summarise pytest results in an html document.
@@ -29,17 +30,35 @@ class ReportWriter:
             List of Qt APIs. If not provided, this defaults to ["PyQt5", "PySide2"]
     """
     
-    fmt = "%d %b %Y, %H:%M:%S"
+    fmt = "%a %d %b %Y, %H:%M:%S"
         
-    def __init__(self, results=None, out=None, css=None, ts=None, qt=None):
+    def __init__(self, results=None, out=None, ts=None, qt=None):
         self.resultsDir = results
         self.out = out
-        self.cssFile = css
+        self.cssFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "report-styles.css")
         ts = float(ts) if ts is not None else ts
         self.ts = self._getTimestamp(ts)
         self.duration = self._getDuration(ts)
         self.qtApis = qt if qt is not None else ["PyQt5", "PySide2"]
         self.qtApisLower = [s.lower() for s in self.qtApis]
+        
+    @staticmethod
+    def _getOSrelease():
+        """ Return contents of /etc/os-release as dict. 
+        
+            This method can be removed once we're using python 3.10, as
+            platform.freedesktop_os_release() will do this.
+        """
+        dct = {}
+        with open("/etc/os-release") as fileobj:
+            while True:
+                line = fileobj.readline()
+                if not line:
+                    break
+                else:
+                    m = re.match(r'(?P<key>\w+)=(?P<value>.+)', line)
+                    dct[m.group('key')] =  m.group('value').strip('"')
+        return dct
         
     @classmethod
     def _getTimestamp(cls, ts):
@@ -53,6 +72,7 @@ class ReportWriter:
     
     @classmethod 
     def _getDuration(cls, ts):
+        """ Return time between now and `ts`, formatted as string of minutes and seconds. """
         if ts is None:
             return None
         td = datetime.now() - datetime.fromtimestamp(ts/1e6)
@@ -62,7 +82,6 @@ class ReportWriter:
         if mins > 0:
             s = f"{mins}m {s}"
         return s
-        
     
     @staticmethod
     def _getTestCaseStatus(testcase):
@@ -95,7 +114,6 @@ class ReportWriter:
         
             Return a list of strings.
         """
-    
         toc = ['<div class="sidenav">', '<ul>']
         level = 1
         for tag in lst:
@@ -145,16 +163,36 @@ class ReportWriter:
         return html
     
     def _getTestSuites(self):
-        resultsFiles = [os.path.join(self.resultsDir, f"{api}-results.xml") for api in self.qtApisLower]
-        resultsFiles = [file for file in resultsFiles if os.path.exists(file)]
-        trees = [ET.parse(file) for file in resultsFiles]
-        roots = [tree.getroot() for tree in trees]
-        testsuites = [root.findall("testsuite")[0] for root in roots]
+        """ Return testsuite elements for each Qt API. """
+        testsuites = {}
+        for api in self.qtApisLower:
+            file = os.path.join(self.resultsDir, f"{api}-results.xml")
+            if os.path.exists(file):
+                tree = ET.parse(file)
+                testsuites[api] = tree.getroot().findall("testsuite")[0]
         return testsuites
     
     def _makeHtmlHeader(self):
-        html= ["<!DOCTYPE html>", "<html>", "<head>", 
-               f'<link rel="stylesheet" href="{self.cssFile}">', "</head>"]
+        html = ["<!DOCTYPE html>", "<html>", "<head>"]
+        with open(self.cssFile) as fileobj:
+            text = fileobj.read()
+        html += ["<style>", text, "</style>", "</head>"]
+        return html
+    
+    def _makeSummaryInfo(self):
+        """ Make section summarising Python and system versions; timestamp and duration. """
+        try:
+            # from python 3.10
+            osInfo = platform.freedesktop_os_release()
+        except AttributeError:
+            osInfo = self._getOSrelease()
+        html = ['<h1 id="summary">Summary</h1>', 
+                f"<p>Python {platform.python_version()} on {osInfo['PRETTY_NAME']}, {platform.release()}</p>"]
+        
+        s = f"<p>Tests started at {self.ts}"
+        if self.duration is not None:
+            s += f"; Duration: {self.duration}"
+        html += [ s, "</p>"]
         return html
     
     def _makeSummaryTable(self):
@@ -163,7 +201,7 @@ class ReportWriter:
         html = ['<h2 id="test-results">Test results</h2>', "<table class=summaryTable>", "<tr>"]
         tableHeader = ["Qt API", "Tests", "Passed", "Skipped", "Failed", "Errors", "Time"]
         html += [f"<th>{header}</th>" for header in tableHeader]
-        for n, testsuite in enumerate(self.testsuites):
+        for qtApi, testsuite in self.testsuites.items():
             total = int(testsuite.attrib['tests'])
             errors = int(testsuite.attrib['errors'])
             failures = int(testsuite.attrib['failures'])
@@ -171,12 +209,11 @@ class ReportWriter:
             passed = total - errors - failures - skipped
             time = testsuite.attrib['time']
             
-            tableRow = [self.qtApis[n], total, passed, skipped, failures, errors, time]
+            tableRow = [qtApi, total, passed, skipped, failures, errors, time]
             tableRow = [f"<td>{item}</td>" for item in tableRow]
             html += ["<tr>"] + tableRow + ["</tr>"]
         html += ["</table>"]
         return html
-    
     
     def _makeDependencyTable(self):
         """ Make html table of dependency versions and return as list of strings. """
@@ -187,40 +224,42 @@ class ReportWriter:
         html += ["</table>"] 
         return html
     
-    
     def _makeBreakdownTable(self):
-        """ Make html table of test results and return as list of strings. """
+        """ Make html table of test results and return as list of strings. 
+        
+            Also populates `notPassed` dict.
+        """
         html = ['<h1 id="breakdown">Breakdown</h1>', "<table class=breakdownTable>"]
         tableHeader = ["Test"] + self.qtApis
         html += [f"<th>{header}</th>" for header in tableHeader]
         
         self.notPassed = {"error":[], "failed":[], "skipped":[]}
         
-        for testcase in self.testsuites[0].findall("testcase"):
+        qt0, *qtApis = self.qtApis
+        
+        for testcase in self.testsuites[qt0.lower()].findall("testcase"):
             
             classname = testcase.attrib['classname']
             name = testcase.attrib['name']
             
-            # find this test in the other testsuite
-            other = self.testsuites[1].findall(f"*[@classname='{classname}'][@name='{name}']")[0]
+            testcases = {qt0:testcase}
             
-            status0 = self._getTestCaseStatus(testcase)
-            status1 = self._getTestCaseStatus(other)
+            # find this test in the other testsuite(s)
+            for qt in qtApis:
+                testcases[qt] = self.testsuites[qt.lower()].findall(f"*[@classname='{classname}'][@name='{name}']")[0]
             
-            data = ["", ""]
-            for n, status, tc in [(0, status0, testcase), (1, status1, other)]:
+            # make this row of html
+            html += ["<tr>", f"<td class=testName>{classname}.{name}</td>"]
+            for qt, tc in testcases.items():
+                status = self._getTestCaseStatus(tc)
                 if status != "passed":
-                    self.notPassed[status].append((self.qtApis[n], tc))
-                    href = f"{self.qtApis[n]}-{classname}.{name}"
-                    data[n] = f"<a href=#{href}>{tc.attrib['time']}s</a>"
+                    self.notPassed[status].append((qt, tc))
+                    href = f"{qt}-{classname}.{name}"
+                    td = f"<a href=#{href}>{tc.attrib['time']}s</a>"
                 else:
-                    data[n] = f"{tc.attrib['time']}s"
-                    
-            html += ["<tr>", 
-                     f"<td class=testName>{classname}.{name}</td>", 
-                     f"<td class={status0}>{data[0]}</td>", 
-                     f"<td class={status1}>{data[1]}</td>"
-                     "</tr>"]
+                    td = f"{tc.attrib['time']}s"
+                html += [f"<td class={status}>{td}</td>"]
+            html += ["</tr>"]
             
         html += ["</table>"]
         
@@ -304,42 +343,37 @@ class ReportWriter:
             html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
             
         return html
-            
+    
     def makeReport(self):
         """ Return string of html detailing the test results. """
         
+        # read xml files
         self.testsuites = self._getTestSuites()
-    
-        # make html header and begin body
-        html = self._makeHtmlHeader()
         
-        s = f"<p>Tests started at {self.ts}"
-        if self.duration is not None:
-            s += f"; Duration: {self.duration}"
-        html += ["<body>", 
-                 '<h1 id="summary">Summary</h1>', 
-                 s, "</p>"]
-        
+        ## get html contents before writing header, so toc can be included at beginning
+        main = ['<div class="main">']
+        # write python and system version; get timestamp and duration
+        main += self._makeSummaryInfo()
         # summarise test results
-        html += self._makeSummaryTable()
-            
+        main += self._makeSummaryTable()
         # list dependencies and versions
-        html += self._makeDependencyTable()
-            
+        main += self._makeDependencyTable()
         # test result breakdown
-        html += self._makeBreakdownTable()
-        
+        main += self._makeBreakdownTable()
         # list errors, failures and skipped tests
-        html += self._makeNotPassedSection()
-        
-        html += self._makeWarningsSection()
+        main += self._makeNotPassedSection()
+        main += self._makeWarningsSection()
+        # end main
+        main += ["</div>"]
         
         # make table of contents
-        toc = self._makeToc(html)
-        # insert toc at beginning of body
-        idx = html.index("<body>")
-        html = html[:idx+1] + toc + ['<div class="main">'] + html[idx+1:] + ["</div>", "</body>", "</html>"]
+        toc = self._makeToc(main)
         
+        # make html header, include stylesheet inline
+        header = self._makeHtmlHeader()
+        
+        # make html string
+        html = header + ["<body>"] + toc + main + ["</body>", "</html>"]
         html = "\n".join(html)
         
         return html
@@ -357,13 +391,11 @@ if __name__ == "__main__":
                         help='directory to read results. Default is "./results"')
     parser.add_argument('--out', default='./report.html',
                         help='path to write output html to. Default is "./report.html"')
-    parser.add_argument('--css', default='./report-styles.css',
-                        help='location of css file. Default is "./report-styles.css"')
     parser.add_argument('--ts', default=None,
                         help='Timestamp of beginning of test execution. If not provided, current date and time will be used')
     
     args = parser.parse_args()
     
-    writer = ReportWriter(args.results, args.out, args.css, args.ts)
+    writer = ReportWriter(args.results, args.out, args.ts)
     writer.writeReport()
     
