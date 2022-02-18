@@ -4,6 +4,7 @@ import pytest
 import random
 import os.path
 import re
+import shutil
 import numpy as np
 from datetime import datetime, timedelta
 from qtpy.QtWidgets import QDialogButtonBox
@@ -119,8 +120,11 @@ class TestPreferences(TracksSetupTeardown):
                 # if text != expected:
                 d = os.path.dirname(os.path.realpath(__file__))
                 d = os.path.join(d, "test_data")
+                if os.path.exists(d):
+                    shutil.rmtree(d)
                 os.mkdir(d)
-                df.to_csv(os.path.join("test_num_pb_sessions_fail.csv"))
+                print(os.path.join(d, "test_num_pb_sessions_fail.csv"))
+                df.to_csv(os.path.join(d, "test_num_pb_sessions_fail.csv"))
                 
                 assert text == expected
         
