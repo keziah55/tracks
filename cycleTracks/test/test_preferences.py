@@ -2,6 +2,7 @@ from .test_cycletracks import TracksSetupTeardown
 from cycleTracks.util import hourMinSecToFloat, parseDuration
 import pytest
 import random
+import os.path
 import re
 import numpy as np
 from datetime import datetime, timedelta
@@ -115,8 +116,11 @@ class TestPreferences(TracksSetupTeardown):
                 expected = self.data.fmtFuncs[colName](expected)
                 expected = str(expected)
                 
-                if text != expected:
-                    df.to_csv("test_num_pb_sessions_fail.csv")
+                # if text != expected:
+                d = os.path.dirname(os.path.realpath(__file__))
+                d = os.path.join(d, "test_data")
+                os.mkdir(d)
+                df.to_csv(os.path.join("test_num_pb_sessions_fail.csv"))
                 
                 assert text == expected
         
