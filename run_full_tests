@@ -46,9 +46,9 @@ for qt_api in pyside2 pyqt5; do
     mv prof "$resultsDir/$qt_api-prof"
 done
 
-testDataDir=cycleTracks/test/test_sata
+testDataDir="cycleTracks/test/test_data"
 if [ -d $testDataDir ]; then
-    mv "$testDataDir" "$resultsDir"
+    cp -r "$testDataDir" "$resultsDir"
 fi
 
 ../bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts

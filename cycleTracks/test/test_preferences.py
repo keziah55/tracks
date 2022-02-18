@@ -117,14 +117,13 @@ class TestPreferences(TracksSetupTeardown):
                 expected = self.data.fmtFuncs[colName](expected)
                 expected = str(expected)
                 
-                # if text != expected:
-                d = os.path.dirname(os.path.realpath(__file__))
-                d = os.path.join(d, "test_data")
-                if os.path.exists(d):
-                    shutil.rmtree(d)
-                os.mkdir(d)
-                print(os.path.join(d, "test_num_pb_sessions_fail.csv"))
-                df.to_csv(os.path.join(d, "test_num_pb_sessions_fail.csv"))
+                if text != expected:
+                    d = os.path.dirname(os.path.realpath(__file__))
+                    d = os.path.join(d, "test_data")
+                    if os.path.exists(d):
+                        shutil.rmtree(d)
+                    os.mkdir(d)
+                    df.to_csv(os.path.join(d, "test_num_pb_sessions_fail.csv"))
                 
                 assert text == expected
         
