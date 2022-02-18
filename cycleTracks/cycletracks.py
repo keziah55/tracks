@@ -24,6 +24,8 @@ class CycleTracks(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        import warnings; warnings.warn("test warnings", UserWarning)
+        
         self.settings = Settings()
         
         self._saveLabel = QLabel()
