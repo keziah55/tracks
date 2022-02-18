@@ -343,18 +343,18 @@ class ReportWriter:
                     else:
                         # otherwise add new entry
                         warnInfo[msgStr] = files[n]
-                        
-        # make html list of file and warning message
-        num = 0
-        for msg, files in warnInfo.items():
-            html += ["<ul>"]
-            f = sorted(set(files)) # remove repeated file names and sort
-            num += len(f)
-            for file in f:
-                html += [f"<li>{file}</li>"]
-            html += ["</ul>", f"<span class=traceback>{msg}</span>"]
-            
-        html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
+        if warnInfo:
+            # make html list of file and warning message
+            num = 0
+            for msg, files in warnInfo.items():
+                html += ["<ul>"]
+                f = sorted(set(files)) # remove repeated file names and sort
+                num += len(f)
+                for file in f:
+                    html += [f"<li>{file}</li>"]
+                html += ["</ul>", f"<span class=traceback>{msg}</span>"]
+                
+            html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
             
         return html
     
