@@ -84,22 +84,28 @@ class CycleDataViewer(QTreeWidget):
     """
     
     itemSelected = Signal(object)
-    """ itemSelected(CycleTreeWidgetItem `item`)
+    """ **signal** itemSelected(CycleTreeWidgetItem `item`)
     
         Emitted when an item in the tree is selected, either by clicking
         on it or by navigating with the up or down keys.
     """
     
     viewerSorted = Signal()
-    """ viewerSorted()
+    """ **signal** viewerSorted()
     
         Emitted after the CycleDataViewer items have been sorted.
     """
     
     selectedSummary = Signal(str)
-    """ selectedSummary(str `summaryString`)
+    """ **signal** selectedSummary(str `summaryString`)
     
         Emitted with a string summarising selected items.
+    """
+    
+    viewerUpdated = Signal()
+    """ **signal** viewerUpdated() 
+    
+        Emitted when `newData` has finished.
     """
     
     def __init__(self, parent, widthSpace=10):
@@ -199,6 +205,8 @@ class CycleDataViewer(QTreeWidget):
         for item in self.topLevelItems:
             if item.text(0) in expanded:
                 self.expandItem(item)
+                
+        self.viewerUpdated.emit()
                 
     @Slot(int)
     def sortTree(self, idx):

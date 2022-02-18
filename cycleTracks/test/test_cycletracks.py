@@ -21,6 +21,38 @@ class TracksSetupTeardown:
             return self.tmpfile.name
         monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
         
+        self._setup()
+        qtbot.addWidget(self.app)
+        
+        yield
+        self.extraTeardown()
+        self.app.close()
+        
+        # can't do this with a fixture in conf file, as it's called when this method is called
+        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+        self._removeTmpConfig()
+        
+    @pytest.fixture
+    def setupKnownData(self, qtbot, monkeypatch, patchSettings):
+        self.tmpfile = tempfile.NamedTemporaryFile()
+        makeDataFrame(random=False, path=self.tmpfile.name)
+        
+        def mockGetFile(*args, **kwargs):
+            return self.tmpfile.name
+        monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
+        
+        self._setup()
+        qtbot.addWidget(self.app)
+        
+        yield
+        self.extraTeardown()
+        self.app.close()
+        
+        # can't do this with a fixture in conf file, as it's called when this method is called
+        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+        self._removeTmpConfig()
+    
+    def _setup(self):
         self.app = CycleTracks()
         self.addData = self.app.addData
         self.viewer = self.app.viewer
@@ -30,18 +62,12 @@ class TracksSetupTeardown:
         self.prefDialog = self.app.prefDialog
         self.data = self.app.data
         
-        qtbot.addWidget(self.app)
         self.app.showMaximized()
         self.app.prefDialog.ok() # see https://github.com/keziah55/cycleTracks/commit/9e0c05f7d19b33a61a52a959adcdc7667cd7b924
         
         self.extraSetup()
-        
-        yield
-        self.extraTeardown()
-        self.app.close()
-        
-        # can't do this with a fixture in conf file, as it's called when this method is called
-        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+    
+    def _removeTmpConfig(self):
         appName = "Cycle Tracks"
         orgName = "Tracks"
         d = os.path.dirname(__file__)
