@@ -64,14 +64,14 @@ class TestPersonalBests:
         
         assert self.pb.bestMonth.text() == expected_label
         
-    def test_new_data_different_column(self, setup, qtbot, monkeypatch):
+    def test_new_data_different_column(self, setup, qtbot, monkeypatch, variables):
         # test dialog message when table is sorted by Time
         new = {'Date':[parseDate("7 April 2021", pd_timestamp=True)], 
                'Time':[parseDuration("01:05:03")], 
                'Distance (km)':[25.08], 'Calories':[375.1], 'Gear':[6]}
         
         self.pb.bestSessions.horizontalHeader().sectionClicked.emit(1)
-        qtbot.wait(10)
+        qtbot.wait(variables.shortWait)
         
         # don't need dialog to pop up
         monkeypatch.setattr(NewPBDialog, "exec_", lambda *args: QDialog.Accepted)
@@ -101,7 +101,7 @@ class TestPersonalBests:
         date1 = self.pb.bestSessions.item(1, 0).text()
         assert date1 == "04 May 2021"
         
-    def test_sort_column(self, setup, qtbot):
+    def test_sort_column(self, setup, qtbot, variables):
         # dict of sortable columns and list of expected dates
         columns = {'Time':['26 Apr 2021', '05 May 2021', '01 May 2021', '29 Apr 2021', '03 May 2021'], 
                    'Distance (km)':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021'], 
@@ -112,7 +112,7 @@ class TestPersonalBests:
             idx = self.pb.bestSessions.headerLabels.index(column)
             
             self.pb.bestSessions.horizontalHeader().sectionClicked.emit(idx)
-            qtbot.wait(10)
+            qtbot.wait(variables.shortWait)
             items = [self.pb.bestSessions.item(idx, 0).text() for idx in range(self.pb.bestSessions.rowCount())]
             assert items == expected
             

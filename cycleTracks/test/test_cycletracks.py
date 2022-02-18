@@ -81,7 +81,7 @@ class TestTracks(TracksSetupTeardown):
         assert len(self.plotWidget.dataItem.scatter.data) == len(pts) + 1
         
 
-    def test_plot_clicked(self, setup, qtbot):
+    def test_plot_clicked(self, setup, qtbot, variables):
         # test that clicking on the plot highlights the nearest plot in the viewer
         
         self.plotWidget.setXAxisRange(None) # ensure all points visible in plotting area
@@ -106,10 +106,10 @@ class TestTracks(TracksSetupTeardown):
             def scenePos(self):
                 return self.sp
             
-        qtbot.wait(100)
+        qtbot.wait(variables.wait)
         with qtbot.waitSignal(self.plotWidget.currentPointChanged):
-            qtbot.mouseMove(self.plot, pos=pos, delay=50)
-        qtbot.wait(100)
+            qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
+        qtbot.wait(variables.wait)
             
         event = MockMouseEvent(scenePos)
         signals = [(self.plotWidget.pointSelected, 'pointSelected'),

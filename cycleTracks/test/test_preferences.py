@@ -22,7 +22,7 @@ class TestPreferences(TracksSetupTeardown):
     def _subtractMonths(dt, months):
         return dt-timedelta(days=months*365/12)
         
-    def test_plot_range(self, setup, qtbot):
+    def test_plot_range(self, setup, qtbot, variables):
         
         plotPref = self.prefDialog.pagesWidget.widget(0)
         plotPref.customRangeCheckBox.setChecked(False)
@@ -54,7 +54,7 @@ class TestPreferences(TracksSetupTeardown):
                 
             axis = self.plot.plotWidget.getAxis("bottom")
             
-            qtbot.wait(100)
+            qtbot.wait(variables.wait)
                 
             assert axis.tickTimestamps[-1] >= lastDate.timestamp()
             text = plotPref.plotRangeCombo.currentText()
@@ -75,7 +75,7 @@ class TestPreferences(TracksSetupTeardown):
             
         assert axis.tickTimestamps[-1] >= lastDate.timestamp()
         dt = self._subtractMonths(lastDate, 4)
-        qtbot.wait(100)
+        qtbot.wait(variables.wait)
         assert axis.tickTimestamps[0] <= dt.timestamp()
         
         

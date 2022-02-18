@@ -69,7 +69,7 @@ class TestCyclePlotWidget:
                 
     def test_month_zoom(self, setup, qtbot, variables):
     
-        qtbot.wait(variables['wait'])
+        qtbot.wait(variables.wait)
     
         axis = self.widget.plotWidget.plotItem.getAxis('bottom')
         
@@ -82,7 +82,7 @@ class TestCyclePlotWidget:
         with qtbot.waitSignal(axis.axisDoubleClicked):
             axis.mouseClickEvent(click)
             
-        qtbot.wait(variables['wait'])
+        qtbot.wait(variables.wait)
             
         # random data always generated current date and current date - 2 years
         # so midpoint should be current month - 1 year
@@ -96,8 +96,8 @@ class TestCyclePlotWidget:
         assert dt1.month == dt0.month + 1
         
         
-    def test_mouse_hover(self, setup_reduced_points, qtbot):
-        qtbot.wait(10) # wait for widget to be maximized so we can get the right size
+    def test_mouse_hover(self, setup_reduced_points, qtbot, varibables):
+        qtbot.wait(variables.shortWait) # wait for widget to be maximized so we can get the right size
         
         size = self.widget.size()
         y = size.height() // 2

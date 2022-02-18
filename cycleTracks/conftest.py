@@ -1,6 +1,14 @@
 from qtpy.QtCore import QCoreApplication
+from dataclasses import dataclass
 import os
 import pytest
+
+@dataclass
+class Variables:
+    wait: int = 100
+    shortWait: int = 10
+    longWait: int = 30000
+    mouseDelay: int = 50
 
 @pytest.fixture(autouse=True)
 def patchSettings(monkeypatch):
@@ -18,5 +26,5 @@ def patchSettings(monkeypatch):
 
 @pytest.fixture()
 def variables():
-    d = {'wait':100}
-    return d
+    v = Variables()
+    return v
