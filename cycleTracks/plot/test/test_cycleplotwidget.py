@@ -96,7 +96,7 @@ class TestCyclePlotWidget:
         assert dt1.month == dt0.month + 1
         
         
-    def test_mouse_hover(self, setup_reduced_points, qtbot, varibables):
+    def test_mouse_hover(self, setup_reduced_points, qtbot, variables):
         qtbot.wait(variables.shortWait) # wait for widget to be maximized so we can get the right size
         
         size = self.widget.size()
