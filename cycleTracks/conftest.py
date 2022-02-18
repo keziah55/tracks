@@ -15,3 +15,8 @@ def patchSettings(monkeypatch):
     monkeypatch.setenv("HOME", d)
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
+
+@pytest.fixture()
+def variables():
+    d = {'wait':100}
+    return d
