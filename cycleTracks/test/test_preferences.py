@@ -106,7 +106,7 @@ class TestPreferences(TracksSetupTeardown):
                 # if it's a Date (pd.Timestamp) return directly
                 return item
         
-        df = self.data.df.sort_values(by=['Avg. speed (km/h)', 'Date'], ascending=False, key=sortKey)[:num]
+        df = self.data.df.sort_values(by=['Avg. speed (km/h)', 'Date'], ascending=False, key=sortKey)
         
         for row in range(self.pbTable.rowCount()):
             for colNum, colName in enumerate(self.pbTable.headerLabels):
@@ -123,7 +123,18 @@ class TestPreferences(TracksSetupTeardown):
                     if os.path.exists(d):
                         shutil.rmtree(d)
                     os.mkdir(d)
-                    df.to_csv(os.path.join(d, "test_num_pb_sessions_fail.csv"))
+                    df.to_csv(os.path.join(d, "test_num_pb_sessions_fail_sorted.csv"))
+                    self.data.df.to_csv(os.path.join(d, "test_num_pb_sessions_fail_unsorted.csv"))
+                    
+                    h = [re.sub(r"\n", " ", name) for name in self.pbTable.headerLabels]
+                    tmpText = ", ".join(h) + "\n"
+                    for r in range(self.pbTable.rowCount()):
+                        tmpRow = []
+                        for c in range(len(self.pbTable.headerLabels)):
+                            tmpRow.append(self.pbTable.item(r, c).text())
+                        tmpText += ",".join(tmpRow) + "\n"
+                    with open(os.path.join(d, "test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
+                        fileobj.write(tmpText)
                 
                 assert text == expected
         

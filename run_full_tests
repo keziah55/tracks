@@ -48,7 +48,7 @@ done
 
 testDataDir="cycleTracks/test/test_data"
 if [ -d $testDataDir ]; then
-    cp -r "$testDataDir" "$resultsDir"
+    mv "$testDataDir" "$resultsDir"
 fi
 
 ../bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts
