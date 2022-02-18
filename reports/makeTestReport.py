@@ -285,62 +285,76 @@ class ReportWriter:
     def _makeWarningsSection(self):
         """ Read warnings summaries from test logs and return list of html strings. """
         html = []
-        
-        # get 'warnings summary' section from logs
-        summaries = []
+                
+        warnInfo = {}
+
         for api in self.qtApisLower:
             file = os.path.join(self.resultsDir, f"{api}-output.log")
+            
+            files = [] # list of file lists
+            msg = [] # list of strings
+            prevIndent = True # previous line started with whitespace
+            inWarningsSummary = False # current line is within warnings summary
+            
             with open(file) as fileobj:
-                text = fileobj.read()
-            m = re.search(r"=+ warnings summary =+\n(?P<summary>.*)\n-- Docs", 
-                          text, flags=re.DOTALL)
-            if m is not None:
-                summaries.append(m.group('summary'))
-        # ideally, they're both the same, but not necessarily
-        # e.g. if a test fails with one api, it might not raise the warning
-        summaries = set(summaries)
-        
-        # make list of dictionaries, collating warnings strings with the list of files
-        # for each warning summary
-        warnInfo = []
-        for summary in summaries:
-            files = []
-            msg = []
-            prevIndent = True
-            for line in summary.split("\n"):
-                if not line:
-                    continue
-                if re.match(r"\s", line) is None:
-                    if prevIndent:
-                        files.append([])
-                    files[-1].append(line)
-                    prevIndent = False
-                else:
-                    if not prevIndent:
-                        msg.append("")
-                    msg[-1] += line + "\n"
-                    prevIndent = True        
-            warnInfo.append(dict(zip(msg, files)))
-        
-        if warnInfo:
-            # combine file lists that correspond to the same warning
-            mainWarn, *otherWarn = warnInfo
-            for msg, files in mainWarn.items():
-                for other in otherWarn:
-                    if msg in other:
-                        mainWarn[msg] += other[msg]
+                while True:
+                    line = fileobj.readline()
+                    if not line:
+                        # end of file
+                        break
+                    if re.match(r"=+ warnings summary", line):
+                        # entering warnings summary
+                        inWarningsSummary = True
+                        continue
+                    elif re.match(r"-- Docs", line):
+                        # end of warnings summary
+                        break
+                    
+                    if inWarningsSummary:
+                        # get files and warning messages
+                        line = line.strip("\n")
+                        if not line:
+                            continue
                         
-            # make html list of file and warning message
-            num = 0
-            for msg, files in mainWarn.items():
-                html += ["<ul>"]
-                f = sorted(set(files))
-                num += len(f)
-                for file in f:
-                    html += [f"<li>{file}</li>"]
-                html += ["</ul>", f"<span class=traceback>{msg}</span>"]
-                
-            html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
+                        if re.match(r"\s", line) is None:
+                            # line doesn't start with whitespace, so is a file name
+                            if prevIndent:
+                                # if previous line was a warning message, not a file name
+                                files.append([])
+                            # append to last file list
+                            files[-1].append(line)
+                            prevIndent = False
+                        else:
+                            if not prevIndent:
+                                # if previous line was a file name, not part of a message
+                                msg.append("")
+                            # append to last message
+                            msg[-1] += line + "\n"
+                            prevIndent = True   
+            if not warnInfo:
+                # if this is the first file (with warnings), make dict of message:file list pairs
+                warnInfo = dict(zip(msg, files))
+            else:
+                # if dict already exists
+                for n, msgStr in enumerate(msg):
+                    if msgStr in warnInfo:
+                        # if message alerady in dict append to its file list
+                        warnInfo[msgStr] += files[n]
+                    else:
+                        # otherwise add new entry
+                        warnInfo[msgStr] = files[n]
+                        
+        # make html list of file and warning message
+        num = 0
+        for msg, files in warnInfo.items():
+            html += ["<ul>"]
+            f = sorted(set(files)) # remove repeated file names and sort
+            num += len(f)
+            for file in f:
+                html += [f"<li>{file}</li>"]
+            html += ["</ul>", f"<span class=traceback>{msg}</span>"]
+            
+        html.insert(0, f'<h1 id="warnings">Warnings ({num})</h1>')
             
         return html
     
