@@ -1,8 +1,16 @@
-from PyQt5.QtCore import QCoreApplication
+from qtpy.QtCore import QCoreApplication
+from dataclasses import dataclass
 import os
 import pytest
 
-@pytest.fixture
+@dataclass
+class Variables:
+    wait: int = 100
+    shortWait: int = 10
+    longWait: int = 30000
+    mouseDelay: int = 50
+
+@pytest.fixture(autouse=True)
 def patchSettings(monkeypatch):
     appName = "Cycle Tracks"
     orgName = "Tracks"
@@ -15,4 +23,8 @@ def patchSettings(monkeypatch):
     monkeypatch.setenv("HOME", d)
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
-    
+
+@pytest.fixture()
+def variables():
+    v = Variables()
+    return v

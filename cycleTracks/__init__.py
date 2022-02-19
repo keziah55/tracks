@@ -1,11 +1,14 @@
 import os.path
-from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtCore import Qt
+from qtpy.QtGui import QIcon, QPixmap, QColor
+from qtpy.QtCore import Qt
 
 def getIconPath(name, ext="svg"):
     d = os.path.dirname(__file__)
     file = os.path.join(d, "..", "images", "icons", f"{name}.{ext}")
-    return file
+    if os.path.exists(file):
+        return file
+    else:
+        raise FileNotFoundError(f"Icon '{file}' not found.")
 
 def getIcon(name, ext="svg"):
     """ Return QIcon of {name}.{ext} """
@@ -13,7 +16,7 @@ def getIcon(name, ext="svg"):
     if os.path.exists(file):
         return QIcon(file)
     else:
-        raise FileNotFoundError(f"No '{name}.{ext}' icon found.")
+        raise FileNotFoundError(f"Icon '{file}' not found.")
         
 def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon"):
     """ Open {name}.{ext} icon and change the colour to `foregroundColour`.

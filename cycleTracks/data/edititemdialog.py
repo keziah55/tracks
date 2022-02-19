@@ -1,18 +1,22 @@
 """
 Dialog box where users can edit rows from the CycleDataViewer.
 """
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
+from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
                              QTableWidgetItem, QCheckBox, QScrollArea)
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 from .adddatatablemixin import AddDataTableMixin
-from dataclasses import dataclass
     
-@dataclass
-class BaseRow:
+class Row:
     """ Data class for a row in the table. """
-    index: int          # pandas index being represented here
-    tableItems: dict    # dict of name:QTableWidgetItem pairs
-    checkBox: QCheckBox # check box
+    ## was using the dataclass decorator
+    ## this worked with pyqt5, but not pyside2
+    ## TypeError: unhashable type: 'Row'
+    
+    def __init__(self, index, tableItems, checkBox):
+        self.index = index
+        self.tableItems = tableItems
+        self.checkBox = checkBox 
+        self.checkBox.clicked.connect(self.enable)
     
     @property
     def checked(self):
@@ -26,11 +30,6 @@ class BaseRow:
         for item in self.tableItems.values():
             item.setFlags(flags)
     
-class Row(BaseRow):
-    # inherit dataclass BaseRow and connect the checkBox to enable
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, *kwargs)
-        self.checkBox.clicked.connect(self.enable)
     
 class EditItemDialog(AddDataTableMixin, QDialog):
     
@@ -93,7 +92,6 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         layout = QVBoxLayout()
         layout.addWidget(scrollArea)
         layout.addWidget(self.buttonBox)
-
         self.setLayout(layout)
         
         # set the table size

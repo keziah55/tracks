@@ -4,7 +4,7 @@
 Object to provide analysis of CycleData.
 """
 
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+from qtpy.QtCore import Signal, Slot
 from . import CycleData
 import numpy as np
 

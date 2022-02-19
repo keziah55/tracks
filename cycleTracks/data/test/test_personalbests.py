@@ -1,9 +1,8 @@
 from cycleTracks.data import PersonalBests
 from cycleTracks.data.personalbests import NewPBDialog
-from cycleTracks.util import parseDate, parseDuration, hourMinSecToFloat
+from cycleTracks.util import parseDate, parseDuration
 from cycleTracks.test import MockParent
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDialog
-import numpy as np
+from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -36,19 +35,7 @@ class TestPersonalBests:
     @pytest.fixture
     def setup(self, qtbot):
         # make CycleData object with known data
-        dates = [f"2021-04-{i:02}" for i in range(26, 31)]
-        dates += [f"2021-05-{i:02}" for i in range(1, 6)] 
-        dct = {'Date':dates,
-               'Time':["00:53:27", "00:43:04", "00:42:40", "00:43:09", "00:42:28",
-                       "00:43:19", "00:42:21", "00:43:04", "00:42:11", "00:43:25"],
-               'Distance (km)':[30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 
-                                25.21, 25.08, 25.12],
-               'Gear':[6]*10}
-        dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
-        times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
-        dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
-        
-        self.parent = MockParent(dct=dct)
+        self.parent = MockParent(random=False)
         self.pb = PersonalBests(self.parent)
         self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
         self.widget = QWidget()
@@ -77,14 +64,14 @@ class TestPersonalBests:
         
         assert self.pb.bestMonth.text() == expected_label
         
-    def test_new_data_different_column(self, setup, qtbot, monkeypatch):
+    def test_new_data_different_column(self, setup, qtbot, monkeypatch, variables):
         # test dialog message when table is sorted by Time
         new = {'Date':[parseDate("7 April 2021", pd_timestamp=True)], 
                'Time':[parseDuration("01:05:03")], 
                'Distance (km)':[25.08], 'Calories':[375.1], 'Gear':[6]}
         
         self.pb.bestSessions.horizontalHeader().sectionClicked.emit(1)
-        qtbot.wait(10)
+        qtbot.wait(variables.shortWait)
         
         # don't need dialog to pop up
         monkeypatch.setattr(NewPBDialog, "exec_", lambda *args: QDialog.Accepted)
@@ -114,7 +101,7 @@ class TestPersonalBests:
         date1 = self.pb.bestSessions.item(1, 0).text()
         assert date1 == "04 May 2021"
         
-    def test_sort_column(self, setup, qtbot):
+    def test_sort_column(self, setup, qtbot, variables):
         # dict of sortable columns and list of expected dates
         columns = {'Time':['26 Apr 2021', '05 May 2021', '01 May 2021', '29 Apr 2021', '03 May 2021'], 
                    'Distance (km)':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021'], 
@@ -125,7 +112,7 @@ class TestPersonalBests:
             idx = self.pb.bestSessions.headerLabels.index(column)
             
             self.pb.bestSessions.horizontalHeader().sectionClicked.emit(idx)
-            qtbot.wait(10)
+            qtbot.wait(variables.shortWait)
             items = [self.pb.bestSessions.item(idx, 0).text() for idx in range(self.pb.bestSessions.rowCount())]
             assert items == expected
             

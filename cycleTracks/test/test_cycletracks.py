@@ -1,8 +1,10 @@
 from cycleTracks.cycletracks import CycleTracks
-from PyQt5.QtCore import Qt, QPoint
+from cycleTracks.util import parseDuration
+from qtpy.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
 import tempfile, os, datetime
+import pandas as pd
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -11,15 +13,46 @@ class TracksSetupTeardown:
     
     @pytest.fixture
     def setup(self, qtbot, monkeypatch, patchSettings):
-        
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.size = 100
-        makeDataFrame(self.size, path=self.tmpfile.name)
+        makeDataFrame(random=True, size=self.size, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
             return self.tmpfile.name
         monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
         
+        self._setup()
+        qtbot.addWidget(self.app)
+        
+        yield
+        self.extraTeardown()
+        self.app.close()
+        
+        # can't do this with a fixture in conf file, as it's called when this method is called
+        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+        self._removeTmpConfig()
+        
+    @pytest.fixture
+    def setupKnownData(self, qtbot, monkeypatch, patchSettings):
+        self.tmpfile = tempfile.NamedTemporaryFile()
+        makeDataFrame(random=False, path=self.tmpfile.name)
+        
+        def mockGetFile(*args, **kwargs):
+            return self.tmpfile.name
+        monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
+        
+        self._setup()
+        qtbot.addWidget(self.app)
+        
+        yield
+        self.extraTeardown()
+        self.app.close()
+        
+        # can't do this with a fixture in conf file, as it's called when this method is called
+        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+        self._removeTmpConfig()
+    
+    def _setup(self):
         self.app = CycleTracks()
         self.addData = self.app.addData
         self.viewer = self.app.viewer
@@ -27,21 +60,14 @@ class TracksSetupTeardown:
         self.plotWidget = self.plot.plotWidget
         self.pbTable = self.app.pb.bestSessions
         self.prefDialog = self.app.prefDialog
+        self.data = self.app.data
         
-        qtbot.addWidget(self.app)
         self.app.showMaximized()
         self.app.prefDialog.ok() # see https://github.com/keziah55/cycleTracks/commit/9e0c05f7d19b33a61a52a959adcdc7667cd7b924
         
         self.extraSetup()
-        
-    @pytest.fixture
-    def teardown(self):
-        yield
-        self.extraTeardown()
-        self.app.close()
-        
-        # can't do this with a fixture in conf file, as it's called when this method is called
-        # presumably, qt has a lock on the file, so wouldn't be deleted in that case
+    
+    def _removeTmpConfig(self):
         appName = "Cycle Tracks"
         orgName = "Tracks"
         d = os.path.dirname(__file__)
@@ -57,7 +83,7 @@ class TracksSetupTeardown:
     
 class TestTracks(TracksSetupTeardown):
     
-    def test_add_data(self, setup, qtbot, teardown):
+    def test_add_data(self, setup, qtbot):
         
         numTopLevelItems = len(self.viewer.topLevelItems)
         pts = self.plotWidget.dataItem.scatter.data
@@ -81,7 +107,7 @@ class TestTracks(TracksSetupTeardown):
         assert len(self.plotWidget.dataItem.scatter.data) == len(pts) + 1
         
 
-    def test_plot_clicked(self, setup, qtbot, teardown):
+    def test_plot_clicked(self, setup, qtbot, variables):
         # test that clicking on the plot highlights the nearest plot in the viewer
         
         self.plotWidget.setXAxisRange(None) # ensure all points visible in plotting area
@@ -106,10 +132,10 @@ class TestTracks(TracksSetupTeardown):
             def scenePos(self):
                 return self.sp
             
-        qtbot.wait(100)
+        qtbot.wait(variables.wait)
         with qtbot.waitSignal(self.plotWidget.currentPointChanged):
-            qtbot.mouseMove(self.plot, pos=pos, delay=50)
-        qtbot.wait(100)
+            qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
+        qtbot.wait(variables.wait)
             
         event = MockMouseEvent(scenePos)
         signals = [(self.plotWidget.pointSelected, 'pointSelected'),
@@ -118,7 +144,7 @@ class TestTracks(TracksSetupTeardown):
         with qtbot.waitSignals(signals):
             self.plotWidget.plotClicked(event)
 
-    def test_viewer_clicked(self, setup, qtbot, teardown):
+    def test_viewer_clicked(self, setup, qtbot):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
         item = self.viewer.topLevelItems[0]
         with qtbot.waitSignal(self.viewer.itemExpanded):
@@ -131,7 +157,7 @@ class TestTracks(TracksSetupTeardown):
         assert self.plotWidget.currentPoint['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
     
-    def test_pb_table_clicked(self, setup, qtbot, teardown):
+    def test_pb_table_clicked(self, setup, qtbot):
         # similar to above, but for pb table
         item = self.pbTable.item(1, 0)
         signals = [(self.app.pb.itemSelected, 'pbTable.itemSelected'), 
@@ -143,7 +169,35 @@ class TestTracks(TracksSetupTeardown):
         assert self.plotWidget.currentPoint['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
         
-    @pytest.mark.skip("test not yet written")
-    def test_plot_update(self, setup, qtbot, teardown):
+    def test_plot_update(self, setup, qtbot):
         # test that, when new data added, the plot auto-rescales so the new points are visible
-        pass
+        
+        self.plot.setXAxisRange(months=6)
+        
+        lastDate = self.data['Date'][-1]
+        year = lastDate.year
+        month = lastDate.month
+        day = 28 # latest date that appears in all months
+        if month == 12:
+            month = 0
+            year += 1
+        newDate = pd.Timestamp(year=year, month=month+1, day=day)
+        
+        newData = {'Date':[newDate],
+                   'Time':[parseDuration("40:20")],
+                   'Distance (km)':[25.08],
+                   'Calories':[375.1],
+                   'Gear':[6]}
+        
+        oldXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
+        
+        with qtbot.waitSignal(self.data.dataChanged):
+            self.data.append(newData)
+            
+        newXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
+        
+        assert oldXRange != newXRange
+        oldMonth = datetime.datetime.fromtimestamp(oldXRange).month
+        if oldMonth == 12:
+            oldMonth = 0
+        assert oldMonth + 1 == datetime.datetime.fromtimestamp(newXRange).month

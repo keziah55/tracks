@@ -1,5 +1,5 @@
 from cycleTracks.data import AddCycleData
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 from datetime import date
 import random
 import pandas as pd
@@ -94,7 +94,7 @@ class TestAddCycleData:
                 qtbot.mouseClick(self.rmvLineButton, Qt.LeftButton)
         
     
-    def test_invalid(self, setup, qtbot):
+    def test_invalid(self, setup, qtbot, variables):
 
         valid = ["30 Jan 2021", "30:04", 16.05, 240.1, 6]
         invalid = ["blah", "not a time", "a string", "", 5.5]
@@ -104,7 +104,7 @@ class TestAddCycleData:
             for idx in range(self.table.columnCount()):
                 text = str(valid[idx])
                 self.table.item(0, idx).setText(text)
-            qtbot.wait(10)
+            qtbot.wait(variables.shortWait)
             assert self.okButton.isEnabled()
             
             # set 'col' to invalid value

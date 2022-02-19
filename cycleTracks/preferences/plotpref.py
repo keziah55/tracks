@@ -3,11 +3,11 @@ Plot preferences
 """
 
 from datetime import date
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
+from qtpy.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
                              QVBoxLayout, QWidget, QLineEdit, QPushButton,
                              QColorDialog, QGridLayout, QLabel, QSizePolicy)
-from PyQt5.QtCore import QTimer, pyqtSlot as Slot, pyqtSignal as Signal, QSize
-from PyQt5.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
+from qtpy.QtCore import QTimer, Slot, Signal, QSize
+from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupWidget
 from customQObjects.core import Settings

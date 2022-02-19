@@ -5,10 +5,10 @@ User input will be validated live; if data is invalid, the 'Ok' button cannot
 be clicked.
 """
 
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QWidget, QPushButton, 
-                             QVBoxLayout, QHBoxLayout)
-from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+from qtpy.QtWidgets import QTableWidgetItem, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import Signal, Slot
+from qtpy.QtGui import QKeySequence
 
 from .adddatatablemixin import AddDataTableMixin
 from cycleTracks.util import dayMonthYearToFloat, parseDate
@@ -49,10 +49,6 @@ class AddCycleData(AddDataTableMixin, QWidget):
         
         self.widthSpace = widthSpace
         
-        # self.table = QTableWidget(0, len(self.headerLabels))
-        # self.table.setHorizontalHeaderLabels(self.headerLabels)
-        # self.table.verticalHeader().setVisible(False)
-        
         self._clicked = []
         self._makeEmptyRow()
         
@@ -62,7 +58,10 @@ class AddCycleData(AddDataTableMixin, QWidget):
         self.rmvLineButton = QPushButton("Remove line")
         self.rmvLineButton.setToolTip("Remove currently selected line")
         self.okButton = QPushButton("Ok")
-        self.okButton.setShortcut(Qt.Key_Enter)
+        try:
+            self.okButton.setShortcut(Qt.Key_Enter)
+        except:
+            self.okButton.setShortcut(QKeySequence(Qt.Key_Enter))
         
         self.addLineButton.clicked.connect(self._makeEmptyRow)
         self.rmvLineButton.clicked.connect(self._removeSelectedRow)

@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QTableWidget
-from PyQt5.QtCore import Qt, QTimer, pyqtSlot as Slot, pyqtSignal as Signal
-from PyQt5.QtGui import QBrush, QColor
+from qtpy.QtWidgets import QTableWidget
+from qtpy.QtCore import Qt, QTimer, Slot, Signal
+from qtpy.QtGui import QBrush, QColor
 from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 
                               parseDuration)
 from functools import partial

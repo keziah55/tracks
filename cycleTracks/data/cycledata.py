@@ -1,8 +1,8 @@
 """
 Object providing convenient access to the contents of a DataFrame of cycling data.
 """
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+from qtpy.QtCore import QObject
+from qtpy.QtCore import Signal, Slot
 from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
                               floatToHourMinSec)
 from functools import partial
@@ -48,12 +48,12 @@ class CycleData(QObject):
         
         sigFigs = {'Distance (km)':2, 
                    'Calories':1,
-                   'Avg. speed (km/h)':2,
-                   'Gear':0}
+                   'Avg. speed (km/h)':2}
         self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sigFigs.items()}
         self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
         self.fmtFuncs['Time'] = lambda t: t
         self.fmtFuncs['Time (hours)'] = floatToHourMinSec
+        self.fmtFuncs['Gear'] = lambda value: self._formatFloat(np.around(value), 0)
         
     @staticmethod
     def _formatFloat(value, digits=2):
@@ -146,7 +146,7 @@ class CycleData(QObject):
         dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
-        tmpDf = self.df.append(tmpDf, ignore_index=True)
+        tmpDf = pd.concat([self.df, tmpDf], ignore_index=True)
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
         self.df.sort_values('Date', inplace=True)

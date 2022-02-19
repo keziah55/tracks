@@ -166,7 +166,7 @@ def hourMinSecToFloat(value):
     """ Convert a string of hh:mm:ss to a float. Useful if you want to
         compare or sort many values.
         
-        Inverse of `hourMinSecToFloat`.
+        Inverse of `floatToHourMinSec`.
     """
     hours, mins, secs = value.split(':')
     value = float(hours) + (float(mins)/60) + (float(secs)/3600)

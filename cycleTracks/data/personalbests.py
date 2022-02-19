@@ -1,15 +1,14 @@
 """
-QTableWidget showing the top sessions.
+Single `PersonalBests` object to manage the two widgets that display personal bests.
 """
 
-from PyQt5.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
+from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
                              QDialogButtonBox, QVBoxLayout, QAbstractItemView)
-from PyQt5.QtCore import Qt, QObject, QSize, pyqtSlot as Slot, pyqtSignal as Signal
-from PyQt5.QtGui import QFontMetrics
+from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
+from qtpy.QtGui import QFontMetrics
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 import re
-import numpy as np
 
 
 class PersonalBests(QObject):
@@ -102,15 +101,10 @@ class PBMonthLabel(QLabel):
     @Slot()
     def newData(self):
         dfs = self.data.splitMonths(returnType="CycleData")
-        summaryArgs = [('Time (hours)', ),
-                       ('Distance (km)', ),
-                       ('Avg. speed (km/h)', max),
-                       ('Calories', ),
-                       ('Gear', lambda v: np.around(np.mean(v)))]
         
-        totals = [(monthYear, [monthData.summaryString(*args) for args in summaryArgs])
+        totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
                   for monthYear, monthData in dfs]
-        idx = self._matchColumn(self.column, [item[0] for item in summaryArgs])
+        idx = self._matchColumn(self.column, [item[0] for item in self.mainWindow.summary.summaryArgs])
         
         try:
             totals.sort(key=lambda tup: float(tup[1][idx]), reverse=True)

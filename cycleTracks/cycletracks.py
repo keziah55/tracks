@@ -6,15 +6,15 @@ Main window for cycleTracks.
 
 import os
 from datetime import datetime
-from PyQt5.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
-                             QMessageBox)
-from PyQt5.QtCore import Qt, QFileSystemWatcher, QTimer, pyqtSlot as Slot
-from PyQt5.QtGui import QIcon
+from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
+                             QMessageBox, QLabel)
+from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
+from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from .plot import CyclePlotWidget
 from .data import (CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, 
-                   PersonalBests)
+                   PersonalBests, Summary)
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
@@ -25,7 +25,11 @@ class CycleTracks(QMainWindow):
         super().__init__()
         
         self.settings = Settings()
-        self.statusBar()
+        
+        self._saveLabel = QLabel()
+        self._summaryLabel = QLabel()
+        self.statusBar().addWidget(self._saveLabel)
+        self.statusBar().addWidget(self._summaryLabel)
         
         self.file = self.getFile()
         self.sep = ','
@@ -39,6 +43,8 @@ class CycleTracks(QMainWindow):
         self.data = CycleData(df)
         self.save()
         self.dataAnalysis = CycleDataAnalysis(self.data)
+        
+        self.summary = Summary()
 
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
@@ -53,6 +59,8 @@ class CycleTracks(QMainWindow):
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
+        self.summary.valueChanged.connect(self.viewer.newData)
+        self.summary.valueChanged.connect(self.pb.newData)
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self.viewer.newData)
         self.data.dataChanged.connect(self.plot.newData)
@@ -60,6 +68,7 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self.save)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
+        self.viewer.selectedSummary.connect(self._summaryLabel.setText)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
@@ -118,7 +127,7 @@ class CycleTracks(QMainWindow):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
         self.backup()
         saveTime = datetime.now().strftime("%H:%M:%S")
-        self.statusBar().showMessage(f"Last saved at {saveTime}")
+        self._saveLabel.setText(f"Last saved at {saveTime}")
         
     @Slot()
     def backup(self):

@@ -2,16 +2,16 @@
 QTreeWidget showing data from CycleData.
 """
 
-from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
+from qtpy.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
                              QAbstractItemView, QMessageBox, QMenu, QAction)
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
-from PyQt5.QtGui import QFontMetrics, QKeySequence
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import Signal, Slot
+from qtpy.QtGui import QFontMetrics, QKeySequence
 import re
-import numpy as np
 from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
+from . import CycleData
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
@@ -84,16 +84,28 @@ class CycleDataViewer(QTreeWidget):
     """
     
     itemSelected = Signal(object)
-    """ itemSelected(CycleTreeWidgetItem `item`)
+    """ **signal** itemSelected(CycleTreeWidgetItem `item`)
     
         Emitted when an item in the tree is selected, either by clicking
         on it or by navigating with the up or down keys.
     """
     
     viewerSorted = Signal()
-    """ viewerSorted()
+    """ **signal** viewerSorted()
     
         Emitted after the CycleDataViewer items have been sorted.
+    """
+    
+    selectedSummary = Signal(str)
+    """ **signal** selectedSummary(str `summaryString`)
+    
+        Emitted with a string summarising selected items.
+    """
+    
+    viewerUpdated = Signal()
+    """ **signal** viewerUpdated() 
+    
+        Emitted when `newData` has finished.
     """
     
     def __init__(self, parent, widthSpace=10):
@@ -128,6 +140,8 @@ class CycleDataViewer(QTreeWidget):
         
         self.currentItemChanged.connect(self._itemChanged)
         
+        self.itemSelectionChanged.connect(self._summariseSelected)
+        
         self.sortTree(0)
         
         msg = "Browse all sessions, grouped by month. Click on the headers \n"
@@ -137,7 +151,7 @@ class CycleDataViewer(QTreeWidget):
         
         self.editAction = QAction("Edit")
         self.editAction.setShortcut(QKeySequence("Ctrl+E"))
-        self.editAction.triggered.connect(self._editItem)
+        self.editAction.triggered.connect(self._editItems)
         self.addAction(self.editAction)
         
         self.mergeAction = QAction("Merge")
@@ -154,16 +168,16 @@ class CycleDataViewer(QTreeWidget):
         menu.addAction(self.mergeAction)
         menu.exec_(self.mapToGlobal(pos))
         
-    def _editItem(self):
+    def _editItems(self):
         items = [item for item in self.selectedItems() if item not in self.topLevelItems]
         if items:
-            dialog = EditItemDialog(items, self.headerLabels)
-            result = dialog.exec_()
+            self.dialog = EditItemDialog(items, self.headerLabels)
+            result = self.dialog.exec_()
             if result == EditItemDialog.Accepted:
-                values, removed = dialog.getValues()
+                values, remove = self.dialog.getValues()
                 self.data.update(values)
-                if removed:
-                    self.data.removeRows(index=removed)
+                if remove:
+                    self.data.removeRows(index=remove)
                 
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
@@ -191,6 +205,8 @@ class CycleDataViewer(QTreeWidget):
         for item in self.topLevelItems:
             if item.text(0) in expanded:
                 self.expandItem(item)
+                
+        self.viewerUpdated.emit()
                 
     @Slot(int)
     def sortTree(self, idx):
@@ -228,12 +244,8 @@ class CycleDataViewer(QTreeWidget):
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            rootText = [monthYear, 
-                        data.summaryString('Time (hours)'), 
-                        data.summaryString('Distance (km)'),
-                        data.summaryString('Avg. speed (km/h)', func=max),
-                        data.summaryString('Calories'),
-                        data.summaryString('Gear', func=lambda v: np.around(np.mean(v)))]
+            summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
+            rootText = [monthYear] + summaries
             
             rootItem = CycleTreeWidgetItem(self)
             for idx, text in enumerate(rootText):
@@ -249,12 +261,10 @@ class CycleDataViewer(QTreeWidget):
                                            headerLabels=self.headerLabels,
                                            row=data.row(rowIdx, formatted=True))
                 dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
-                       'item':item}#, 
-                       # 'index':data.df.index[rowIdx]}
+                       'item':item}
                 self.items.append(dct)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
-        
     
     @Slot()
     def combineRows(self):
@@ -289,3 +299,24 @@ class CycleDataViewer(QTreeWidget):
         for item in self.items:
             if item['item'] == currentItem:
                 self.itemSelected.emit(item['datetime'])
+
+    @Slot()
+    def _summariseSelected(self):
+        idx = [item.index for item in self.selectedItems() if item not in self.topLevelItems]
+        if len(idx) <= 1:
+            s = ""
+        else:
+            df = self.data.df.loc[idx]
+            data = CycleData(df)
+            
+            summary = {args[0]: data.summaryString(*args) for args in self.parent.summary.summaryArgs}
+            
+            s = f"{len(idx)} sessions selected: "
+            lst = []
+            lst.append(f"{summary['Time (hours)']}")
+            lst.append(f"{summary['Distance (km)']} km")
+            lst.append(f"{summary['Avg. speed (km/h)']} km/h")
+            lst.append(f"{summary['Calories']} cal")
+            s += "; ".join(lst)
+        
+        self.selectedSummary.emit(s)
