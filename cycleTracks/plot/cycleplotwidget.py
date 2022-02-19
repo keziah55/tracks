@@ -195,6 +195,8 @@ class Plot(PlotWidget):
         self.plotItem.vb.sigResized.connect(self.updateViews)
         
         self.currentPoint = {}
+        
+        self._regenerateCachedPBs = {key:False for key in self.plottable}
         self.hgltPBs = {key:[] for key in self.plottable}
         
         self.viewMonths = None
@@ -329,6 +331,7 @@ class Plot(PlotWidget):
         self.plotSeries(self.ySeries, mode='set')
         self.plotTotalDistance(mode='set')
         self.resetMonthRange()
+        self._regenerateCachedPBs = {key:True for key in self._regenerateCachedPBs}
         
     @property
     def ySeries(self):
@@ -484,41 +487,28 @@ class Plot(PlotWidget):
         
     @Slot(bool)
     def highlightPBs(self, show):
+        """ Highlight points that are, or were, PBs. """
         if show:
-            # TODO what object should be called here? The personal bests table?
-            # Needs to go through all data one by one and check if each point 
-            # would be in the top N for the current series
-            # Could do this here and simply get "pb/numSessions" from settings
-            # then go through data object column
-            # Might be handy to do it here, then we can also cache values so they 
-            # don't have to be re-calculated when the series is changed then changed back
-            
-            # get idx iterating through data, then to get a PB point:
-            # pt = self.dataItem.scatter.points()[idx]
-            
-            # TODO need to regenerate points if new data have been added
-            
-            if len(self.hgltPBs[self.ySeries]) == 0:
+            if self._regenerateCachedPBs[self.ySeries] or len(self.hgltPBs[self.ySeries]) == 0:
                 self.hgltPBs[self.ySeries] = self._getPBs()
+                self._regenerateCachedPBs[self.ySeries] = False
             for pt in self.hgltPBs[self.ySeries]:
                 colour = self.style['highlightPoint']['colour']
                 pen = mkPen(colour)
                 brush = mkBrush(colour)
                 pt.setPen(pen)
                 pt.setBrush(brush)
-            
         else:
-            # hide PBs
             for pt in self.hgltPBs[self.ySeries]:
                 pt.resetPen()
                 pt.resetBrush()
         
     def _getPBs(self):
+        """ Return array of points that represent(ed) a PB in the current series. """
+        # get number of top sessions and current y series
         col = self.data.quickNames[self.ySeries]
         num = self.parent.settings.value("pb/numSessions", cast=int)
-        
         series = self.data[col]
-        
         minBest = min(series[:num]) # minimum value to beat to be a PB
         idx = list(range(num)) # first num values will be PBs
         for n in range(num, len(series)):
