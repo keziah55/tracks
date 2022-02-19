@@ -59,11 +59,11 @@ class CyclePlotWidget(QWidget):
         self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
         self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
         
-        plotLayout = QHBoxLayout()
-        plotLayout.addWidget(self.plotWidget)
-        plotLayout.addWidget(self.plotToolBar)
+        self.plotLayout = QHBoxLayout()
+        self.plotLayout.addWidget(self.plotWidget)
+        self.plotLayout.addWidget(self.plotToolBar)
         self.layout = QVBoxLayout()
-        self.layout.addLayout(plotLayout)
+        self.layout.addLayout(self.plotLayout)
         self.layout.addWidget(self.plotLabel)
         
         self.setLayout(self.layout)
@@ -95,11 +95,11 @@ class CyclePlotWidget(QWidget):
     def setStyle(self, style, force=False):
         if force or self.plotWidget.style.name != style:
             self.plotState = self.plotWidget.getState()
-            self.layout.removeWidget(self.plotWidget)
+            self.plotLayout.removeWidget(self.plotWidget)
             self.plotWidget.deleteLater()
             self._makePlot(self.parent, style=style)
             self.plotWidget.setState(self.plotState)
-            self.layout.insertWidget(0, self.plotWidget)
+            self.plotLayout.insertWidget(0, self.plotWidget)
             
     def addCustomStyle(self, name, style, setStyle=True):
         self.plotWidget.style.addStyle(name, style)
