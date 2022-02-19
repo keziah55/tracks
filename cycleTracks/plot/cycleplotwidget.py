@@ -492,14 +492,16 @@ class Plot(PlotWidget):
             if self._regenerateCachedPBs[self.ySeries] or len(self.hgltPBs[self.ySeries]) == 0:
                 self.hgltPBs[self.ySeries] = self._getPBs()
                 self._regenerateCachedPBs[self.ySeries] = False
-            for pt in self.hgltPBs[self.ySeries]:
+            for idx in self.hgltPBs[self.ySeries]:
+                pt = self.dataItem.scatter.points()[idx]
                 colour = self.style['highlightPoint']['colour']
                 pen = mkPen(colour)
                 brush = mkBrush(colour)
                 pt.setPen(pen)
                 pt.setBrush(brush)
         else:
-            for pt in self.hgltPBs[self.ySeries]:
+            for idx in self.hgltPBs[self.ySeries]:
+                pt = self.dataItem.scatter.points()[idx]
                 pt.resetPen()
                 pt.resetBrush()
         
@@ -515,7 +517,7 @@ class Plot(PlotWidget):
             if series[n] >= minBest:
                 idx.append(n)
                 minBest = series[n]
-        return self.dataItem.scatter.points()[idx]
+        return idx
         
     @Slot(object)
     def mouseMoved(self, pos):
