@@ -4,8 +4,8 @@ Widget containing plot and labels.
 
 from datetime import datetime, timedelta
 import os
-from pyqtgraph import (PlotWidget, PlotItem, PlotCurveItem, mkPen, mkBrush, 
-                       InfiniteLine, setConfigOptions)
+from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
+                       setConfigOptions)
 import numpy as np
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
@@ -13,7 +13,8 @@ from customQObjects.core import Settings
 
 from .cycleplotlabel import CyclePlotLabel
 from .plottoolbar import PlotToolBar
-from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
+from .custompyqtgraph import (CustomPlotItem, CustomAxisItem, CustomDateAxisItem, 
+                              CustomViewBox)
 from cycleTracks.util import floatToHourMinSec
 
     
@@ -56,7 +57,7 @@ class CyclePlotWidget(QWidget):
         self.plotToolBar = PlotToolBar()
         self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
         self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
-        self.plotToolBar.highlightPBClicked.connect(self.plotWidget.highlightPBs)
+        self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
         
         plotLayout = QHBoxLayout()
         plotLayout.addWidget(self.plotWidget)
@@ -157,7 +158,7 @@ class Plot(PlotWidget):
         self.setStyle(style)
         
         self.dateAxis = CustomDateAxisItem()
-        self.plotItem = PlotItem(viewBox=CustomViewBox(), 
+        self.plotItem = CustomPlotItem(viewBox=CustomViewBox(), 
                          axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
         super().__init__(plotItem=self.plotItem)
         
@@ -170,9 +171,6 @@ class Plot(PlotWidget):
         self.plottable = ['speed', 'distance', 'time', 'calories']
         
         self._initRightAxis()
-        
-        self.setYSeries('speed')
-        self.plotTotalDistance()
         
         # axis labels
         self.plotItem.setLabel('bottom',text='Date')
@@ -196,10 +194,15 @@ class Plot(PlotWidget):
         
         self.currentPoint = {}
         
+        # all points that are/were PBs can be highlighted
+        self._showPBs = False
         self._regenerateCachedPBs = {key:False for key in self.plottable}
         self.hgltPBs = {key:[] for key in self.plottable}
         
         self.viewMonths = None
+        
+        self.setYSeries('speed')
+        self.plotTotalDistance()
         
     @property
     def data(self):
@@ -265,13 +268,15 @@ class Plot(PlotWidget):
         # enableAutoRange on both viewBoxes
         for vb in self.viewBoxes:
             vb.enableAutoRange()
-        self.plotItem.hideButtons()
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
         
     @Slot()
     def resetMonthRange(self):
         if self.viewMonths is not None:
             self.setXAxisRange(self.viewMonths)
-        self.plotItem.hideButtons()
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
     
     @Slot(float, float)
     def setPlotRange(self, x0, x1):
@@ -365,6 +370,9 @@ class Plot(PlotWidget):
         
         if self.viewBoxes[0].xRange is not None:
             self.setPlotRange(*self.viewBoxes[0].xRange)
+            
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
         
         
     def plotTotalDistance(self, mode='new'):
@@ -486,9 +494,10 @@ class Plot(PlotWidget):
         self.hgltPnt.setBrush(brush)
         
     @Slot(bool)
-    def highlightPBs(self, show):
+    def _highlightPBs(self, show):
         """ Highlight points that are, or were, PBs. """
         if show:
+            self._showPBs = True
             if self._regenerateCachedPBs[self.ySeries] or len(self.hgltPBs[self.ySeries]) == 0:
                 self.hgltPBs[self.ySeries] = self._getPBs()
                 self._regenerateCachedPBs[self.ySeries] = False
@@ -500,6 +509,7 @@ class Plot(PlotWidget):
                 pt.setPen(pen)
                 pt.setBrush(brush)
         else:
+            self._showPBs = False
             for idx in self.hgltPBs[self.ySeries]:
                 pt = self.dataItem.scatter.points()[idx]
                 pt.resetPen()
