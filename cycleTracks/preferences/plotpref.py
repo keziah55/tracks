@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox,
 from qtpy.QtCore import QTimer, Slot, Signal, QSize
 from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
-from customQObjects.widgets import GroupWidget
+from customQObjects.widgets import GroupWidget, ComboBox
 from customQObjects.core import Settings
 from cycleTracks import makeForegroundIcon 
 
@@ -292,7 +292,7 @@ class PlotPreferences(QWidget):
         self.customStyle.setEnabled(False)
         self.customStyle.saveStyle.connect(self._saveStyle)
         
-        self.plotStyleList = QComboBox()
+        self.plotStyleList = ComboBox()
         styles = [s.capitalize() for s in styles]
         self.plotStyleList.addItems(styles)
         self.plotStyleList.currentTextChanged.connect(self._updateCustomStyleWidget)
@@ -391,9 +391,10 @@ class PlotPreferences(QWidget):
         
     def _saveStyle(self, name, style, setStyle=False):
         self.mainWindow.plot.addCustomStyle(name, style, setStyle=setStyle)
-        idx = self.plotStyleList.count()-1
-        self.plotStyleList.insertItem(idx, name.capitalize())
-        self.plotStyleList.setCurrentIndex(idx)
+        if name not in self.plotStyleList.items:
+            idx = self.plotStyleList.count()-1
+            self.plotStyleList.insertItem(idx, name.capitalize())
+            self.plotStyleList.setCurrentIndex(idx)
         self.addPlotStyleButton.setChecked(False)
         self.editPlotStyleButton.setChecked(False)
         self.customStyle.setEnabled(False)
