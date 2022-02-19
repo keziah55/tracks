@@ -4,15 +4,16 @@ Widget containing plot and labels.
 
 from datetime import datetime, timedelta
 import os
-from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
-                       setConfigOptions)
+from pyqtgraph import (PlotWidget, PlotItem, PlotCurveItem, mkPen, mkBrush, 
+                       InfiniteLine, setConfigOptions)
 import numpy as np
 from qtpy.QtCore import Signal, Slot
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
 from customQObjects.core import Settings
 
 from .cycleplotlabel import CyclePlotLabel
-from .custompyqtgraph import CustomPlotItem, CustomAxisItem, CustomDateAxisItem, CustomViewBox
+from .plottoolbar import PlotToolBar
+from .custompyqtgraph import CustomAxisItem, CustomDateAxisItem, CustomViewBox
 from cycleTracks.util import floatToHourMinSec
 
     
@@ -22,8 +23,10 @@ class CyclePlotWidget(QWidget):
     
         Parameters
         ----------
-        data : CycleData
-            CycleData object.
+        parent : CycleTracks
+            CycleTracks main window object.
+        style : str, optional
+            Plot style to apply.
     """
     
     currentPointChanged = Signal(dict)
@@ -50,8 +53,16 @@ class CyclePlotWidget(QWidget):
         
         self._makePlot(parent, style=style)
         
+        self.plotToolBar = PlotToolBar()
+        self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
+        self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
+        self.plotToolBar.highlightPBClicked.connect(self.plotWidget.highlightPBs)
+        
+        plotLayout = QHBoxLayout()
+        plotLayout.addWidget(self.plotWidget)
+        plotLayout.addWidget(self.plotToolBar)
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.plotWidget)
+        self.layout.addLayout(plotLayout)
         self.layout.addWidget(self.plotLabel)
         
         self.setLayout(self.layout)
@@ -146,14 +157,9 @@ class Plot(PlotWidget):
         self.setStyle(style)
         
         self.dateAxis = CustomDateAxisItem()
-        self.plotItem = CustomPlotItem(viewBox=CustomViewBox(), 
+        self.plotItem = PlotItem(viewBox=CustomViewBox(), 
                          axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
         super().__init__(plotItem=self.plotItem)
-        
-        # disconnect autoBtn from its slot and connect to new slot that will
-        # auto scale both viewBoxes
-        self.plotItem.viewAllBtn.clicked.connect(self.viewAll)
-        self.plotItem.viewRangeBtn.clicked.connect(self.resetMonthRange)
         
         self.dateAxis.axisDoubleClicked.connect(self.setPlotRange)
         
@@ -475,6 +481,26 @@ class Plot(PlotWidget):
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
         self.hgltPnt.setBrush(brush)
+        
+    @Slot(bool)
+    def highlightPBs(self, show):
+        if show:
+            # TODO what object should be called here? The personal bests table?
+            # Needs to go through all data one by one and check if each point 
+            # would be in the top N for the current series
+            # Could do this here and simply get "pb/numSessions" from settings
+            # then go through data object column
+            # Might be handy to do it here, then we can also cache values so they 
+            # don't have to be re-calculated when the series is changed then changed back
+            
+            # get idx iterating through data, then to get a PB point:
+            # pt = self.dataItem.scatter.points()[idx]
+            
+            self.ySeries
+            pass
+        else:
+            # hide PBs
+            pass
         
     @Slot(object)
     def mouseMoved(self, pos):
