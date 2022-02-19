@@ -195,6 +195,7 @@ class Plot(PlotWidget):
         self.plotItem.vb.sigResized.connect(self.updateViews)
         
         self.currentPoint = {}
+        self.hgltPBs = {key:[] for key in self.plottable}
         
         self.viewMonths = None
         
@@ -466,7 +467,6 @@ class Plot(PlotWidget):
                 point = self.hgltPnt
             else:
                 return None
-        
         try:
             # if other points are already highlighted, remove highlighting
             self.hgltPnt.resetPen()
@@ -496,11 +496,36 @@ class Plot(PlotWidget):
             # get idx iterating through data, then to get a PB point:
             # pt = self.dataItem.scatter.points()[idx]
             
-            self.ySeries
-            pass
+            # TODO need to regenerate points if new data have been added
+            
+            if len(self.hgltPBs[self.ySeries]) == 0:
+                self.hgltPBs[self.ySeries] = self._getPBs()
+            for pt in self.hgltPBs[self.ySeries]:
+                colour = self.style['highlightPoint']['colour']
+                pen = mkPen(colour)
+                brush = mkBrush(colour)
+                pt.setPen(pen)
+                pt.setBrush(brush)
+            
         else:
             # hide PBs
-            pass
+            for pt in self.hgltPBs[self.ySeries]:
+                pt.resetPen()
+                pt.resetBrush()
+        
+    def _getPBs(self):
+        col = self.data.quickNames[self.ySeries]
+        num = self.parent.settings.value("pb/numSessions", cast=int)
+        
+        series = self.data[col]
+        
+        minBest = min(series[:num]) # minimum value to beat to be a PB
+        idx = list(range(num)) # first num values will be PBs
+        for n in range(num, len(series)):
+            if series[n] >= minBest:
+                idx.append(n)
+                minBest = series[n]
+        return self.dataItem.scatter.points()[idx]
         
     @Slot(object)
     def mouseMoved(self, pos):
