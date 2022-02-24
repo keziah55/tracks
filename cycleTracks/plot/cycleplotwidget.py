@@ -79,8 +79,8 @@ class CyclePlotWidget(QWidget):
         
         self.plotWidget.pointSelected.connect(self.pointSelected)
         
-    @Slot()
-    def newData(self):
+    @Slot(object)
+    def newData(self, idx=None):
         self.plotWidget.updatePlots()
         
     @Slot(object)

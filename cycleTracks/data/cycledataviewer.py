@@ -8,6 +8,8 @@ from qtpy.QtCore import QSize, Qt
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtGui import QFontMetrics, QKeySequence
 import re
+import calendar
+from dataclasses import dataclass
 from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
@@ -24,9 +26,10 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
         `idx` arg to `QTreeWidget.sortItems()` is ignored.
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, row=[], **kwargs):
         super().__init__(*args, **kwargs)
         self.sortColumn = 0
+        self.setRow(row)
     
     def __lt__(self, other):
         item0 = self.text(self.sortColumn)
@@ -52,20 +55,41 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     def sortColumn(self, value):
         self._sortColumn = value
         
-        
+    def setRow(self, row):
+        self.row = row
+        for idx, text in enumerate(row):
+            self.setText(idx, text)
+            self.setTextAlignment(idx, Qt.AlignCenter)
+            font = self.font(idx)
+            font.setBold(True)
+            self.setFont(idx, font)
+            
+    @property
+    def monthYear(self):
+        return self.row[0]
+            
 class IndexTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem that stores the index of the DataFrame row it represents. """
     
     def __init__(self, *args, index=None, headerLabels=[], row={}, **kwargs):
         super().__init__(*args, **kwargs)
         self.index = index
+        self.headerLabels = headerLabels
+        self.setRow(row)
         
-        for idx, col in enumerate(headerLabels):
+    def setRow(self, row):
+        self.row = row
+        for idx, col in enumerate(self.headerLabels):
             col = re.sub(r"\s", " ", col) # remove \n from avg speed
-            value = row[col]
+            value = self.row[col]
             self.setText(idx, value)
             self.setTextAlignment(idx, Qt.AlignCenter)
         
+@dataclass
+class TreeItem:
+    dateTime: object = None
+    topLevelItem: CycleTreeWidgetItem = None
+    treeWidgetItem: IndexTreeWidgetItem = None
 
 class CycleDataViewer(QTreeWidget):
     """ QTreeWidget showing cycling data, split by month.
@@ -194,12 +218,74 @@ class CycleDataViewer(QTreeWidget):
         items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
         return items
     
-    @Slot()
-    def newData(self):
+    @property 
+    def topLevelItemsDict(self):
+        return {item.monthYear: item for item in self.topLevelItems}
+    
+    @Slot(object)
+    def newData(self, indices=None):
+        """ Add or update items. 
+        
+            If `indices` is None, the whole tree will be cleared and remade.
+            If a list or Pandas Index is passed, the corresponding items will be
+            changed and top level items updated as necessary.
+        """
+        if indices is None:
+            # clear and remake tree
+            self._makeTree()
+            return 
+        
+        indices = list(indices) # cast to list so updated items can be removed
+        
+        # update changed items
+        changed = []
+        for item in self.items:
+            if (idx := item.treeWidgetItem.index) in indices:
+                # if index is already in tree, update that row and remove from indices list
+                item.treeWidgetItem.setRow(self.data.row(idx, formatted=True))
+                indices.remove(idx)
+                # store month and year of changed items, so top level items can be 
+                # updated where necessary
+                date = self.data.df.iloc[idx]['Date']
+                if (monthYear := (date.month, date.year)) not in changed:
+                    changed.append(monthYear)
+        
+        # update top level items of changed months
+        for month, year in changed:
+            data = self.data.getMonth(month, year, returnType="CycleData")
+            summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
+            monthYear = f"{calendar.month_name[date.month]} {date.year}"
+            rootText = [monthYear] + summaries
+            rootItem = self.topLevelItemsDict[monthYear]
+            rootItem.setRow(rootText)
+        
+        # for remaining indices add new rows to tree
+        for idx in indices:
+            date = self.data.df.iloc[idx]['Date']
+            monthYear = f"{calendar.month_name[date.month]} {date.year}"
+            if monthYear not in self.topLevelItemsDict:
+                data = self.data.getMonth(date.month, date.year, returnType="CycleData")
+                summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
+                rootText = [monthYear] + summaries
+                rootItem = CycleTreeWidgetItem(self, row=rootText)
+            else:
+                rootItem = self.topLevelItemsDict[monthYear]
+                
+            item = IndexTreeWidgetItem(rootItem, index=idx, 
+                                       headerLabels=self.headerLabels,
+                                       row=self.data.row(idx, formatted=True))
+            itemData = TreeItem(self.data['Date'][idx], rootItem, item)
+            self.items.append(itemData)
+            
+        self.viewerUpdated.emit()
+        
+    def _makeTree(self):
+        """ Clear and remake tree, preserving which items are expanded. """
         expanded = []
         for item in self.topLevelItems:
             if item.isExpanded():
                 expanded.append(item.text(0))
+                
         self.clear()
         self.makeTree()
         for item in self.topLevelItems:
@@ -246,23 +332,15 @@ class CycleDataViewer(QTreeWidget):
             # and calories (in bold)
             summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
             rootText = [monthYear] + summaries
-            
-            rootItem = CycleTreeWidgetItem(self)
-            for idx, text in enumerate(rootText):
-                rootItem.setText(idx, text)
-                rootItem.setTextAlignment(idx, Qt.AlignCenter)
-                font = rootItem.font(idx)
-                font.setBold(True)
-                rootItem.setFont(idx, font)
+            rootItem = CycleTreeWidgetItem(self, row=rootText)
                 
             # make rows of data for tree
             for rowIdx in reversed(range(len(data))):
                 item = IndexTreeWidgetItem(rootItem, index=data.df.index[rowIdx], 
                                            headerLabels=self.headerLabels,
                                            row=data.row(rowIdx, formatted=True))
-                dct = {'datetime':data['Date'][rowIdx], 'topLevelItem':rootItem,
-                       'item':item}
-                self.items.append(dct)
+                itemData = TreeItem(data['Date'][rowIdx], rootItem, item)
+                self.items.append(itemData)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
     
@@ -287,18 +365,17 @@ class CycleDataViewer(QTreeWidget):
         else:
             self.data.combineRows(dates[0])
             
-            
     @Slot(object)
     def highlightItem(self,  date):
         for item in self.items:
-            if item['datetime'] == date:
-                self.setCurrentItem(item['item'])
+            if item.dateTime == date:
+                self.setCurrentItem(item.item)
                 
     @Slot(QTreeWidgetItem, QTreeWidgetItem)
     def _itemChanged(self, currentItem, previousItem):
         for item in self.items:
-            if item['item'] == currentItem:
-                self.itemSelected.emit(item['datetime'])
+            if item.treeWidgetItem == currentItem:
+                self.itemSelected.emit(item.dateTime)
 
     @Slot()
     def _summariseSelected(self):
