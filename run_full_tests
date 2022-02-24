@@ -48,6 +48,9 @@ done
 
 testDataDir="cycleTracks/test/test_data"
 if [ -d $testDataDir ]; then
+    echo "moving test_data to results:"
+    echo $testDataDir
+    echo $resultsDir
     mv "$testDataDir" "$resultsDir"
 fi
 

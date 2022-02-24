@@ -369,7 +369,7 @@ class CycleDataViewer(QTreeWidget):
     def highlightItem(self,  date):
         for item in self.items:
             if item.dateTime == date:
-                self.setCurrentItem(item.item)
+                self.setCurrentItem(item.treeWidgetItem)
                 
     @Slot(QTreeWidgetItem, QTreeWidgetItem)
     def _itemChanged(self, currentItem, previousItem):
