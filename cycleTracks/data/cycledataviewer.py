@@ -236,7 +236,7 @@ class CycleDataViewer(QTreeWidget):
             return 
         
         indices = list(indices) # cast to list so updated items can be removed
-        
+
         # update changed items
         changed = []
         for item in self.items:
@@ -277,6 +277,8 @@ class CycleDataViewer(QTreeWidget):
             itemData = TreeItem(self.data['Date'][idx], rootItem, item)
             self.items.append(itemData)
             
+        self.sortTree(self.sortColumn, switchOrder=False)
+            
         self.viewerUpdated.emit()
         
     def _makeTree(self):
@@ -295,11 +297,16 @@ class CycleDataViewer(QTreeWidget):
         self.viewerUpdated.emit()
                 
     @Slot(int)
-    def sortTree(self, idx):
-        """ Sort the tree based on column `idx`. """
+    def sortTree(self, idx, switchOrder=True):
+        """ Sort the tree based on column `idx`. 
+        
+            If `idx` is the current `sortColumn` and `switchOrder` is True,
+            the sort order will be reversed. To re-apply the current sort, 
+            pass switchOrder=False.
+        """
         
         # switch sort order if clicked column is already selected
-        if idx == self.sortColumn:
+        if idx == self.sortColumn and switchOrder:
             self.sortDescending[idx] = not self.sortDescending[idx]
             
         order = Qt.DescendingOrder if self.sortDescending[idx] else Qt.AscendingOrder
