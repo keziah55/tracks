@@ -160,7 +160,7 @@ class CycleTracks(QMainWindow):
         
     @Slot()
     def _summaryValueChanged(self):
-        self.viewer.newData()
+        self.viewer.updateTopLevelItems()
         self.pb.newData()
         
     def createDockWidget(self, widget, area, title, key=None):

@@ -296,6 +296,17 @@ class CycleDataViewer(QTreeWidget):
                 
         self.viewerUpdated.emit()
                 
+    def updateTopLevelItems(self):
+        dfs = self.data.splitMonths(returnType="CycleData")
+        for monthYear, data in reversed(dfs):
+            # root item of tree: summary of month, with total time, distance
+            # and calories (in bold)
+            summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
+            rootText = [monthYear] + summaries
+            rootItem = self.topLevelItemsDict[monthYear]
+            rootItem.setRow(rootText)
+        self.viewerUpdated.emit()
+        
     @Slot(int)
     def sortTree(self, idx, switchOrder=True):
         """ Sort the tree based on column `idx`. 
