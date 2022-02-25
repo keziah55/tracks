@@ -287,6 +287,19 @@ class CycleData(QObject):
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
     
+    def getMonth(self, month, year, returnType='DataFrame'):
+        """ Return DataFrame or CycleData of data from the given month and year. """
+        ts0 = pd.Timestamp(day=1, month=month, year=year)
+        month += 1
+        if month > 12:
+            month %= 12
+            year += 1
+        ts1 = pd.Timestamp(day=1, month=month, year=year)
+        df = self.df[(self.df['Date'] >= ts0) & (self.df['Date'] < ts1)]
+        if returnType == "CycleData":
+            df = CycleData(df)
+        return df
+    
     def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
         """ Split `df` into months. 
         

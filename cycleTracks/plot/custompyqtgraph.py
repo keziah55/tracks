@@ -163,51 +163,13 @@ class CustomViewBox(ViewBox):
         
         
 class CustomPlotItem(PlotItem):
+    """ PlotItem without autoBtn """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        self.buttonSize = 24
-        self.buttonPad = 6
-        
-        self.viewAllBtn = ButtonItem(parentItem=self, pixmap=self._getPixmap("all"),
-                                     width=self.buttonSize)
-        self.viewRangeBtn = ButtonItem(parentItem=self, pixmap=self._getPixmap("range"),
-                                       width=self.buttonSize)
-        
-        self.buttons = [self.viewAllBtn, self.viewRangeBtn]
-        
-        self.viewAllBtn.setToolTip("View all data")
-        self.viewRangeBtn.setToolTip("Reset plot range")
-        
         self.autoBtn = None
-        
-    def close(self):
-        super().close()
-        for button in self.buttons:
-            button.setParent(None)
-            button = None
-            
-    def _getPixmap(self, mode):
-        foregroundColour = mkColor(getConfigOption('foreground'))
-        if mode == "all":
-            pixmap = makeForegroundIcon("view_all", foregroundColour, ext="png", returnType="pixmap")
-        elif mode == "range":
-            pixmap = makeForegroundIcon("view_range", foregroundColour, ext="png", returnType="pixmap")
-        return pixmap
-    
-    def setButtonPixmaps(self):
-        # set button pixmap to use plot's foreground colour
-        self.viewAllBtn.setPixmap(self._getPixmap("all"))
-        self.viewRangeBtn.setPixmap(self._getPixmap("range"))
             
     def resizeEvent(self, ev):
-        if not hasattr(self, 'buttons') or any([button is None for button in self.buttons]):
-            # closed down or being initialised
-            return
-        btnRect = self.mapRectFromItem(self.viewAllBtn, self.viewAllBtn.boundingRect())
-        y = self.size().height() - btnRect.height()
-        self.viewAllBtn.setPos(0, y)
-        self.viewRangeBtn.setPos(self.buttonSize + self.buttonPad, y)
+        return None
         
     def updateButtons(self):
         return None

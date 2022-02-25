@@ -44,8 +44,8 @@ class PersonalBests(QObject):
         self.bestMonth = PBMonthLabel(parent=self, mainWindow=parent, column=monthCriterion)
         self.bestSessions = PBTable(parent=self, mainWindow=parent, rows=numSessions)
         
-    @Slot()
-    def newData(self):
+    @Slot(object)
+    def newData(self, idx=None):
         bestSession = self.bestSessions.newData()
         bestMonth = self.bestMonth.newData()
         

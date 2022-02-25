@@ -8,11 +8,13 @@ from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine,
                        setConfigOptions)
 import numpy as np
 from qtpy.QtCore import Signal, Slot
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
 from customQObjects.core import Settings
 
 from .cycleplotlabel import CyclePlotLabel
-from .custompyqtgraph import CustomPlotItem, CustomAxisItem, CustomDateAxisItem, CustomViewBox
+from .plottoolbar import PlotToolBar
+from .custompyqtgraph import (CustomPlotItem, CustomAxisItem, CustomDateAxisItem, 
+                              CustomViewBox)
 from cycleTracks.util import floatToHourMinSec
 
     
@@ -22,8 +24,10 @@ class CyclePlotWidget(QWidget):
     
         Parameters
         ----------
-        data : CycleData
-            CycleData object.
+        parent : CycleTracks
+            CycleTracks main window object.
+        style : str, optional
+            Plot style to apply.
     """
     
     currentPointChanged = Signal(dict)
@@ -50,8 +54,16 @@ class CyclePlotWidget(QWidget):
         
         self._makePlot(parent, style=style)
         
+        self.plotToolBar = PlotToolBar()
+        self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
+        self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
+        self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
+        
+        self.plotLayout = QHBoxLayout()
+        self.plotLayout.addWidget(self.plotWidget)
+        self.plotLayout.addWidget(self.plotToolBar)
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.plotWidget)
+        self.layout.addLayout(self.plotLayout)
         self.layout.addWidget(self.plotLabel)
         
         self.setLayout(self.layout)
@@ -67,8 +79,8 @@ class CyclePlotWidget(QWidget):
         
         self.plotWidget.pointSelected.connect(self.pointSelected)
         
-    @Slot()
-    def newData(self):
+    @Slot(object)
+    def newData(self, idx=None):
         self.plotWidget.updatePlots()
         
     @Slot(object)
@@ -83,11 +95,11 @@ class CyclePlotWidget(QWidget):
     def setStyle(self, style, force=False):
         if force or self.plotWidget.style.name != style:
             self.plotState = self.plotWidget.getState()
-            self.layout.removeWidget(self.plotWidget)
+            self.plotLayout.removeWidget(self.plotWidget)
             self.plotWidget.deleteLater()
             self._makePlot(self.parent, style=style)
             self.plotWidget.setState(self.plotState)
-            self.layout.insertWidget(0, self.plotWidget)
+            self.plotLayout.insertWidget(0, self.plotWidget)
             
     def addCustomStyle(self, name, style, setStyle=True):
         self.plotWidget.style.addStyle(name, style)
@@ -150,11 +162,6 @@ class Plot(PlotWidget):
                          axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
         super().__init__(plotItem=self.plotItem)
         
-        # disconnect autoBtn from its slot and connect to new slot that will
-        # auto scale both viewBoxes
-        self.plotItem.viewAllBtn.clicked.connect(self.viewAll)
-        self.plotItem.viewRangeBtn.clicked.connect(self.resetMonthRange)
-        
         self.dateAxis.axisDoubleClicked.connect(self.setPlotRange)
         
         self.hgltPnt = None
@@ -164,9 +171,6 @@ class Plot(PlotWidget):
         self.plottable = ['speed', 'distance', 'time', 'calories']
         
         self._initRightAxis()
-        
-        self.setYSeries('speed')
-        self.plotTotalDistance()
         
         # axis labels
         self.plotItem.setLabel('bottom',text='Date')
@@ -190,7 +194,15 @@ class Plot(PlotWidget):
         
         self.currentPoint = {}
         
+        # all points that are/were PBs can be highlighted
+        self._showPBs = False
+        self._regenerateCachedPBs = {key:False for key in self.plottable}
+        self.hgltPBs = {key:[] for key in self.plottable}
+        
         self.viewMonths = None
+        
+        self.setYSeries('speed')
+        self.plotTotalDistance()
         
     @property
     def data(self):
@@ -256,13 +268,15 @@ class Plot(PlotWidget):
         # enableAutoRange on both viewBoxes
         for vb in self.viewBoxes:
             vb.enableAutoRange()
-        self.plotItem.hideButtons()
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
         
     @Slot()
     def resetMonthRange(self):
         if self.viewMonths is not None:
             self.setXAxisRange(self.viewMonths)
-        self.plotItem.hideButtons()
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
     
     @Slot(float, float)
     def setPlotRange(self, x0, x1):
@@ -322,6 +336,7 @@ class Plot(PlotWidget):
         self.plotSeries(self.ySeries, mode='set')
         self.plotTotalDistance(mode='set')
         self.resetMonthRange()
+        self._regenerateCachedPBs = {key:True for key in self._regenerateCachedPBs}
         
     @property
     def ySeries(self):
@@ -355,6 +370,9 @@ class Plot(PlotWidget):
         
         if self.viewBoxes[0].xRange is not None:
             self.setPlotRange(*self.viewBoxes[0].xRange)
+            
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
         
         
     def plotTotalDistance(self, mode='new'):
@@ -460,7 +478,6 @@ class Plot(PlotWidget):
                 point = self.hgltPnt
             else:
                 return None
-        
         try:
             # if other points are already highlighted, remove highlighting
             self.hgltPnt.resetPen()
@@ -475,6 +492,44 @@ class Plot(PlotWidget):
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
         self.hgltPnt.setBrush(brush)
+        
+    @Slot(bool)
+    def _highlightPBs(self, show):
+        """ Highlight points that are, or were, PBs. """
+        if show:
+            self._showPBs = True
+            if self._regenerateCachedPBs[self.ySeries] or len(self.hgltPBs[self.ySeries]) == 0:
+                self.hgltPBs[self.ySeries] = self._getPBs()
+                self._regenerateCachedPBs[self.ySeries] = False
+            for idx in self.hgltPBs[self.ySeries]:
+                pt = self.dataItem.scatter.points()[idx]
+                colour = self.style['inactivePoints']['colour']
+                pen = mkPen(colour)
+                brush = mkBrush(colour)
+                pt.setPen(pen)
+                pt.setBrush(brush)
+        else:
+            self._showPBs = False
+            for idx in self.hgltPBs[self.ySeries]:
+                pt = self.dataItem.scatter.points()[idx]
+                pt.resetPen()
+                pt.resetBrush()
+        
+    def _getPBs(self):
+        """ Return array of points that represent(ed) a PB in the current series. """
+        # get number of top sessions and current y series
+        col = self.data.quickNames[self.ySeries]
+        num = self.parent.settings.value("pb/numSessions", cast=int)
+        series = self.data[col]
+        minBest = min(series[:num]) # minimum value to beat to be a PB
+        idx = list(range(num)) # first num values will be PBs
+        for n in range(num, len(series)):
+            if series[n] >= minBest:
+                # idx.append(n)
+                minBest = series[n]
+            else:
+                idx.append(n)
+        return idx
         
     @Slot(object)
     def mouseMoved(self, pos):
@@ -531,7 +586,7 @@ class PlotStyle:
         self.settings = Settings(plotStyleFile, Settings.NativeFormat)
         
         self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
-                     'highlightPoint', 'foreground', 'background']
+                     'highlightPoint', 'inactivePoints', 'foreground', 'background']
         self.symbolKeys = ['speed', 'distance', 'time', 'calories']
         
         # make defaults

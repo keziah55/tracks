@@ -121,9 +121,7 @@ class TestPreferences(TracksSetupTeardown):
                 if text != expected:
                     d = os.path.dirname(os.path.realpath(__file__))
                     d = os.path.join(d, "test_data")
-                    if os.path.exists(d):
-                        shutil.rmtree(d)
-                    os.mkdir(d)
+                    os.makedirs(d, exist_ok=True)
                     df.to_csv(os.path.join(d, "test_num_pb_sessions_fail_sorted.csv"))
                     self.data.df.to_csv(os.path.join(d, "test_num_pb_sessions_fail_unsorted.csv"))
                     

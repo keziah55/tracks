@@ -59,13 +59,9 @@ class CycleTracks(QMainWindow):
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
-        self.summary.valueChanged.connect(self.viewer.newData)
-        self.summary.valueChanged.connect(self.pb.newData)
+        self.summary.valueChanged.connect(self._summaryValueChanged)
         self.addData.newData.connect(self.data.append)
-        self.data.dataChanged.connect(self.viewer.newData)
-        self.data.dataChanged.connect(self.plot.newData)
-        self.data.dataChanged.connect(self.pb.newData)
-        self.data.dataChanged.connect(self.save)
+        self.data.dataChanged.connect(self._dataChanged)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.viewer.selectedSummary.connect(self._summaryLabel.setText)
@@ -155,6 +151,18 @@ class CycleTracks(QMainWindow):
         self.backup()
         self.data.setDataFrame(df)
         
+    @Slot(object)
+    def _dataChanged(self, idx):
+        self.viewer.newData(idx)
+        self.plot.newData(idx)
+        self.pb.newData(idx)
+        self.save()
+        
+    @Slot()
+    def _summaryValueChanged(self):
+        self.viewer.updateTopLevelItems()
+        self.pb.newData()
+        
     def createDockWidget(self, widget, area, title, key=None):
         dock = QDockWidget()
         dock.setWidget(widget)
@@ -183,7 +191,6 @@ class CycleTracks(QMainWindow):
         self.settings.setValue("window/geometry", geometry)
         
     def createActions(self):
-        
         self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q",
                                statusTip="Exit the application", 
                                triggered=self.close)

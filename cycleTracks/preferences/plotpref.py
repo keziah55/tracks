@@ -72,6 +72,8 @@ class StyleDesigner(QWidget):
         for key in styleKeys:
             if key == "highlightPoint":
                 label = "Highlight point"
+            elif key == "inactivePoints":
+                label = "Inactive points"
             else:
                 label = key.capitalize()
             colourName = QLabel(label)
