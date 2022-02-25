@@ -52,12 +52,8 @@ class CyclePlotWidget(QWidget):
         self.plotLabel = None
         self.parent = parent
         
-        self._makePlot(parent, style=style)
-        
         self.plotToolBar = PlotToolBar()
-        self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
-        self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
-        self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
+        self._makePlot(parent, style=style)
         
         self.plotLayout = QHBoxLayout()
         self.plotLayout.addWidget(self.plotWidget)
@@ -76,8 +72,11 @@ class CyclePlotWidget(QWidget):
             self.plotLabel.setStyle(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
         self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
-        
         self.plotWidget.pointSelected.connect(self.pointSelected)
+        
+        self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
+        self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
+        self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
         
     @Slot(object)
     def newData(self, idx=None):

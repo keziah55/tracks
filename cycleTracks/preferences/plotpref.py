@@ -13,6 +13,8 @@ from customQObjects.widgets import GroupWidget, ComboBox
 from customQObjects.core import Settings
 from cycleTracks import makeForegroundIcon 
 
+from pprint import pprint
+
 class StyleDesigner(QWidget):
     
     saveStyle = Signal(str, dict)
@@ -67,7 +69,8 @@ class StyleDesigner(QWidget):
         
         listHeight = None
         
-        self.colours = {}
+        self._colourButtonWidgets = {}
+        self._symbolListWidgets = {}
         row = 0
         for key in styleKeys:
             if key == "highlightPoint":
@@ -78,15 +81,16 @@ class StyleDesigner(QWidget):
                 label = key.capitalize()
             colourName = QLabel(label)
             colourValue = ColourButton()
-            self.colours[key] = colourValue
+            self._colourButtonWidgets[key] = colourValue
             self.gridLayout.addWidget(colourName, row, 0)
             self.gridLayout.addWidget(colourValue, row, 1)
             if key in symbolKeys:
                 symbolList = self._createSymbolList()
+                self._symbolListWidgets[key] = symbolList
                 self.gridLayout.addWidget(symbolList, row, 2)
                 if listHeight is None:
                     listHeight = symbolList.sizeHint().height()
-            self.colours[key].clicked.connect(self.setColour)
+            self._colourButtonWidgets[key].clicked.connect(self.setColour)
             row += 1
             
         if listHeight is not None:
@@ -133,16 +137,43 @@ class StyleDesigner(QWidget):
     def setName(self, name):
         self.nameEdit.setText(name.lower())
         
-    def setStyle(self, style, name=None):
+    def setStyle(self, style, name=None, setAsPrevious=False):
+        """ Set colours and symbols from `style` dict and optionally style `name`. 
+        
+            If `setAsPrevious` is True, the given style (and name, if applicable)
+            will be saved as the internal 'last style' (used when discarding changes).
+            You may want to use this if you are setting the initial style by 
+            calling this method, rather than by passing the style to the constructor.
+        """
         for key, value in style.items():
-            widget = self.colours[key]
-            widget.setColour(value['colour'])
+            # two possible `style` dict strutures, due to my own stupidity
+            # easiest to support both here
+            # first get colour and/or symbol from dict item
+            c, s = None, None
+            if isinstance(value, dict):
+                c = value['colour']
+                s = value.get('symbol', None)
+            elif QColor.isValidColor(value):
+                c = value
+            elif value in self.symbols:
+                s = value
+                key = key.removesuffix("Symbol")
+            # apply colour and/or symbol value
+            if c is not None:
+                widget = self._colourButtonWidgets[key]
+                widget.setColour(c)
+            if s is not None:
+                widget = self._symbolListWidgets[key]
+                widget.setCurrentText(self.symbols[s].capitalize())
+                
         if name is not None:
             self.setName(name)
+        if setAsPrevious:
+            self._lastSavedName, self._lastSavedStyle = self.getStyle()
             
     def getStyle(self):
         style = {}
-        for row in range(1, self.gridLayout.rowCount()-1): # don't need first and last from layout
+        for row in range(self.gridLayout.rowCount()):
             key = self.gridLayout.itemAtPosition(row, 0).widget().text().lower()
             colour = self.gridLayout.itemAtPosition(row, 1).widget().colour
             
@@ -374,8 +405,9 @@ class PlotPreferences(QWidget):
         # does setCurrentText not emit currentTextChanged signal?
         self._enableDisableDeleteButton(plotStyle)
     
-        self.customStyle.setName(plotStyle)
-        self.customStyle.setStyle(self.mainWindow.plot.getStyle(plotStyle))
+        # self.customStyle.setName(plotStyle)
+        self.customStyle.setStyle(self.mainWindow.plot.getStyle(plotStyle), 
+                                  name=plotStyle, setAsPrevious=True)
         
         customRange = self.settings.value("customRange", False)
         rng = self.settings.value("range", "All")
@@ -391,9 +423,9 @@ class PlotPreferences(QWidget):
         
         self.settings.endGroup()
         
-    def _saveStyle(self, name, style, setStyle=False):
-        self.mainWindow.plot.addCustomStyle(name, style, setStyle=setStyle)
-        if name not in self.plotStyleList.items:
+    def _saveStyle(self, name, style, setStyle=True):
+        self.mainWindow.plot.addCustomStyle(name.lower(), style, setStyle=setStyle)
+        if name.capitalize() not in self.plotStyleList.items:
             idx = self.plotStyleList.count()-1
             self.plotStyleList.insertItem(idx, name.capitalize())
             self.plotStyleList.setCurrentIndex(idx)
