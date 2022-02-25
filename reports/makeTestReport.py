@@ -11,6 +11,7 @@ import re
 import pkg_resources
 import argparse
 import platform
+import subprocess
 
 class ReportWriter:
     """ Object to summarise pytest results in an html document.
@@ -193,6 +194,12 @@ class ReportWriter:
         if self.duration is not None:
             s += f"; Duration: {self.duration}"
         html += [ s, "</p>"]
+        
+        html += ["<h2>Git log</h2>"]
+        p = subprocess.run(["git", "log", "-1"], capture_output=True)
+        lines = [item for item in p.stdout.decode().split("\n") if item]
+        html += [f"<p>{line}</p>" for line in lines]
+        
         return html
     
     def _makeSummaryTable(self):
