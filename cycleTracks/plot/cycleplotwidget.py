@@ -193,6 +193,8 @@ class Plot(PlotWidget):
         
         self.currentPoint = {}
         
+        self._prevHgltPointColour = None
+        
         # all points that are/were PBs can be highlighted
         self._showPBs = False
         self._regenerateCachedPBs = {key:False for key in self.plottable}
@@ -477,17 +479,20 @@ class Plot(PlotWidget):
                 point = self.hgltPnt
             else:
                 return None
-        try:
-            # if other points are already highlighted, remove highlighting
-            self.hgltPnt.resetPen()
-            self.hgltPnt.resetBrush()
-        except (AttributeError, RuntimeError):
-            pass
         
+        # reset previous hgltPoint pen and brush
+        if self._prevHgltPointColour is not None:
+            pen = mkPen(self._prevHgltPointColour)
+            brush = mkBrush(self._prevHgltPointColour)
+            self.hgltPnt.setPen(pen)
+            self.hgltPnt.setBrush(brush)
+        # store current colour of new hgltPoint
+        self._prevHgltPointColour = point.pen().color().name()
+        
+        # set colour of new point
         colour = self.style['highlightPoint']['colour']
         pen = mkPen(colour)
         brush = mkBrush(colour)
-            
         self.hgltPnt = point
         self.hgltPnt.setPen(pen)
         self.hgltPnt.setBrush(brush)
