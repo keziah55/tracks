@@ -30,7 +30,7 @@ class PlotToolBar(QToolBar):
             action.setToolTip(tooltip)
         self.addSeparator()
         
-        icon = makeForegroundIcon(name, colour, ext="png")
+        icon = makeForegroundIcon("pb", colour, ext="png")
         action = self.addAction(icon, "")
         action.setToolTip("Highlight every point that was a PB")
         action.setCheckable(True)
