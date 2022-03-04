@@ -17,7 +17,6 @@ from .custompyqtgraph import (CustomPlotItem, CustomAxisItem, CustomDateAxisItem
                               CustomViewBox)
 from cycleTracks.util import floatToHourMinSec
 
-    
 class CyclePlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
         under the mouse.
@@ -508,6 +507,7 @@ class Plot(PlotWidget):
             for idx in self.hgltPBs[self.ySeries]:
                 pt = self.dataItem.scatter.points()[idx]
                 colour = self.style['inactivePoints']['colour']
+                # colour = self.style['highlightPoint']['colour']
                 pen = mkPen(colour)
                 brush = mkBrush(colour)
                 pt.setPen(pen)
@@ -529,7 +529,7 @@ class Plot(PlotWidget):
         idx = list(range(num)) # first num values will be PBs
         for n in range(num, len(series)):
             if series[n] >= minBest:
-                # idx.append(n)
+                idx.append(n)
                 minBest = series[n]
             else:
                 idx.append(n)
@@ -580,6 +580,14 @@ class Plot(PlotWidget):
     
 
 class PlotStyle:
+    """ Class to manage plot styles. 
+    
+        Does not store the style directly, but gets (and sets) from a 
+        Settings object, which manages the plotStyles.ini file.
+        
+        The default styles "dark" and "light" will be written to the file in 
+        the constructor, if they do not exist in the file.
+    """
     
     defaultStyles = ["dark", "light"]
     
