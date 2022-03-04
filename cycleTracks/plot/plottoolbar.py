@@ -1,4 +1,5 @@
-from qtpy.QtWidgets import QToolBar
+from qtpy.QtWidgets import QToolBar, QApplication
+from qtpy.QtGui import QPalette
 from qtpy.QtCore import Qt, Signal
 from cycleTracks import makeForegroundIcon
 
@@ -15,11 +16,9 @@ class PlotToolBar(QToolBar):
         
         self.setOrientation(Qt.Vertical)
         
-        # TODO colour we want here really depends on the overall style
-        # maybe add a user-override option in preferences?
-        # could just add it in the plot style menu, as it is part of the plot
-        # 'toolbar foreground'?
-        colour = "#ffffff"
+        # get foreground colour for buttons
+        palette = QApplication.style().standardPalette()
+        colour = palette.color(QPalette.WindowText)
         
         rangeButtons = {"view_all":("View all points", self.viewAllClicked), 
                         "view_range":("View custom range", self.viewRangeClicked)}
