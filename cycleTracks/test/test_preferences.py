@@ -101,7 +101,7 @@ class TestPreferences(TracksSetupTeardown):
         
         def sortKey(item):
             # round Avg Speed to two decimal places when sorting
-            if isinstance(item, float):
+            if item.dtype == float:
                 return np.around(item, decimals=2)
             else:
                 # if it's a Date (pd.Timestamp) return directly
