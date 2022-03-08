@@ -249,7 +249,7 @@ class CycleDataViewer(QTreeWidget):
                 date = self.data.df.iloc[idx]['Date']
                 if (monthYear := (date.month, date.year)) not in changed:
                     changed.append(monthYear)
-        
+                    
         # update top level items of changed months
         for month, year in changed:
             data = self.data.getMonth(month, year, returnType="CycleData")
@@ -263,13 +263,14 @@ class CycleDataViewer(QTreeWidget):
         for idx in indices:
             date = self.data.df.iloc[idx]['Date']
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
+            data = self.data.getMonth(date.month, date.year, returnType="CycleData")
+            summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
+            rootText = [monthYear] + summaries
             if monthYear not in self.topLevelItemsDict:
-                data = self.data.getMonth(date.month, date.year, returnType="CycleData")
-                summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
-                rootText = [monthYear] + summaries
                 rootItem = CycleTreeWidgetItem(self, row=rootText)
             else:
                 rootItem = self.topLevelItemsDict[monthYear]
+                rootItem.setRow(rootText)
                 
             item = IndexTreeWidgetItem(rootItem, index=idx, 
                                        headerLabels=self.headerLabels,
