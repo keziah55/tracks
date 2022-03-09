@@ -13,8 +13,7 @@ from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from .plot import CyclePlotWidget
-from .data import (CycleData, CycleDataAnalysis, CycleDataViewer, AddCycleData, 
-                   PersonalBests, Summary)
+from .data import CycleData, CycleDataViewer, AddCycleData, PersonalBests, Summary
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
@@ -42,7 +41,6 @@ class CycleTracks(QMainWindow):
         df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
         self.data = CycleData(df)
         self.save()
-        self.dataAnalysis = CycleDataAnalysis(self.data)
         
         self.summary = Summary()
 
