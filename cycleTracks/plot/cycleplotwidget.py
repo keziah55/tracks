@@ -506,8 +506,7 @@ class Plot(PlotWidget):
                 self._regenerateCachedPBs[self.ySeries] = False
             for idx in self.hgltPBs[self.ySeries]:
                 pt = self.dataItem.scatter.points()[idx]
-                colour = self.style['inactivePoints']['colour']
-                # colour = self.style['highlightPoint']['colour']
+                colour = self.style['highlightPoint']['colour']
                 pen = mkPen(colour)
                 brush = mkBrush(colour)
                 pt.setPen(pen)
@@ -531,8 +530,6 @@ class Plot(PlotWidget):
             if series[n] >= minBest:
                 idx.append(n)
                 minBest = series[n]
-            else:
-                idx.append(n)
         return idx
         
     @Slot(object)
@@ -598,7 +595,7 @@ class PlotStyle:
         self.settings = Settings(plotStyleFile, Settings.NativeFormat)
         
         self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
-                     'highlightPoint', 'inactivePoints', 'foreground', 'background']
+                     'highlightPoint', 'foreground', 'background']
         self.symbolKeys = ['speed', 'distance', 'time', 'calories']
         
         # make defaults

@@ -13,8 +13,6 @@ from customQObjects.widgets import GroupWidget, ComboBox
 from customQObjects.core import Settings
 from cycleTracks import makeForegroundIcon 
 
-from pprint import pprint
-
 class StyleDesigner(QWidget):
     
     saveStyle = Signal(str, dict)
@@ -75,8 +73,6 @@ class StyleDesigner(QWidget):
         for key in styleKeys:
             if key == "highlightPoint":
                 label = "Highlight point"
-            elif key == "inactivePoints":
-                label = "Inactive points"
             else:
                 label = key.capitalize()
             colourName = QLabel(label)
