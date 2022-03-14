@@ -2,11 +2,9 @@
 Subclasses of pyqtgraph items. 
 """
 
-from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem, getConfigOption, mkColor
-from pyqtgraph.graphicsItems.ButtonItem import ButtonItem
+from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem
 from qtpy.QtCore import Signal
 from datetime import datetime
-from cycleTracks import makeForegroundIcon
 
 class CustomAxisItem(AxisItem):
     """ Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.

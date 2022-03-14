@@ -268,15 +268,13 @@ class Plot(PlotWidget):
         # enableAutoRange on both viewBoxes
         for vb in self.viewBoxes:
             vb.enableAutoRange()
-        if self._showPBs:
-            self._highlightPBs(self._showPBs)
+        self.updateHighlightPBs()
         
     @Slot()
     def resetMonthRange(self):
         if self.viewMonths is not None:
             self.setXAxisRange(self.viewMonths)
-        if self._showPBs:
-            self._highlightPBs(self._showPBs)
+        self.updateHighlightPBs()
     
     @Slot(float, float)
     def setPlotRange(self, x0, x1):
@@ -353,27 +351,30 @@ class Plot(PlotWidget):
     def plotSeries(self, key, mode='new'):
         """ Plot given series on y1 axis. """
         label = self.data.quickNames[key]
+        # get series and set axis tick formatter
         if key == 'time':
             series = self.data.timeHours
             self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
         else:
             series = self.data[label]
             self.plotItem.getAxis('left').tickFormatter = None
+        # make style
         styleDict = self.style[key]
         style = self._makeScatterStyle(**styleDict)
+        # make or update plot
         if mode == 'new':
             self.dataItem = self.plotItem.scatterPlot(self.data.dateTimestamps, 
                                                       series, **style)
+            self.plotItem.vb.sigRangeChanged.connect(self.updateHighlightPBs)
         elif mode == 'set':
             self.dataItem.setData(self.data.dateTimestamps, series, **style)
+        # set axis label
         self.plotItem.setLabel('left', text=label, color=styleDict['colour'])
-        
+        # retain plot range when switching series
         if self.viewBoxes[0].xRange is not None:
             self.setPlotRange(*self.viewBoxes[0].xRange)
-            
-        if self._showPBs:
-            self._highlightPBs(self._showPBs)
-        
+        # if PBs were highlighted, highlight again
+        self.updateHighlightPBs()
         
     def plotTotalDistance(self, mode='new'):
         """ Plot monthly total distance. """
@@ -483,8 +484,11 @@ class Plot(PlotWidget):
         if self._prevHgltPointColour is not None:
             pen = mkPen(self._prevHgltPointColour)
             brush = mkBrush(self._prevHgltPointColour)
-            self.hgltPnt.setPen(pen)
-            self.hgltPnt.setBrush(brush)
+            try:
+                self.hgltPnt.setPen(pen)
+                self.hgltPnt.setBrush(brush)
+            except:
+                pass
         # store current colour of new hgltPoint
         self._prevHgltPointColour = point.pen().color().name()
         
@@ -517,6 +521,10 @@ class Plot(PlotWidget):
                 pt = self.dataItem.scatter.points()[idx]
                 pt.resetPen()
                 pt.resetBrush()
+                
+    def updateHighlightPBs(self):
+        if self._showPBs:
+            self._highlightPBs(self._showPBs)
         
     def _getPBs(self):
         """ Return array of points that represent(ed) a PB in the current series. """
@@ -524,12 +532,14 @@ class Plot(PlotWidget):
         col = self.data.quickNames[self.ySeries]
         num = self.parent.settings.value("pb/numSessions", cast=int)
         series = self.data[col]
-        minBest = min(series[:num]) # minimum value to beat to be a PB
+        best = series[:num]
         idx = list(range(num)) # first num values will be PBs
         for n in range(num, len(series)):
-            if series[n] >= minBest:
+            if series[n] >= np.min(best):
                 idx.append(n)
-                minBest = series[n]
+                # replace value in best array
+                minIdx = np.argmin(best)
+                best[minIdx] = series[n]
         return idx
         
     @Slot(object)
@@ -539,7 +549,7 @@ class Plot(PlotWidget):
             
             idx = int(mousePoint.x())
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
-                self._makePointDict(idx)
+                self._setCurrentPointFromTimestamp(idx)
                 pts = self.scatterPointsAtX(mousePoint, self.dataItem.scatter)
                 if len(pts) != 0:
                     # could be multiple points at same x, so get closest point to mouse by y value
@@ -549,7 +559,7 @@ class Plot(PlotWidget):
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
             
-    def _makePointDict(self, ts):
+    def _setCurrentPointFromTimestamp(self, ts):
         # given timestamp in seconds, find nearest date and speed
         idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
         self.setCurrentPoint(idx)
