@@ -54,7 +54,8 @@ class CycleTracks(QMainWindow):
         self.plot = CyclePlotWidget(self, style=plotStyle)
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.viewer.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         self.summary.valueChanged.connect(self._summaryValueChanged)
