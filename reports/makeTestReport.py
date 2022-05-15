@@ -173,6 +173,17 @@ class ReportWriter:
                 testsuites[api] = tree.getroot().findall("testsuite")[0]
         return testsuites
     
+    def _getCoverage(self):
+        coverage = {}
+        for api in self.qtApisLower:
+            file = os.path.join(self.resultsDir, f"{api}-coverage.xml")
+            coverage[api] = {}
+            if os.path.exists(file):
+                tree = ET.parse(file)
+                coverage[api]['summary'] = tree.getroot().attrib
+                coverage[api]['packages'] = tree.getroot().findall("packages")[0]
+        return coverage
+    
     def _makeHtmlHeader(self):
         html = ["<!DOCTYPE html>", "<html>", "<head>"]
         with open(self.cssFile) as fileobj:
@@ -206,7 +217,7 @@ class ReportWriter:
         """ Make html table summarising test results and return as list of strings. """
         html = []
         html = ['<h2 id="test-results">Test results</h2>', "<table class=summaryTable>", "<tr>"]
-        tableHeader = ["Qt API", "Tests", "Passed", "Skipped", "Failed", "Errors", "Time"]
+        tableHeader = ["Qt API", "Tests", "Passed", "Skipped", "Failed", "Errors", "Time", "Coverage"]
         html += [f"<th>{header}</th>" for header in tableHeader]
         for qtApi, testsuite in self.testsuites.items():
             total = int(testsuite.attrib['tests'])
@@ -216,10 +227,14 @@ class ReportWriter:
             passed = total - errors - failures - skipped
             time = testsuite.attrib['time']
             
-            tableRow = [qtApi, total, passed, skipped, failures, errors, time]
+            cov = float(self.coverage[qtApi]['summary']['line-rate'])
+            cov = f"{cov*100:0.2f}%"
+            
+            tableRow = [qtApi, total, passed, skipped, failures, errors, time, cov]
             tableRow = [f"<td>{item}</td>" for item in tableRow]
             html += ["<tr>"] + tableRow + ["</tr>"]
         html += ["</table>"]
+        
         return html
     
     def _makeDependencyTable(self):
@@ -370,6 +385,7 @@ class ReportWriter:
         
         # read xml files
         self.testsuites = self._getTestSuites()
+        self.coverage = self._getCoverage()
         
         ## get html contents before writing header, so toc can be included at beginning
         main = ['<div class="main">']
