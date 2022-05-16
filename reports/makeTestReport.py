@@ -207,7 +207,7 @@ class ReportWriter:
             s += f"; Duration: {self.duration}"
         html += [ s, "</p>"]
         
-        html += ["<h2>Git log</h2>"]
+        html += ['<h2 id="gitlog">Git log</h2>']
         p = subprocess.run(["git", "log", "-1"], capture_output=True)
         lines = [item for item in p.stdout.decode().split("\n") if item]
         html += [f"<p>{line}</p>" for line in lines]
@@ -383,7 +383,9 @@ class ReportWriter:
     
     def _makeCoverageTable(self):
         html = ['<h1 id="coverage">Coverage</h1>', "<table class=breakdownTable>"]
-        tableHeader = ["File"] + self.qtApis
+        tableHeader = ["File"]
+        for qt in self.qtApis:
+            tableHeader += [qt, f"{qt} miss"]
         html += [f"<th>{header}</th>" for header in tableHeader]
         
         qt0, *qtApis = self.qtApisLower
@@ -396,18 +398,20 @@ class ReportWriter:
                 cov = float(file.attrib['line-rate'])
                 miss = self._getMissedLines(file) # TODO
                 
-                covs = [cov]
-        
+                results = [(cov, miss)]
+                
                 # find this test in the other testsuite(s)
                 for qt in qtApis:
                     classes = self.coverage[qt]['packages'].findall(f"*[@name='{name}']")[0].findall('classes')[0] # only one 'classes' group per package
                     file = classes.findall(f"*[@filename='{fname}']")[0]
-                    covs.append(float(file.attrib['line-rate']))
-                    miss = self._getMissedLines(file) # TODO
+                    results.append((float(file.attrib['line-rate']),
+                                    self._getMissedLines(file)))
+                    # covs.append(float(file.attrib['line-rate']))
+                    # misses.append(self._getMissedLines(file)) # TODO
                 
                 # make this row of html
                 html += ["<tr>", f"<td class=fileName>{fname}</td>"]
-                html += [f"<td>{c*100:0.0f}%</td>" for c in covs]
+                html += [f"<td>{cov*100:0.0f}%</td><td>{miss}</td>" for cov, miss in results]
                 html += ["</tr>"]
                 
         html += ["</table>"]
