@@ -12,6 +12,7 @@ import pkg_resources
 import argparse
 import platform
 import subprocess
+import numpy as np
 
 class ReportWriter:
     """ Object to summarise pytest results in an html document.
@@ -380,6 +381,56 @@ class ReportWriter:
             
         return html
     
+    def _makeCoverageTable(self):
+        html = ['<h1 id="coverage">Coverage</h1>', "<table class=breakdownTable>"]
+        tableHeader = ["File"] + self.qtApis
+        html += [f"<th>{header}</th>" for header in tableHeader]
+        
+        qt0, *qtApis = self.qtApisLower
+        
+        for package in self.coverage[qt0]['packages'].findall("package"):
+            name = package.attrib['name']
+            for file in package.findall('classes')[0].findall('class'): # only one 'classes' group per package
+                # for file in classes.findall('class'):
+                fname = file.attrib['filename']
+                cov = float(file.attrib['line-rate'])
+                miss = self._getMissedLines(file) # TODO
+                
+                covs = [cov]
+        
+                # find this test in the other testsuite(s)
+                for qt in qtApis:
+                    classes = self.coverage[qt]['packages'].findall(f"*[@name='{name}']")[0].findall('classes')[0] # only one 'classes' group per package
+                    file = classes.findall(f"*[@filename='{fname}']")[0]
+                    covs.append(float(file.attrib['line-rate']))
+                    miss = self._getMissedLines(file) # TODO
+                
+                # make this row of html
+                html += ["<tr>", f"<td class=fileName>{fname}</td>"]
+                html += [f"<td>{c*100:0.0f}%</td>" for c in covs]
+                html += ["</tr>"]
+                
+        html += ["</table>"]
+        
+        return html
+                    
+    def _getMissedLines(self, classGroup):
+        lines = classGroup.findall('lines')[0].findall('line')
+        miss = [int(line.attrib['number']) for line in lines if line.attrib['hits']=='0']
+        if not miss:
+            return ""
+        miss = np.array(miss)
+        consecutive = np.split(miss, np.where(np.diff(miss) != 1)[0]+1)
+        lineNums = []
+        for c in consecutive:
+            if len(c) > 1:
+                s = f"{c[0]}-{c[-1]}"
+            else:
+                s = str(c[0])
+            lineNums.append(s)
+        return ", ".join(lineNums)
+            
+    
     def makeReport(self):
         """ Return string of html detailing the test results. """
         
@@ -400,6 +451,8 @@ class ReportWriter:
         # list errors, failures and skipped tests
         main += self._makeNotPassedSection()
         main += self._makeWarningsSection()
+        # coverage breakdown
+        main += self._makeCoverageTable()
         # end main
         main += ["</div>"]
         

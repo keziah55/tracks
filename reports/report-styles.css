@@ -76,6 +76,10 @@ td {
   text-align: left;
 }
 
+.fileName {
+  text-align: left;
+}
+
 .traceback {
   font-family: monospace;
   white-space: pre;
