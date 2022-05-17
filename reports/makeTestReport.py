@@ -293,6 +293,10 @@ class ReportWriter:
         
             Return list of html strings.
         """
+        if not hasattr(self, "notPassed"):
+            msg = "'_makeBreakdownTable' must be called before '_makeNotPassedSection'"
+            raise RuntimeError(msg)
+            
         html = []
         for name, lst in self.notPassed.items():
             if len(lst) > 0:
@@ -382,11 +386,15 @@ class ReportWriter:
         return html
     
     def _makeCoverageTable(self):
+        """ Make html table of file test coverage and return as list of strings. 
+        
+            Also populates `missed` dict.
+        """
         html = ['<h1 id="coverage">Coverage</h1>', "<table class=breakdownTable>"]
-        tableHeader = ["File"]
-        for qt in self.qtApis:
-            tableHeader += [qt, f"{qt} miss"]
+        tableHeader = ["File"] + self.qtApis
         html += [f"<th>{header}</th>" for header in tableHeader]
+
+        self.missed = {}
         
         qt0, *qtApis = self.qtApisLower
         
@@ -397,28 +405,35 @@ class ReportWriter:
                 fname = file.attrib['filename']
                 cov = float(file.attrib['line-rate'])
                 miss = self._getMissedLines(file) # TODO
+                results = [cov]
+                if cov < 1:
+                    self.missed[fname] = {qt0:miss}
                 
-                results = [(cov, miss)]
-                
-                # find this test in the other testsuite(s)
+                # find this file in the other coverage report(s)
                 for qt in qtApis:
                     classes = self.coverage[qt]['packages'].findall(f"*[@name='{name}']")[0].findall('classes')[0] # only one 'classes' group per package
                     file = classes.findall(f"*[@filename='{fname}']")[0]
-                    results.append((float(file.attrib['line-rate']),
-                                    self._getMissedLines(file)))
-                    # covs.append(float(file.attrib['line-rate']))
-                    # misses.append(self._getMissedLines(file)) # TODO
+                    cov = float(file.attrib['line-rate'])
+                    miss = self._getMissedLines(file)
+                    results.append(cov)
+                    if cov < 1:
+                        if fname not in self.missed:
+                            self.missed[fname] = {}
+                        self.missed[fname][qt] = miss
                 
                 # make this row of html
                 html += ["<tr>", f"<td class=fileName>{fname}</td>"]
-                html += [f"<td>{cov*100:0.0f}%</td><td>{miss}</td>" for cov, miss in results]
+                html += [f"<td>{cov*100:0.0f}%</td>" for cov in results]
+                # html += [f"<td>{cov*100:0.0f}%</td><td>{miss}</td>" for cov, miss in results]
                 html += ["</tr>"]
                 
         html += ["</table>"]
         
         return html
-                    
+    
+    
     def _getMissedLines(self, classGroup):
+        """ Return string of missed lines in this <class> """
         lines = classGroup.findall('lines')[0].findall('line')
         miss = [int(line.attrib['number']) for line in lines if line.attrib['hits']=='0']
         if not miss:
@@ -434,6 +449,29 @@ class ReportWriter:
             lineNums.append(s)
         return ", ".join(lineNums)
             
+    
+    def _makeMissedLinesTable(self):
+        """ Make html table of missed lines and return as list of strings """
+        
+        if not hasattr(self, "missed"):
+            msg = "'_makeCoverageTable' must be called before '_makeMissedLinesTable'"
+            raise RuntimeError(msg)
+        
+        html = ['<h1 id="missed">Missed lines</h1>', "<table class=breakdownTable>"]
+        tableHeader = ["File"] + self.qtApis
+        html += [f"<th>{header}</th>" for header in tableHeader]
+        
+        for fname, dct in self.missed.items():
+            html += ["<tr>", f"<td class=fileName>{fname}</td>"]
+            for qt in self.qtApisLower:
+                miss = dct.get(qt, "")
+                html += [f"<td>{miss}</td>"]
+            html += ["</tr>"]
+            
+        html += ["</table>"]
+        
+        return html
+                
     
     def makeReport(self):
         """ Return string of html detailing the test results. """
@@ -457,6 +495,8 @@ class ReportWriter:
         main += self._makeWarningsSection()
         # coverage breakdown
         main += self._makeCoverageTable()
+        # coverage breakdown
+        main += self._makeMissedLinesTable()
         # end main
         main += ["</div>"]
         
