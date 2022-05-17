@@ -460,7 +460,7 @@ class ReportWriter:
             msg = "'_makeCoverageTable' must be called before '_makeMissedLinesTable'"
             raise RuntimeError(msg)
         
-        html = ['<h1 id="missed">Missed lines</h1>', "<table class=breakdownTable>"]
+        html = ['<h2 id="missed">Missed lines</h2>', "<table class=breakdownTable>"]
         tableHeader = ["File"] + self.qtApis
         html += [f"<th>{header}</th>" for header in tableHeader]
         
