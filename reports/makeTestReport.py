@@ -401,10 +401,9 @@ class ReportWriter:
         for package in self.coverage[qt0]['packages'].findall("package"):
             name = package.attrib['name']
             for file in package.findall('classes')[0].findall('class'): # only one 'classes' group per package
-                # for file in classes.findall('class'):
                 fname = file.attrib['filename']
                 cov = float(file.attrib['line-rate'])
-                miss = self._getMissedLines(file) # TODO
+                miss = self._getMissedLines(file) 
                 results = [cov]
                 if cov < 1:
                     self.missed[fname] = {qt0:miss}
@@ -423,8 +422,12 @@ class ReportWriter:
                 
                 # make this row of html
                 html += ["<tr>", f"<td class=fileName>{fname}</td>"]
-                html += [f"<td>{cov*100:0.0f}%</td>" for cov in results]
-                # html += [f"<td>{cov*100:0.0f}%</td><td>{miss}</td>" for cov, miss in results]
+                for cov in results:
+                    td = f"{cov*100:0.0f}%"
+                    if cov < 1:
+                        href = f"{qt}-missed-{fname}"
+                        td = f"<a href=#{href}>{td}</a>"
+                    html += [f"<td>{td}</td>"]
                 html += ["</tr>"]
                 
         html += ["</table>"]
@@ -462,10 +465,10 @@ class ReportWriter:
         html += [f"<th>{header}</th>" for header in tableHeader]
         
         for fname, dct in self.missed.items():
-            html += ["<tr>", f"<td class=fileName>{fname}</td>"]
+            html += [f'<tr id="missed-{fname}">', f"<td class=fileName>{fname}</td>"]
             for qt in self.qtApisLower:
                 miss = dct.get(qt, "")
-                html += [f"<td>{miss}</td>"]
+                html += [f'<td id="{qt}-missed-{fname}">{miss}</td>']
             html += ["</tr>"]
             
         html += ["</table>"]
