@@ -105,7 +105,7 @@ class TestPersonalBests:
         # dict of sortable columns and list of expected dates
         columns = {'Time':['26 Apr 2021', '05 May 2021', '01 May 2021', '29 Apr 2021', '03 May 2021'], 
                    'Distance (km)':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021'], 
-                   'Speed\n(km/h)':['04 May 2021', '02 May 2021', '30 Apr 2021', '29 Apr 2021', '28 Apr 2021'], 
+                   'Speed (km/h)':['04 May 2021', '02 May 2021', '30 Apr 2021', '29 Apr 2021', '28 Apr 2021'], 
                    'Calories':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021']}
         
         for column, expected in columns.items():
