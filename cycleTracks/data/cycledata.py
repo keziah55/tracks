@@ -172,7 +172,7 @@ class CycleData(QObject):
                     changed.append(index)
         if changed:
             for index in changed:
-                # update the avg speed for the changed indices
+                # update the speed for the changed indices
                 # (simpler to do this for all changed indices than also track whether
                 # distance and/or time have changed)
                 distance = self.df['Distance (km)'][index]

@@ -183,11 +183,11 @@ class PBTable(QTableWidget):
         
         self.selectKey = "Speed (km/h)"
         
-        # make header tall enough for two rows of text (avg speed has line break)
-        font = self.header.font()
-        metrics = QFontMetrics(font)
-        height = metrics.height()
-        self.header.setMinimumHeight(height*2)
+        # # make header tall enough for two rows of text (avg speed has line break)
+        # font = self.header.font()
+        # metrics = QFontMetrics(font)
+        # height = metrics.height()
+        # self.header.setMinimumHeight(height*2)
         
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
@@ -239,7 +239,6 @@ class PBTable(QTableWidget):
         for idx in indices:
             row = {}
             for k in self.headerLabels:
-                k = re.sub(r"\s", " ", k) # remove \n from avg speed
                 value = self.data.formatted(k)[idx]
                 row[k] = value
             row['datetime'] = self.data['Date'][idx]
@@ -277,7 +276,6 @@ class PBTable(QTableWidget):
         
         for rowNum, row in enumerate(self.items):
             for colNum, key in enumerate(self.headerLabels):
-                key = re.sub(r"\s", " ", key) # remove \n from avg speed
                 value = row[key]
                 item = QTableWidgetItem()
                 item.setText(value)
@@ -295,7 +293,6 @@ class PBTable(QTableWidget):
     @Slot(int)
     def selectColumn(self, idx):
         col = self.headerLabels[idx]
-        col = re.sub(r"\s", " ", col) # remove \n from avg speed
         if col in self.selectableColumns:
             self.clearContents()
             self.setTable(key=col)
@@ -330,7 +327,6 @@ class PBTable(QTableWidget):
             self.parent.itemSelected.emit(dct['datetime'])
 
     def makeMessage(self, key, idx, value):
-        key = re.sub(r"\s", " ", key) # remove \n from avg speed
         # check for units
         m = re.search(r"\((?P<unit>.+)\)", key)
         if m is not None:

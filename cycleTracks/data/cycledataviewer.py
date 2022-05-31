@@ -80,7 +80,6 @@ class IndexTreeWidgetItem(QTreeWidgetItem):
     def setRow(self, row):
         self.row = row
         for idx, col in enumerate(self.headerLabels):
-            col = re.sub(r"\s", " ", col) # remove \n from avg speed
             value = self.row[col]
             self.setText(idx, value)
             self.setTextAlignment(idx, Qt.AlignCenter)
@@ -144,11 +143,11 @@ class CycleDataViewer(QTreeWidget):
                              'Calories', 'Gear']
         self.setHeaderLabels(self.headerLabels)
         self.header().setStretchLastSection(False)
-        # make header tall enough for two rows of text (avg speed has line break)
-        font = self.header().font()
-        metrics = QFontMetrics(font)
-        height = metrics.height()
-        self.header().setMinimumHeight(height*2)
+        # # make header tall enough for two rows of text (avg speed has line break)
+        # font = self.header().font()
+        # metrics = QFontMetrics(font)
+        # height = metrics.height()
+        # self.header().setMinimumHeight(height*2)
         # align header text centrally
         for idx in range(len(self.headerLabels)):
             self.headerItem().setTextAlignment(idx, Qt.AlignCenter)

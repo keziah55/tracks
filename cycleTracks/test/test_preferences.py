@@ -100,7 +100,7 @@ class TestPreferences(TracksSetupTeardown):
             qtbot.mouseClick(button, Qt.LeftButton)
         
         def sortKey(item):
-            # round Avg Speed to two decimal places when sorting
+            # round Speed to two decimal places when sorting
             if item.dtype == float:
                 return np.around(item, decimals=2)
             else:
@@ -111,7 +111,6 @@ class TestPreferences(TracksSetupTeardown):
         
         for row in range(self.pbTable.rowCount()):
             for colNum, colName in enumerate(self.pbTable.headerLabels):
-                colName = re.sub(r"\s", " ", colName) # remove \n from avg speed
                 text = self.pbTable.item(row, colNum).text()
                 
                 expected = df.iloc[row][colName]
