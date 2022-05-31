@@ -82,7 +82,7 @@ def randomData(size):
          'Gear':np.random.default_rng().integers(1, 8, size=size)}
     
     speed = d['Distance (km)'] / np.array([convertSecs(timeToSecs(t)) for t in d['Time']])
-    d['Avg. speed (km/h)'] = speed
+    d['Speed (km/h)'] = speed
     
     return d
 
@@ -97,7 +97,7 @@ def knownData():
             'Gear':[6]*10}
     dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
     times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
-    dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
+    dct['Speed (km/h)'] = dct['Distance (km)'] / times
     return dct
 
 def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):

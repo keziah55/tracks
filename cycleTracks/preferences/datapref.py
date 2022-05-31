@@ -21,7 +21,7 @@ class DataPreferences(QWidget):
         
         bestMonthGroup = GroupWidget("Best month", layout="grid")
         self.bestMonthCriteria = QComboBox()
-        self.bestMonthCriteria.addItems(["Time", "Distance", "Avg. speed", 
+        self.bestMonthCriteria.addItems(["Time", "Distance", "Speed", 
                                          "Calories", "Gear"])
         
         bestMonthLabel = QLabel("Criterion:")

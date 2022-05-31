@@ -72,7 +72,7 @@ class TestCycleData:
             expected['Distance (km)'] += self.df.at[idx, 'Distance (km)']
             expected['Calories'] += self.df.at[idx, 'Calories']
             expected['Time'] += hourMinSecToFloat(parseDuration(self.df.at[idx, 'Time']))
-        expected['Avg. speed (km/h)'] = expected['Distance (km)'] / expected['Time']
+        expected['Speed (km/h)'] = expected['Distance (km)'] / expected['Time']
         expected['Time'] = floatToHourMinSec(expected['Time'])
         
         data = CycleData(self.df)

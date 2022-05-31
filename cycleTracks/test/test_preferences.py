@@ -107,7 +107,7 @@ class TestPreferences(TracksSetupTeardown):
                 # if it's a Date (pd.Timestamp) return directly
                 return item
         
-        df = self.data.df.sort_values(by=['Avg. speed (km/h)', 'Date'], ascending=False, key=sortKey)
+        df = self.data.df.sort_values(by=['Speed (km/h)', 'Date'], ascending=False, key=sortKey)
         
         for row in range(self.pbTable.rowCount()):
             for colNum, colName in enumerate(self.pbTable.headerLabels):
@@ -147,7 +147,7 @@ class TestPreferences(TracksSetupTeardown):
             val = indices.pop(0)
             indices.append(val)
             
-        keys = {"Distance":"Distance (km)", "Avg. speed":"Avg. speed (km/h)"}
+        keys = {"Distance":"Distance (km)", "Speed":"Speed (km/h)"}
         
         for idx in indices:
             pbPref.bestMonthCriteria.setCurrentIndex(idx)
@@ -164,7 +164,7 @@ class TestPreferences(TracksSetupTeardown):
                 values = [(monthYear, sum(df[column])) for monthYear, df in months]
             elif column == "Time":
                 values = [(monthYear, sum([hourMinSecToFloat(parseDuration(t)) for t in df[column]])) for monthYear, df in months]
-            elif column == "Avg. speed (km/h)":
+            elif column == "Speed (km/h)":
                 values = [(monthYear, max(df[column])) for monthYear, df in months]
             else:
                 values = [(monthYear, np.around(np.mean(df[column]))) for monthYear, df in months]
@@ -178,7 +178,7 @@ class TestPreferences(TracksSetupTeardown):
         self.prefDialog.pagesWidget.setCurrentIndex(1)
         pbPref = self.prefDialog.pagesWidget.widget(1)
         
-        aliases = {'Distance':'Distance (km)', 'Speed':'Avg. speed\n(km/h)'}
+        aliases = {'Distance':'Distance (km)', 'Speed':'Speed (km/h)'}
         funcs = {'sum':sum, 'min':min, 'max':max, 'mean':np.mean}
         
         for name, comboBox in pbPref.summaryComboBoxes.items():

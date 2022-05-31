@@ -68,7 +68,7 @@ class CyclePlotLabel(QWidget):
         
         self.data = {}
         self.data['date'] = {'string':"{}"}
-        self.data['speed'] = {'string':"Avg. speed: {:.3f} km/h"}
+        self.data['speed'] = {'string':"Speed: {:.3f} km/h"}
         self.data['distance'] = {'string':"Distance: {} km"}
         self.data['calories'] = {'string':"Calories: {}"}
         self.data['time'] = {'string':"Time: {}"}

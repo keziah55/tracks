@@ -95,7 +95,7 @@ class CycleDataViewer(QTreeWidget):
     """ QTreeWidget showing cycling data, split by month.
     
         Each item in the tree shows a summary: month, total time, total distance,
-        max. avg. speed and total calories.
+        max. speed and total calories.
         
         The tree can be sorted by double clicking on the header.
     
@@ -140,7 +140,7 @@ class CycleDataViewer(QTreeWidget):
         self.widthSpace = widthSpace
         self.dateFmt = "%d %b %Y"
         
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
+        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Speed (km/h)', 
                              'Calories', 'Gear']
         self.setHeaderLabels(self.headerLabels)
         self.header().setStretchLastSection(False)
@@ -411,7 +411,7 @@ class CycleDataViewer(QTreeWidget):
             lst = []
             lst.append(f"{summary['Time (hours)']}")
             lst.append(f"{summary['Distance (km)']} km")
-            lst.append(f"{summary['Avg. speed (km/h)']} km/h")
+            lst.append(f"{summary['Speed (km/h)']} km/h")
             lst.append(f"{summary['Calories']} cal")
             s += "; ".join(lst)
         

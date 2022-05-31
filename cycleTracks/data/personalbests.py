@@ -166,7 +166,7 @@ class PBTable(QTableWidget):
     """
     
     def __init__(self, mainWindow, parent=None, rows=5):
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Avg. speed\n(km/h)', 
+        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Speed (km/h)', 
                              'Calories', 'Gear']
         columns = len(self.headerLabels)
         super().__init__(rows, columns)
@@ -175,13 +175,13 @@ class PBTable(QTableWidget):
         
         # dict of columns that can be selected and the functions used to compare values
         self.selectableColumns = {'Time':hourMinSecToFloat, 'Distance (km)':float, 
-                                  'Avg. speed (km/h)':float, 'Calories':float}
+                                  'Speed (km/h)':float, 'Calories':float}
         
         self.setHorizontalHeaderLabels(self.headerLabels)
         
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         
-        self.selectKey = "Avg. speed (km/h)"
+        self.selectKey = "Speed (km/h)"
         
         # make header tall enough for two rows of text (avg speed has line break)
         font = self.header.font()
@@ -191,7 +191,7 @@ class PBTable(QTableWidget):
         
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
-        self.selectColumn(self.headerLabels.index('Avg. speed\n(km/h)'))
+        self.selectColumn(self.headerLabels.index('Speed (km/h)'))
         
         self.newIdx = None
         self._setToolTip(rows)
@@ -219,7 +219,7 @@ class PBTable(QTableWidget):
         msg += "Click on a session to highlight it in the plot."
         self.setToolTip(msg)
     
-    def _getBestSessions(self, n=5, key="Avg. speed (km/h)", order='descending'):
+    def _getBestSessions(self, n=5, key="Speed (km/h)", order='descending'):
         validOrders = ['descending', 'ascending']
         if order not in validOrders:
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
@@ -255,7 +255,7 @@ class PBTable(QTableWidget):
         # return only `n` values
         return pb[:n]
        
-    def setTable(self, key="Avg. speed (km/h)", order='descending',
+    def setTable(self, key="Speed (km/h)", order='descending',
                  highlightNew=False):
         
         n = self.rowCount()
@@ -267,7 +267,7 @@ class PBTable(QTableWidget):
         
         rowNums = ['1']
         for idx in range(1, len(self.items)):
-            if self.items[idx]['Avg. speed (km/h)'] == self.items[idx-1]['Avg. speed (km/h)']:
+            if self.items[idx]['Speed (km/h)'] == self.items[idx-1]['Speed (km/h)']:
                 if rowNums[-1][-1] != "=":
                     # add an equals sign (unless there's one there already)
                     rowNums[-1] += "="

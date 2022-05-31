@@ -13,7 +13,7 @@ def getNewData(key):
                      ({'Date':[parseDate("6 May 2021", pd_timestamp=True)], 
                        'Time':[parseDuration("00:42:15")], 
                        'Distance (km)':[25.1], 'Calories':[375.4], 'Gear':[6]},
-                      "<center><span>New #2 avg. speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br>and<br><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
+                      "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br>and<br><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
                       "<b>May 2021</b>: <b>150.72</b> km, <b>04:16:35</b> hours, <b>2254.2</b> calories"),
                      'best month':
                      ({'Date':[parseDate("6 May 2021", pd_timestamp=True)], 
@@ -26,7 +26,7 @@ def getNewData(key):
                      ({'Date':[parseDate("6 April 2021", pd_timestamp=True)], 
                        'Time':[parseDuration("00:42:15")], 
                        'Distance (km)':[25.1], 'Calories':[375.4], 'Gear':[6]},
-                      "<center><span>New #2 avg. speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br><span>Congratulations!</span></center>",
+                      "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br><span>Congratulations!</span></center>",
                       "<b>April 2021</b>: <b>155.93</b> km, <b>04:27:03</b> hours, <b>2332.1</b> calories")}
     return newDataParams[key]
     
@@ -105,7 +105,7 @@ class TestPersonalBests:
         # dict of sortable columns and list of expected dates
         columns = {'Time':['26 Apr 2021', '05 May 2021', '01 May 2021', '29 Apr 2021', '03 May 2021'], 
                    'Distance (km)':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021'], 
-                   'Avg. speed\n(km/h)':['04 May 2021', '02 May 2021', '30 Apr 2021', '29 Apr 2021', '28 Apr 2021'], 
+                   'Speed\n(km/h)':['04 May 2021', '02 May 2021', '30 Apr 2021', '29 Apr 2021', '28 Apr 2021'], 
                    'Calories':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021']}
         
         for column, expected in columns.items():

@@ -188,7 +188,7 @@ class TestCycleDataViewer:
         dct = dialogEdit[2]
         expected = dct['Distance (km)'] / hourMinSecToFloat(dct['Time'])
         row = self.parent.data.df.loc[self.parent.data.df['Date'] == dct['Date']]
-        speed = row['Avg. speed (km/h)'].values[0]
+        speed = row['Speed (km/h)'].values[0]
         assert np.isclose(speed, expected)
 
 

@@ -444,7 +444,7 @@ class Plot(PlotWidget):
         """
         self.currentPoint['index'] = idx
         self.currentPoint['date'] = self.data.datetimes[idx].strftime("%a %d %b %Y")
-        self.currentPoint['speed'] = self.data.avgSpeed[idx]
+        self.currentPoint['speed'] = self.data.speed[idx]
         self.currentPoint['distance'] = self.data.distance[idx]
         self.currentPoint['calories'] = self.data.calories[idx]
         self.currentPoint['time'] = self.data.time[idx]

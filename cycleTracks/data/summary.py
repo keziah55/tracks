@@ -13,7 +13,7 @@ class Summary(QObject):
     
     funcs = {'sum':sum, 'min':min, 'max':max, 'mean':np.mean}
     names = {'time':'Time (hours)', 'distance':'Distance (km)',
-             'speed':'Avg. speed (km/h)', 'calories':'Calories', 'gear':'Gear'}
+             'speed':'Speed (km/h)', 'calories':'Calories', 'gear':'Gear'}
     
     def __init__(self, time='sum', distance='sum', speed='max', calories='sum', gear='mean'):
         super().__init__()

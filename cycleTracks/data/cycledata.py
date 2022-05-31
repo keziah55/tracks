@@ -32,14 +32,13 @@ class CycleData(QObject):
             a given DataFrame of cycling data.
         """
         super().__init__()
-        self.df = self._makeAvgSpeedColumn(df)
+        self.df = self._makeSpeedColumn(df)
         
         self.propertyNames = {'Distance (km)':'distance', 
                               'Date':'date',
                               'Time':'time',
                               'Calories':'calories',
-                              # 'Avg speed (km/h)':'avgSpeed',
-                              'Avg. speed (km/h)':'avgSpeed',
+                              'Speed (km/h)':'speed',
                               'Gear':'gear',
                               'Time (hours)':'timeHours'}
         
@@ -48,7 +47,7 @@ class CycleData(QObject):
         
         sigFigs = {'Distance (km)':2, 
                    'Calories':1,
-                   'Avg. speed (km/h)':2}
+                   'Speed (km/h)':2}
         self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sigFigs.items()}
         self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
         self.fmtFuncs['Time'] = lambda t: t
@@ -99,7 +98,7 @@ class CycleData(QObject):
                 If provided, abridge the object to show only the first and last 
                 `headTail` rows. By default, do not abridge and return the full object.
         """
-        keys = ["Date", "Time", "Distance (km)", "Avg. speed (km/h)", "Calories", "Gear"]
+        keys = ["Date", "Time", "Distance (km)", "Speed (km/h)", "Calories", "Gear"]
         joinStr = "  "
         columns = {key: self.formatted(key) for key in keys}
         widths = {key: max(max([len(str(item)) for item in values]), len(key))#+len(joinStr))
@@ -143,7 +142,7 @@ class CycleData(QObject):
             raise TypeError(msg)
             
         times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
-        dct['Avg. speed (km/h)'] = dct['Distance (km)'] / times
+        dct['Speed (km/h)'] = dct['Distance (km)'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
         tmpDf = pd.concat([self.df, tmpDf], ignore_index=True)
@@ -178,15 +177,15 @@ class CycleData(QObject):
                 # distance and/or time have changed)
                 distance = self.df['Distance (km)'][index]
                 time = hourMinSecToFloat(self.df['Time'][index])
-                self.df.at[index, 'Avg. speed (km/h)'] = distance / time
+                self.df.at[index, 'Speed (km/h)'] = distance / time
             self.dataChanged.emit(changed)
         
-    def _makeAvgSpeedColumn(self, df):
-        ## Avg. speed was not always included in csv file
+    def _makeSpeedColumn(self, df):
+        ## speed was not always included in csv file
         ## If user does not have this column, create it
-        if 'Avg. speed (km/h)' not in df.columns:
+        if 'Speed (km/h)' not in df.columns:
             times = np.array([hourMinSecToFloat(t) for t in df['Time']])
-            df['Avg. speed (km/h)'] = df['Distance (km)'] / times
+            df['Speed (km/h)'] = df['Distance (km)'] / times
         return df
         
     def setDataFrame(self, df):
@@ -255,9 +254,9 @@ class CycleData(QObject):
         return np.array(self.df['Gear'])
     
     @property 
-    def avgSpeed(self):
+    def speed(self):
         """ Return average speeds as numpy array. """
-        return np.array(self.df['Avg. speed (km/h)'])
+        return np.array(self.df['Speed (km/h)'])
     
     @property
     def timeHours(self):
@@ -390,7 +389,7 @@ class CycleData(QObject):
         """ Combine all rows in the dataframe with the given data. """
         i0, *idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
         
-        combinable = ['Time', 'Distance (km)', 'Calories', 'Avg. speed (km/h)']
+        combinable = ['Time', 'Distance (km)', 'Calories', 'Speed (km/h)']
         
         for i in idx:
             for name in combinable:
@@ -399,7 +398,7 @@ class CycleData(QObject):
                     t1 = hourMinSecToFloat(parseDuration(self.df.iloc[i][name]))
                     newValue = floatToHourMinSec(t0 + t1)
                     self.df.at[i0, name] = newValue
-                elif name == 'Avg. speed (km/h)':
+                elif name == 'Speed (km/h)':
                     self.df.at[i0, name] = self.df['Distance (km)'][i0] / hourMinSecToFloat(self.df['Time'][i0])
                 else:
                     self.df.at[i0, name] += self.df.iloc[i][name]
