@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox,
 from qtpy.QtCore import QTimer, Slot, Signal, QSize
 from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
-from customQObjects.widgets import GroupWidget, ComboBox
+from customQObjects.widgets import GroupBox, ComboBox
 from customQObjects.core import Settings
 from cycleTracks import makeForegroundIcon 
 
@@ -313,7 +313,7 @@ class PlotPreferences(QWidget):
         super().__init__()
         self.mainWindow = mainWindow
         
-        plotStyleGroup = GroupWidget("Plot style")
+        plotStyleGroup = GroupBox("Plot style")
         styles = self.mainWindow.plot.getValidStyles()
         self.customStyle = StyleDesigner(styleKeys=self.mainWindow.plot.getStyleKeys(),
                                          symbolKeys=self.mainWindow.plot.getStyleSymbolKeys(),
@@ -358,7 +358,7 @@ class PlotPreferences(QWidget):
         plotStyleGroup.addLayout(plotStyleBox)
         plotStyleGroup.addWidget(self.customStyle)
 
-        plotConfigGroup = GroupWidget("Default plot range", layout="vbox")
+        plotConfigGroup = GroupBox("Default plot range", layout="vbox")
         
         self.plotRangeCombo = QComboBox()
         ranges = ["1 month", "3 months", "6 months", "1 year", "Current year", "All"]

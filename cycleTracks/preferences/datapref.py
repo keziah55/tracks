@@ -3,7 +3,7 @@ Preferences for personal bests and data viewer.
 """
 
 from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget
-from customQObjects.widgets import GroupWidget
+from customQObjects.widgets import GroupBox
 from customQObjects.core import Settings
 
 class FuncComboBox(QComboBox):
@@ -19,7 +19,7 @@ class DataPreferences(QWidget):
         super().__init__()
         self.mainWindow = mainWindow
         
-        bestMonthGroup = GroupWidget("Best month", layout="grid")
+        bestMonthGroup = GroupBox("Best month", layout="grid")
         self.bestMonthCriteria = QComboBox()
         self.bestMonthCriteria.addItems(["Time", "Distance", "Speed", 
                                          "Calories", "Gear"])
@@ -28,7 +28,7 @@ class DataPreferences(QWidget):
         bestMonthGroup.addWidget(bestMonthLabel, 0, 0)
         bestMonthGroup.addWidget(self.bestMonthCriteria, 0, 1)
         
-        topSessionsGroup = GroupWidget("Top sessions", layout="grid")
+        topSessionsGroup = GroupBox("Top sessions", layout="grid")
         self.numSessionsBox = QSpinBox()
         self.numSessionsBox.setMinimum(1)
         numSessionsLabel = QLabel("Number of top sessions:")
@@ -36,7 +36,7 @@ class DataPreferences(QWidget):
         topSessionsGroup.addWidget(numSessionsLabel, 0, 0)
         topSessionsGroup.addWidget(self.numSessionsBox, 0, 1)
         
-        summaryCriteriaGroup = GroupWidget("Summary criteria", layout="grid")
+        summaryCriteriaGroup = GroupBox("Summary criteria", layout="grid")
         names = ["Time", "Distance", "Calories", "Speed", "Gear"]
         self.summaryComboBoxes = {}
         for row, name in enumerate(names):
