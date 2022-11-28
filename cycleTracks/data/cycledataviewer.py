@@ -394,24 +394,42 @@ class CycleDataViewer(QTreeWidget):
         for item in self.items:
             if item.treeWidgetItem == currentItem:
                 self.itemSelected.emit(item.dateTime)
-
+                break
+            
     @Slot()
     def _summariseSelected(self):
-        idx = [item.index for item in self.selectedItems() if item not in self.topLevelItems]
-        if len(idx) <= 1:
-            s = ""
-        else:
+        """ Emit :attr:`selectedSummary` with string for status bar. 
+        
+            If a top level item is selected, summarise it. Otherwise, summarise
+            multiple selected items.
+        """
+        s = ""
+        if len(self.selectedItems()) == 1 and (item:=self.selectedItems()[0]) in self.topLevelItems:
+            s = self._summariseMonth(item)
+        elif len((idx:=[item.index for item in self.selectedItems() if item not in self.topLevelItems])) > 1:
             df = self.data.df.loc[idx]
             data = CycleData(df)
-            
-            summary = {args[0]: data.summaryString(*args) for args in self.parent.summary.summaryArgs}
-            
-            s = f"{len(idx)} sessions selected: "
-            lst = []
-            lst.append(f"{summary['Time (hours)']}")
-            lst.append(f"{summary['Distance (km)']} km")
-            lst.append(f"{summary['Speed (km/h)']} km/h")
-            lst.append(f"{summary['Calories']} cal")
-            s += "; ".join(lst)
-        
+            s = self._summariseData(data)
         self.selectedSummary.emit(s)
+        
+    def _summariseMonth(self, item):
+        """ Summarise month given by `item` """
+        if item not in self.topLevelItems:
+            return
+        months = self.data.splitMonths(returnType='CycleData')
+        month, *_ = [data for monthyear, data in months if monthyear==item.text(0)]
+        return self._summariseData(month)
+            
+    def _summariseData(self, data):
+        """ Return string of summarised `data`, where `data` is a :class:`CycleData` object """
+        summary = {args[0]: data.summaryString(*args) for args in self.parent.summary.summaryArgs}
+        
+        s = f"{len(data)} sessions: "
+        lst = []
+        lst.append(f"{summary['Time (hours)']}")
+        lst.append(f"{summary['Distance (km)']} km")
+        lst.append(f"{summary['Speed (km/h)']} km/h")
+        lst.append(f"{summary['Calories']} cal")
+        s += "; ".join(lst)
+        
+        return s
