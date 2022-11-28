@@ -37,7 +37,7 @@ echo "cd cycleTracks"
 mkdir "$resultsDir"
 
 # test with pyside2, then pyqt5
-for qt_api in pyside2 pyqt5; do
+for qt_api in pyside2 pyqt5 pyside6 pyqt6; do
     export QT_API=$qt_api
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"

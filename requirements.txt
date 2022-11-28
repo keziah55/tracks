@@ -3,5 +3,7 @@ pandas
 qtpy
 PyQt5
 PySide2
+PyQt6
+PySide6
 pyqtgraph
 git+https://github.com/keziah55/CustomPyQtObjects.git
