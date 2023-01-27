@@ -309,6 +309,8 @@ class ColourButton(QLabel):
 
 class PlotPreferences(QWidget):
     
+    name = "Plot"
+    
     def __init__(self, mainWindow):
         super().__init__()
         self.mainWindow = mainWindow

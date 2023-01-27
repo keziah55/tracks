@@ -8,19 +8,22 @@ from .plotpref import PlotPreferences
 from .datapref import DataPreferences
 
 class PreferencesDialog(QDialog):
+    
+    pages = [PlotPreferences, DataPreferences]
+    
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.contentsWidget = QListWidget()
         self.pagesWidget = QStackedWidget()
         
-        self.plotPref = PlotPreferences(parent)
-        self.dataPref = DataPreferences(parent)
-        self.pagesWidget.addWidget(self.plotPref)
-        self.pagesWidget.addWidget(self.dataPref)
+        pages = sorted(self.pages, key=lambda widget: widget.name)
         
-        self.contentsWidget.addItem("Plot")
-        self.contentsWidget.addItem("Data")
+        for page in pages:
+            widget = page(parent)
+            self.pagesWidget.addWidget(widget)
+            self.contentsWidget.addItem(widget.name)
+
         self.contentsWidget.currentItemChanged.connect(self.changePage)
         self.contentsWidget.setCurrentRow(0)
         

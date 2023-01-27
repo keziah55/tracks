@@ -15,6 +15,8 @@ class FuncComboBox(QComboBox):
 
 class DataPreferences(QWidget):
     
+    name = "Data"
+    
     def __init__(self, mainWindow):
         super().__init__()
         self.mainWindow = mainWindow
