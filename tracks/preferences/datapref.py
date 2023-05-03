@@ -81,7 +81,7 @@ class DataPreferences(QWidget):
         bestMonthCriterion = self.settings.value("bestMonthCriterion", "distance").capitalize()
         self.bestMonthCriteria.setCurrentText(bestMonthCriterion)
         
-        usePBcount = self.settings.value("usePBcount", True)
+        usePBcount = self.settings.value("usePBcount", False)
         self.bestMonthPB.setChecked(usePBcount)
         self.pbRangeCombo.setEnabled(usePBcount)
         

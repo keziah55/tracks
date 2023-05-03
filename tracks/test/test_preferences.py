@@ -1,5 +1,5 @@
-from .test_cycletracks import TracksSetupTeardown
-from cycleTracks.util import hourMinSecToFloat, floatToHourMinSec, parseDuration
+from .test_tracks import TracksSetupTeardown
+from tracks.util import hourMinSecToFloat, floatToHourMinSec, parseDuration
 import pytest
 import random
 import os.path
@@ -16,6 +16,8 @@ pytest_plugin = "pytest-qt"
 class TestPreferences(TracksSetupTeardown):
     
     def extraSetup(self):
+        self.dataIdx = 0
+        self.plotIdx = 1
         self.prefDialog.show()
     
     def extraTeardown(self):
@@ -27,7 +29,8 @@ class TestPreferences(TracksSetupTeardown):
         
     def test_plot_range(self, setup, qtbot, variables):
         
-        plotPref = self.prefDialog.pagesWidget.widget(0)
+        self.prefDialog.pagesWidget.setCurrentIndex(self.plotIdx)
+        plotPref = self.prefDialog.pagesWidget.widget(self.plotIdx)
         plotPref.customRangeCheckBox.setChecked(False)
         
         rng = list(range(plotPref.plotRangeCombo.count()))
@@ -81,14 +84,14 @@ class TestPreferences(TracksSetupTeardown):
         qtbot.wait(variables.wait)
         assert axis.tickTimestamps[0] <= dt.timestamp()
         
-        
     @pytest.mark.skip("test not yet written")
     def test_plot_style(self, setup, qtbot):
-        plotPref = self.prefDialog.pagesWidget.widget(0)
+        self.prefDialog.pagesWidget.setCurrentIndex(self.plotIdx)
+        plotPref = self.prefDialog.pagesWidget.widget(self.plotIdx)
 
     def test_num_pb_sessions(self, setup, qtbot):
-        self.prefDialog.pagesWidget.setCurrentIndex(1)
-        pbPref = self.prefDialog.pagesWidget.widget(1)
+        self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
+        pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
         
         num = random.randrange(2, len(self.data))
         while num == pbPref.numSessionsBox.value():
@@ -137,8 +140,8 @@ class TestPreferences(TracksSetupTeardown):
                 assert text == expected
         
     def test_pb_month_criterion(self, setup, qtbot):
-        self.prefDialog.pagesWidget.setCurrentIndex(1)
-        pbPref = self.prefDialog.pagesWidget.widget(1)
+        self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
+        pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
         
         indices = list(range(pbPref.bestMonthCriteria.count()))
         random.shuffle(indices)
@@ -174,8 +177,8 @@ class TestPreferences(TracksSetupTeardown):
             assert self.app.pb.bestMonth.monthYear == best[0]
             
     def test_set_summary_criteria(self, setupKnownData, qtbot, variables):
-        self.prefDialog.pagesWidget.setCurrentIndex(1)
-        pbPref = self.prefDialog.pagesWidget.widget(1)
+        self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
+        pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
         
         aliases = {'Distance':'Distance (km)', 'Speed':'Speed (km/h)'}
         funcs = {'sum':sum, 'min':min, 'max':max, 'mean':np.mean}

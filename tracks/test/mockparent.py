@@ -1,10 +1,10 @@
-from cycleTracks.data import CycleData, Summary
+from tracks.data import Data, Summary
 from . import makeDataFrame
 import tempfile
 import pandas as pd
 
 class MockParent:
-    """ Mock CycleTracks object.
+    """ Mock Tracks object.
     
         Data can be passed in with `dct` or a pre-determined data set can be 
         used by passing `known=True`. If neither `dct` nor `known` are passed,
@@ -32,6 +32,6 @@ class MockParent:
             df = pd.DataFrame.from_dict(dct)
             df.to_csv(self.tmpfile.name, index=False)
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        self.data = CycleData(self.df)
+        self.data = Data(self.df)
         self.dataAnalysis = None
         self.summary = Summary()

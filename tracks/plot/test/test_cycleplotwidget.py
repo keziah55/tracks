@@ -1,5 +1,5 @@
-from cycleTracks.plot import CyclePlotWidget
-from cycleTracks.test import MockParent
+from .. import PlotWidget
+from tracks.test import MockParent
 from qtpy.QtCore import Qt, QPoint
 from datetime import datetime
 import random
@@ -21,14 +21,13 @@ class Click:
     def button(self):
         return Qt.LeftButton
 
-
-class TestCyclePlotWidget:
+class TestPlotWidget:
     
     @pytest.fixture
     def setup(self, qtbot):
         self.parent = MockParent()
         
-        self.widget = CyclePlotWidget(self.parent)
+        self.widget = PlotWidget(self.parent)
         qtbot.addWidget(self.widget)
         self.widget.showMaximized()
         
@@ -36,10 +35,9 @@ class TestCyclePlotWidget:
     def setup_reduced_points(self, qtbot):
         self.parent = MockParent(size=50)
         
-        self.widget = CyclePlotWidget(self.parent)
+        self.widget = PlotWidget(self.parent)
         qtbot.addWidget(self.widget)
         self.widget.showMaximized()
-        
         
     def test_switch_series(self, setup, qtbot):
         
@@ -101,7 +99,6 @@ class TestCyclePlotWidget:
         assert dt0.month == now.month + 1
         assert dt0.year == now.year - 1
         assert dt1.month == dt0.month + 1
-        
         
     def test_mouse_hover(self, setup_reduced_points, qtbot, variables):
         qtbot.wait(variables.shortWait) # wait for widget to be maximized so we can get the right size
