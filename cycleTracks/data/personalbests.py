@@ -7,9 +7,10 @@ from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel,
 from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
 from qtpy.QtGui import QFontMetrics
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
+from cycleTracks.data import CycleData
 from customQObjects.widgets import TimerDialog
 import re
-
+from datetime import date
 
 class PersonalBests(QObject):
     """ Object to manage the two PB widgets.
@@ -38,6 +39,8 @@ class PersonalBests(QObject):
         Emitted when the criterion for calculating the best month is changed.
     """
     
+    statusMessage = Signal(str)
+    
     def __init__(self, parent, numSessions=5, monthCriterion="distance"):
         super().__init__()
         self.newPBdialog = NewPBDialog()
@@ -46,6 +49,7 @@ class PersonalBests(QObject):
         
     @Slot(object)
     def newData(self, idx=None):
+        self.emitStatusMessage()
         bestSession = self.bestSessions.newData()
         bestMonth = self.bestMonth.newData()
         
@@ -67,6 +71,11 @@ class PersonalBests(QObject):
             self.bestSessions.setTable(highlightNew=True)
         if bestMonth is not None:
             self.bestMonth.setText()
+            
+        self.statusMessage.emit("")
+    
+    def emitStatusMessage(self):
+        self.statusMessage.emit("Checking for new PBs...")
 
 class PBMonthLabel(QLabel):
     
@@ -75,6 +84,7 @@ class PBMonthLabel(QLabel):
         self.mainWindow = mainWindow
         self.parent = parent
         self.column = column
+        self.pbCount = (None, None)
         self.monthYear = self.time = self.distance = self.calories = ""
         self.newData()
         self.setText()
@@ -90,17 +100,28 @@ class PBMonthLabel(QLabel):
     def data(self):
         return self.mainWindow.data
     
-    def setColumn(self, column):
+    def setColumn(self, column, pbCount=None, pbMonthRange=None):
         self.column = column
+        self.pbCount = (pbCount, pbMonthRange)
         self.newData()
         self.setText()
         col = re.sub(r" +\(.*\)", "", column).lower()
         if self.parent is not None:
-            self.parent.monthCriterionChanged.emit(col)
+            if pbCount is not None:
+                t = " - Most PBs - "
+                t += f"{pbMonthRange} months" if pbMonthRange is not None else "All time"
+            else:
+                t = ""
+            c = self.data.quickNames[col]
+            self.parent.monthCriterionChanged.emit(f"{c}{t}")
         
     @Slot()
     def newData(self):
-        dfs = self.data.splitMonths(returnType="CycleData")
+        if self.pbCount[0] is not None:
+            month = self._pbCount()
+            dfs = [month]
+        else:
+            dfs = self.data.splitMonths(returnType="CycleData")
         
         totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
                   for monthYear, monthData in dfs]
@@ -121,6 +142,27 @@ class PBMonthLabel(QLabel):
             return msg
         else:
             return None
+        
+    def _pbCount(self):
+        pbCount, pbMonthRange = self.pbCount
+        idx = self.data.getPBs(self.column, pbCount)
+        pb_df = self.data.df.loc[idx].copy()
+        
+        if pbMonthRange is not None:
+            month = date.today().month
+            year = date.today().year
+            month = month - pbMonthRange
+            if month < 0:
+                month += 13
+                year -= 1
+            today = f"{date.today().year}{date.today().month:02d}{date.today().day:02d}"
+            prev = f"{year}{month:02d}01"
+            pb_df = pb_df.query(f'{prev} < Date < {today}')
+            
+        data = CycleData(pb_df)
+        pb_dfs = data.splitMonths(returnType="CycleData")
+        pb_dfs.sort(key=lambda item: len(item[1]), reverse=True)
+        return pb_dfs[0]
         
     @classmethod
     def _matchColumn(cls, column, lst):

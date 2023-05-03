@@ -16,7 +16,7 @@ def patchSettings(monkeypatch):
     orgName = "Tracks"
     d = os.path.dirname(__file__)
     # if conf file exists in test dir, remove it, so we're always testing with
-    # defaults, unless changed in te test
+    # defaults, unless changed in the test
     confFile = os.path.join(d, ".config", orgName, appName+".conf")
     if os.path.exists(confFile):
         os.remove(confFile)

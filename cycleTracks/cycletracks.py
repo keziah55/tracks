@@ -27,8 +27,8 @@ class CycleTracks(QMainWindow):
         
         self._saveLabel = QLabel()
         self._summaryLabel = QLabel()
-        self.statusBar().addWidget(self._saveLabel)
-        self.statusBar().addWidget(self._summaryLabel)
+        # self.statusBar().addWidget(self._saveLabel)
+        # self.statusBar().addWidget(self._summaryLabel)
         
         self.file = self.getFile()
         self.sep = ','
@@ -63,10 +63,12 @@ class CycleTracks(QMainWindow):
         self.data.dataChanged.connect(self._dataChanged)
         self.plot.pointSelected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
-        self.viewer.selectedSummary.connect(self._summaryLabel.setText)
+        # self.viewer.selectedSummary.connect(self._summaryLabel.setText)
+        self.viewer.selectedSummary.connect(self.statusBar().showMessage)
         self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
+        self.pb.statusMessage.connect(self.statusBar().showMessage)
         
         self.fileChangedTimer = QTimer()
         self.fileChangedTimer.setInterval(100)
@@ -74,7 +76,6 @@ class CycleTracks(QMainWindow):
         self.fileChangedTimer.timeout.connect(self.csvFileChanged)
         self.fileWatcher = QFileSystemWatcher([self.file])
         self.fileWatcher.fileChanged.connect(self.startTimer)
-        
         
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
                         f"Best month ({monthCriterion})", "PB month"),
@@ -122,7 +123,8 @@ class CycleTracks(QMainWindow):
         self.data.df.to_csv(self.file, sep=self.sep, index=False)
         self.backup()
         saveTime = datetime.now().strftime("%H:%M:%S")
-        self._saveLabel.setText(f"Last saved at {saveTime}")
+        # self._saveLabel.setText(f"Last saved at {saveTime}")
+        self.statusBar().showMessage(f"Last saved at {saveTime}")
         
     @Slot()
     def backup(self):

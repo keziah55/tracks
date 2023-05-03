@@ -394,7 +394,7 @@ class Plot(PlotWidget):
     def switchSeries(self, key):
         if key in self.plottable and key in self.data.quickNames.keys():
             self.plotItem.removeItem(self.dataItem)
-            self.plotSeries(key)
+            self.ySeries = key
             
     @Slot(object)
     def plotClicked(self, event):
@@ -528,6 +528,8 @@ class Plot(PlotWidget):
         
     def _getPBs(self):
         """ Return array of points that represent(ed) a PB in the current series. """
+        num = self.parent.settings.value("pb/numSessions", cast=int)
+        return self.data.getPBs(self.ySeries, num)
         # get number of top sessions and current y series
         col = self.data.quickNames[self.ySeries]
         num = self.parent.settings.value("pb/numSessions", cast=int)

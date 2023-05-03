@@ -133,7 +133,7 @@ class CycleData(QObject):
     @property
     def quickNames(self):
         return self._quickNames
-         
+    
     @Slot(dict)
     def append(self, dct):
         """ Append values in dict to DataFrame. """
@@ -384,6 +384,36 @@ class CycleData(QObject):
                 dts.append(dt)
                 odo.append(dist)
         return dts, odo
+    
+    def getPBs(self, column, pbCount):
+        """ Return indices where the value in `column` was a PB (at the time).
+        
+            Parameters
+            ----------
+            column : str
+                Column :attr:`quickName` to look through
+            pbCount : int
+                Number of sessions that can be PBs simultaneously
+                
+            Returns
+            -------
+            idx : List[int]
+                list of indicies of PBs
+        """
+        key = self.quickNames[column]
+        if key == 'Time':
+            series = self.timeHours
+        else:
+            series = self[key]
+        best = series[:pbCount]
+        idx = list(range(pbCount)) # first pbCount values will be PBs
+        for n in range(pbCount, len(series)):
+            if series[n] >= np.min(best):
+                idx.append(n)
+                # replace value in best array
+                minIdx = np.argmin(best)
+                best[minIdx] = series[n]
+        return idx
  
     def combineRows(self, date):
         """ Combine all rows in the dataframe with the given data. """
