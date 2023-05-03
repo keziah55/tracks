@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Run Cycle Tracks.
+Run Tracks.
 """
 import sys
 from qtpy.QtWidgets import QApplication
-from cycleTracks.cycletracks import CycleTracks
+from tracks.tracks import Tracks
 
 if __name__ == '__main__':
 
-    QApplication.setApplicationName("Cycle Tracks")
+    QApplication.setApplicationName("Tracks")
     QApplication.setOrganizationName("Tracks")
     
     app = QApplication(sys.argv)
     
-    window = CycleTracks()
+    window = Tracks()
     window.show()
     
     sys.exit(app.exec_())

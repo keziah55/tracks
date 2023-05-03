@@ -32,7 +32,6 @@ def parseDuration(value):
     s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
     return s
 
-            
 def parseDate(value, pd_timestamp=False):
     """ Convert string to datetime.date object (or pandas.Timestamp, if 
     `pd_timestamp` is True).
@@ -150,7 +149,6 @@ def parseDate(value, pd_timestamp=False):
         ret = pd.Timestamp(ret)
         
     return ret
-
 
 def floatToHourMinSec(value):
     """ Convert a float of hours into hh:mm:ss. 

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from cycleTracks.util import (isInt, isFloat, isDate, isDuration, checkMonthYearFloat, 
-                              checkHourMinSecFloat, checkDayMonthYearFloat, 
-                              parseDuration, parseDate, hourMinSecToFloat, 
-                              monthYearToFloat, dayMonthYearToFloat, floatToHourMinSec)
+from tracks.util import (isInt, isFloat, isDate, isDuration, checkMonthYearFloat, 
+    checkHourMinSecFloat, checkDayMonthYearFloat, parseDuration, parseDate,
+    hourMinSecToFloat, monthYearToFloat, dayMonthYearToFloat, floatToHourMinSec)
 import pytest
 from datetime import datetime, date
 import pandas as pd

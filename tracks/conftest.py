@@ -12,7 +12,7 @@ class Variables:
 
 @pytest.fixture(autouse=True)
 def patchSettings(monkeypatch):
-    appName = "Cycle Tracks"
+    appName = "Tracks"
     orgName = "Tracks"
     d = os.path.dirname(__file__)
     # if conf file exists in test dir, remove it, so we're always testing with

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main window for cycleTracks.
+Main window for Tracks.
 """
 
 import os
@@ -12,13 +12,13 @@ from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
 from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
-from .plot import CyclePlotWidget
-from .data import CycleData, CycleDataViewer, AddCycleData, PersonalBests, Summary
+from .plot import PlotWidget
+from .data import Data, DataViewer, AddData, PersonalBests, Summary
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
 
-class CycleTracks(QMainWindow):
+class Tracks(QMainWindow):
     def __init__(self):
         super().__init__()
         
@@ -38,7 +38,7 @@ class CycleTracks(QMainWindow):
                 fileobj.write(s+'\n')
                 
         df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
-        self.data = CycleData(df)
+        self.data = Data(df)
         self.save()
         
         self.summary = Summary()
@@ -47,10 +47,10 @@ class CycleTracks(QMainWindow):
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
         self.pb = PersonalBests(self, numSessions=numTopSessions, 
                                 monthCriterion=monthCriterion)
-        self.viewer = CycleDataViewer(self)
-        self.addData = AddCycleData()
+        self.viewer = DataViewer(self)
+        self.addData = AddData()
         plotStyle = self.settings.value("plot/style", "dark")
-        self.plot = CyclePlotWidget(self, style=plotStyle)
+        self.plot = PlotWidget(self, style=plotStyle)
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -112,9 +112,9 @@ class CycleTracks(QMainWindow):
     @staticmethod
     def getFile():
         home = os.path.expanduser('~')
-        path = os.path.join(home, '.cycletracks')
+        path = os.path.join(home, '.tracks')
         os.makedirs(path, exist_ok=True)
-        file = os.path.join(path, 'cycletracks.csv')
+        file = os.path.join(path, 'tracks.csv')
         return file
         
     @Slot()
@@ -141,7 +141,7 @@ class CycleTracks(QMainWindow):
         try: 
             assert_frame_equal(self.data.df, df, check_exact=False)
         except AssertionError:
-            msg = "CycleTracks csv file changed on disk. Do you want to reload?"
+            msg = "Tracks csv file changed on disk. Do you want to reload?"
             btn = QMessageBox.question(self, "File changed on disk", msg)
             if btn == QMessageBox.Yes:
                 self.loadCsvFile()

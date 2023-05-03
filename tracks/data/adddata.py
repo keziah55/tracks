@@ -11,7 +11,7 @@ from qtpy.QtCore import Signal, Slot
 from qtpy.QtGui import QKeySequence
 
 from .adddatatablemixin import AddDataTableMixin
-from cycleTracks.util import dayMonthYearToFloat, parseDate
+from tracks.util import dayMonthYearToFloat, parseDate
 
 from datetime import datetime
 import calendar

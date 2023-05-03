@@ -11,7 +11,7 @@ from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, 
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupBox, ComboBox
 from customQObjects.core import Settings
-from cycleTracks import makeForegroundIcon 
+from tracks import makeForegroundIcon 
 
 class StyleDesigner(QWidget):
     

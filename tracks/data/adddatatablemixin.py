@@ -1,12 +1,11 @@
 from qtpy.QtWidgets import QTableWidget
 from qtpy.QtCore import Qt, QTimer, Slot, Signal
 from qtpy.QtGui import QBrush, QColor
-from cycleTracks.util import (isDate, isFloat, isInt, isDuration, parseDate, 
-                              parseDuration)
+from tracks.util import isDate, isFloat, isInt, isDuration, parseDate, parseDuration
 from functools import partial
 
 class AddDataTableMixin(object):
-    """ Mixin providing validation and type casting for a table for adding cycle data.
+    """ Mixin providing validation and type casting for a table for adding data.
     
         Should be used as part of a widget that has a `table` attribute. If it
         also has a `okButton`, this will be enabled/diabled when validation 

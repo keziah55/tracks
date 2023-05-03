@@ -1,5 +1,5 @@
-from cycleTracks.cycletracks import CycleTracks
-from cycleTracks.util import parseDuration
+from tracks.tracks import Tracks
+from tracks.util import parseDuration
 from qtpy.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
@@ -19,7 +19,7 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return self.tmpfile.name
-        monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
+        monkeypatch.setattr(Tracks, "getFile", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
@@ -39,7 +39,7 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return self.tmpfile.name
-        monkeypatch.setattr(CycleTracks, "getFile", mockGetFile)
+        monkeypatch.setattr(Tracks, "getFile", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
@@ -53,7 +53,7 @@ class TracksSetupTeardown:
         self._removeTmpConfig()
     
     def _setup(self):
-        self.app = CycleTracks()
+        self.app = Tracks()
         self.addData = self.app.addData
         self.viewer = self.app.viewer
         self.plot = self.app.plot

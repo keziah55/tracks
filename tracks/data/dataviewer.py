@@ -11,7 +11,7 @@ import re
 import calendar
 from dataclasses import dataclass
 from .edititemdialog import EditItemDialog
-from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
+from tracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
 from . import Data
 

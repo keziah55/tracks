@@ -6,8 +6,8 @@ from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel,
                              QDialogButtonBox, QVBoxLayout, QAbstractItemView)
 from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
 from qtpy.QtGui import QFontMetrics
-from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
-from cycleTracks.data import Data
+from tracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
+from tracks.data import Data
 from customQObjects.widgets import TimerDialog
 import re
 from datetime import date
