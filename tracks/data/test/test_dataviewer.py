@@ -1,7 +1,7 @@
-from cycleTracks.data import CycleDataViewer, CycleData
-from cycleTracks.data.edititemdialog import EditItemDialog
-from cycleTracks.util import monthYearToFloat, hourMinSecToFloat
-from cycleTracks.test import makeDataFrame, MockParent
+from .. import DataViewer, Data
+from ..edititemdialog import EditItemDialog
+from tracks.util import monthYearToFloat, hourMinSecToFloat
+from tracks.test import makeDataFrame, MockParent
 from qtpy.QtWidgets import QMessageBox, QDialog
 from qtpy.QtCore import Qt
 import random
@@ -13,7 +13,7 @@ import pytest
 
 pytest_plugin = "pytest-qt"
 
-class TestCycleDataViewer:
+class TestDataViewer:
     
     @pytest.fixture
     def setup(self, qtbot):
@@ -29,7 +29,7 @@ class TestCycleDataViewer:
             self.widget.expandItem(item)
         
     def _setup(self, qtbot):
-        self.widget = CycleDataViewer(self.parent)
+        self.widget = DataViewer(self.parent)
         self.parent.data.dataChanged.connect(self.widget.newData)
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)
@@ -80,7 +80,7 @@ class TestCycleDataViewer:
         tmpfile = tempfile.NamedTemporaryFile()
         makeDataFrame(100, path=tmpfile.name)
         df = pd.read_csv(tmpfile.name, parse_dates=['Date'])
-        data = CycleData(df)
+        data = Data(df)
         self.parent.data = data    
         
         self.widget.newData()

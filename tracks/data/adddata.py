@@ -26,7 +26,7 @@ class TableWidgetDateItem(QTableWidgetItem):
         value1 = dayMonthYearToFloat(item1)
         return value0 < value1
 
-class AddCycleData(AddDataTableMixin, QWidget):
+class AddData(AddDataTableMixin, QWidget):
     """ QWidget containing a QTableWidget, where users can add new data. 
     
         User input is validated live; it is not possible to submit invalid data.

@@ -1,5 +1,5 @@
 """
-Dialog box where users can edit rows from the CycleDataViewer.
+Dialog box where users can edit rows from the DataViewer.
 """
 from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QVBoxLayout, QWidget,
                              QTableWidgetItem, QCheckBox, QScrollArea)

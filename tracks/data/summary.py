@@ -32,7 +32,7 @@ class Summary(QObject):
         
     @property    
     def summaryArgs(self):
-        """ Get dict of args to `CycleData.summaryString`. """
+        """ Get dict of args to `Data.summaryString`. """
         args = []
         for name, arg0 in self.names.items():
             func = getattr(self, name)

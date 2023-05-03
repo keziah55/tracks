@@ -11,7 +11,7 @@ import calendar
 import numpy as np
 import pandas as pd
 
-class CycleData(QObject):
+class Data(QObject):
     
     dataChanged = Signal(object)
     """ **signal** dataChanged(object `index`)
@@ -90,7 +90,7 @@ class CycleData(QObject):
         return row
     
     def toString(self, headTail=None):
-        """ Return CycleData object as a string.
+        """ Return Data object as a string.
         
             Parameters
             ----------
@@ -138,7 +138,7 @@ class CycleData(QObject):
     def append(self, dct):
         """ Append values in dict to DataFrame. """
         if not isinstance(dct, dict):
-            msg = f"Can only append dict to CycleData, not {type(dct).__name__}"
+            msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
             
         times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
@@ -287,7 +287,7 @@ class CycleData(QObject):
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
     
     def getMonth(self, month, year, returnType='DataFrame'):
-        """ Return DataFrame or CycleData of data from the given month and year. """
+        """ Return DataFrame or Data of data from the given month and year. """
         ts0 = pd.Timestamp(day=1, month=month, year=year)
         month += 1
         if month > 12:
@@ -295,8 +295,8 @@ class CycleData(QObject):
             year += 1
         ts1 = pd.Timestamp(day=1, month=month, year=year)
         df = self.df[(self.df['Date'] >= ts0) & (self.df['Date'] < ts1)]
-        if returnType == "CycleData":
-            df = CycleData(df)
+        if returnType == "Data":
+            df = Data(df)
         return df
     
     def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
@@ -306,17 +306,17 @@ class CycleData(QObject):
             -----------
             includeEmpty : bool
                 If True and if a month has no data, a monthYear string and empty 
-                DataFrame or CycleData object will be included in the returned list. 
+                DataFrame or Data object will be included in the returned list. 
                 Otherwise, it  will be ignored. Default is False.
-            returnType : {'DataFrame', 'CycleData'}
+            returnType : {'DataFrame', 'Data'}
                 Type of object to return with each month's data. Default is 
                 (pandas) 'DataFrame'
             
             Returns
             -------
-            list of (monthYear string, DataFrame/CycleData) tuples
+            list of (monthYear string, DataFrame/Data) tuples
         """
-        validReturnTypes = ['DataFrame', 'CycleData']
+        validReturnTypes = ['DataFrame', 'Data']
         if returnType not in validReturnTypes:
             msg = f"Invalid returnType '{returnType}'. Valid values are {', '.join(validReturnTypes)}"
             raise ValueError(msg)
@@ -348,8 +348,8 @@ class CycleData(QObject):
                 month = date.month
                 year = date.year
             monthYear = f"{calendar.month_name[month]} {year}"
-            if returnType == "CycleData":
-                df = CycleData(df)
+            if returnType == "Data":
+                df = Data(df)
             lst.append((monthYear, df))
         return lst
     
@@ -448,7 +448,7 @@ class CycleData(QObject):
             if isinstance(dates, str):
                 dates = [dates]
             if not isinstance(dates, list):
-                raise TypeError("CycleData.removeRows takes list of dates")
+                raise TypeError("Data.removeRows takes list of dates")
                 
             idx = []
             for date in dates:

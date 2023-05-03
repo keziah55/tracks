@@ -1,4 +1,4 @@
-from cycleTracks.data import AddCycleData
+from .. import AddData
 from qtpy.QtCore import Qt
 from datetime import date
 import random
@@ -7,11 +7,11 @@ import pytest
 
 pytest_plugin = "pytest-qt"
 
-class TestAddCycleData:
+class TestAddData:
     
     @pytest.fixture
     def setup(self, qtbot):
-        self.widget = AddCycleData()
+        self.widget = AddData()
         qtbot.addWidget(self.widget)
         self.widget.move(100,100)
         self.widget.show()

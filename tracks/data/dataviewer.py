@@ -1,5 +1,5 @@
 """
-QTreeWidget showing data from CycleData.
+QTreeWidget showing data from Data.
 """
 
 from qtpy.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView, 
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from .edititemdialog import EditItemDialog
 from cycleTracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                              hourMinSecToFloat, monthYearToFloat)
-from . import CycleData
+from . import Data
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem subclass, with __lt__ method overridden, so that 
@@ -90,7 +90,7 @@ class TreeItem:
     topLevelItem: CycleTreeWidgetItem = None
     treeWidgetItem: IndexTreeWidgetItem = None
 
-class CycleDataViewer(QTreeWidget):
+class DataViewer(QTreeWidget):
     """ QTreeWidget showing cycling data, split by month.
     
         Each item in the tree shows a summary: month, total time, total distance,
@@ -101,7 +101,7 @@ class CycleDataViewer(QTreeWidget):
         Parameters
         ----------
         parent : QWidget
-            Main window/widget with :class:`CycleData` object
+            Main window/widget with :class:`Data` object
         widthSpace : int
             Spacing to add to width in `sizeHint`. Default is 5.
     """
@@ -116,7 +116,7 @@ class CycleDataViewer(QTreeWidget):
     viewerSorted = Signal()
     """ **signal** viewerSorted()
     
-        Emitted after the CycleDataViewer items have been sorted.
+        Emitted after the DataViewer items have been sorted.
     """
     
     selectedSummary = Signal(str)
@@ -251,7 +251,7 @@ class CycleDataViewer(QTreeWidget):
                     
         # update top level items of changed months
         for month, year in changed:
-            data = self.data.getMonth(month, year, returnType="CycleData")
+            data = self.data.getMonth(month, year, returnType="Data")
             summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             rootText = [monthYear] + summaries
@@ -262,7 +262,7 @@ class CycleDataViewer(QTreeWidget):
         for idx in indices:
             date = self.data.df.iloc[idx]['Date']
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
-            data = self.data.getMonth(date.month, date.year, returnType="CycleData")
+            data = self.data.getMonth(date.month, date.year, returnType="Data")
             summaries = [data.summaryString(*args) for args in self.parent.summary.summaryArgs]
             rootText = [monthYear] + summaries
             if monthYear not in self.topLevelItemsDict:
@@ -297,7 +297,7 @@ class CycleDataViewer(QTreeWidget):
         self.viewerUpdated.emit()
                 
     def updateTopLevelItems(self):
-        dfs = self.data.splitMonths(returnType="CycleData")
+        dfs = self.data.splitMonths(returnType="Data")
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
@@ -340,10 +340,10 @@ class CycleDataViewer(QTreeWidget):
         self.viewerSorted.emit()
         
     def makeTree(self):
-        """ Populate tree with data from CycleData object. """
+        """ Populate tree with data from Data object. """
         
         self.items = []
-        dfs = self.data.splitMonths(returnType="CycleData")
+        dfs = self.data.splitMonths(returnType="Data")
         
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
@@ -408,7 +408,7 @@ class CycleDataViewer(QTreeWidget):
             s = self._summariseMonth(item)
         elif len((idx:=[item.index for item in self.selectedItems() if item not in self.topLevelItems])) > 1:
             df = self.data.df.loc[idx]
-            data = CycleData(df)
+            data = Data(df)
             s = self._summariseData(data)
         self.selectedSummary.emit(s)
         
@@ -416,12 +416,12 @@ class CycleDataViewer(QTreeWidget):
         """ Summarise month given by `item` """
         if item not in self.topLevelItems:
             return
-        months = self.data.splitMonths(returnType='CycleData')
+        months = self.data.splitMonths(returnType='Data')
         month, *_ = [data for monthyear, data in months if monthyear==item.text(0)]
         return self._summariseData(month)
             
     def _summariseData(self, data):
-        """ Return string of summarised `data`, where `data` is a :class:`CycleData` object """
+        """ Return string of summarised `data`, where `data` is a :class:`Data` object """
         summary = {args[0]: data.summaryString(*args) for args in self.parent.summary.summaryArgs}
         
         s = f"{len(data)} sessions: "

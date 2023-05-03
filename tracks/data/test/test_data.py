@@ -1,6 +1,6 @@
-from cycleTracks.data import CycleData
-from cycleTracks.util import parseDuration, hourMinSecToFloat, floatToHourMinSec
-from cycleTracks.test import makeDataFrame
+from .. import Data
+from tracks.util import parseDuration, hourMinSecToFloat, floatToHourMinSec
+from tracks.test import makeDataFrame
 import pandas as pd
 import numpy as np
 import tempfile
@@ -8,14 +8,14 @@ import pytest
 
 pytest_plugin = "pytest-qt"
 
-class TestCycleData:
+class TestData:
     
     @pytest.fixture
     def setup(self):
         self.tmpfile = tempfile.NamedTemporaryFile()
         makeDataFrame(500, path=self.tmpfile.name)
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
-        self.data = CycleData(self.df)
+        self.data = Data(self.df)
     
     def test_properties(self, setup):
         for name in self.df.columns:
@@ -75,7 +75,7 @@ class TestCycleData:
         expected['Speed (km/h)'] = expected['Distance (km)'] / expected['Time']
         expected['Time'] = floatToHourMinSec(expected['Time'])
         
-        data = CycleData(self.df)
+        data = Data(self.df)
         date = expected['Date'].strftime("%d %b %Y")
         
         with qtbot.waitSignal(data.dataChanged):
@@ -98,7 +98,7 @@ class TestCycleData:
         tmpfile = tempfile.NamedTemporaryFile()
         makeDataFrame(100, path=tmpfile.name)
         df = pd.read_csv(tmpfile.name, parse_dates=['Date'])
-        data = CycleData(df)
+        data = Data(df)
         
         dts, odo = data.getMonthlyOdometer()
         

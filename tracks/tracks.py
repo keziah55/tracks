@@ -18,7 +18,6 @@ from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
 
-
 class CycleTracks(QMainWindow):
     def __init__(self):
         super().__init__()

@@ -7,7 +7,7 @@ from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel,
 from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
 from qtpy.QtGui import QFontMetrics
 from cycleTracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
-from cycleTracks.data import CycleData
+from cycleTracks.data import Data
 from customQObjects.widgets import TimerDialog
 import re
 from datetime import date
@@ -121,7 +121,7 @@ class PBMonthLabel(QLabel):
             month = self._pbCount()
             dfs = [month]
         else:
-            dfs = self.data.splitMonths(returnType="CycleData")
+            dfs = self.data.splitMonths(returnType="Data")
         
         totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
                   for monthYear, monthData in dfs]
@@ -159,8 +159,8 @@ class PBMonthLabel(QLabel):
             prev = f"{year}{month:02d}01"
             pb_df = pb_df.query(f'{prev} < Date < {today}')
             
-        data = CycleData(pb_df)
-        pb_dfs = data.splitMonths(returnType="CycleData")
+        data = Data(pb_df)
+        pb_dfs = data.splitMonths(returnType="Data")
         pb_dfs.sort(key=lambda item: len(item[1]), reverse=True)
         return pb_dfs[0]
         
@@ -199,7 +199,7 @@ class PBTable(QTableWidget):
         Parameters
         ----------
         mainWindow : QWidget
-            Main window/widget with :class:`CycleData` object
+            Main window/widget with :class:`Data` object
         parent : QObject
          PersonalBests object that manages this object.
         rows : int

@@ -1,7 +1,7 @@
-from cycleTracks.data import PersonalBests
-from cycleTracks.data.personalbests import NewPBDialog
-from cycleTracks.util import parseDate, parseDuration
-from cycleTracks.test import MockParent
+from .. import PersonalBests
+from ..personalbests import NewPBDialog
+from tracks.util import parseDate, parseDuration
+from tracks.test import MockParent
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
 
@@ -34,7 +34,7 @@ class TestPersonalBests:
     
     @pytest.fixture
     def setup(self, qtbot):
-        # make CycleData object with known data
+        # make Data object with known data
         self.parent = MockParent(random=False)
         self.pb = PersonalBests(self.parent)
         self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
