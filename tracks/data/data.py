@@ -3,8 +3,7 @@ Object providing convenient access to the contents of a DataFrame of cycling dat
 """
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
-from cycleTracks.util import (parseDate, parseDuration, hourMinSecToFloat, 
-                              floatToHourMinSec)
+from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
 from functools import partial
 from datetime import datetime
 import calendar

@@ -1,3 +1,3 @@
-from .cycleplotwidget import CyclePlotWidget
+from .plotwidget import PlotWidget
 
-__all__ = ["CyclePlotWidget"]
+__all__ = ["PlotWidget"]

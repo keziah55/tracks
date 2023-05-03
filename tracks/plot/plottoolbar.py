@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QToolBar, QApplication
 from qtpy.QtGui import QPalette
 from qtpy.QtCore import Qt, Signal
-from cycleTracks import makeForegroundIcon
+from tracks import makeForegroundIcon
 
 class PlotToolBar(QToolBar):
     """ Vertical tool bar with buttons to control the plot. """

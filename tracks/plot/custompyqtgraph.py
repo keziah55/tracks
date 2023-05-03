@@ -33,7 +33,6 @@ class CustomAxisItem(AxisItem):
         else:
             return super().tickStrings(values, *args, **kwargs)
         
-        
 class CustomDateAxisItem(DateAxisItem):
     """ DateAxisItem that emits `axisDoubleClicked` signal when the axis is 
         double clicked. 
@@ -124,7 +123,6 @@ class CustomDateAxisItem(DateAxisItem):
         self.tickVals.sort()
         return tickVals
     
-    
 class CustomViewBox(ViewBox):
     """ ViewBox subclass that stores the current xRange and yRange as properties. """
     
@@ -159,7 +157,6 @@ class CustomViewBox(ViewBox):
             self.yRange = yRange
         super().setRange(rect, xRange, yRange, **kwargs)
         
-        
 class CustomPlotItem(PlotItem):
     """ PlotItem without autoBtn """
     def __init__(self, *args, **kwargs):
@@ -171,4 +168,3 @@ class CustomPlotItem(PlotItem):
         
     def updateButtons(self):
         return None
-        

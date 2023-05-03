@@ -4,27 +4,27 @@ Widget containing plot and labels.
 
 from datetime import datetime, timedelta
 import os
-from pyqtgraph import (PlotWidget, PlotCurveItem, mkPen, mkBrush, InfiniteLine, 
-                       setConfigOptions)
+from pyqtgraph import (PlotWidget as _PlotWidget, PlotCurveItem, mkPen, mkBrush, 
+                       InfiniteLine, setConfigOptions)
 import numpy as np
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
 from customQObjects.core import Settings
 
-from .cycleplotlabel import CyclePlotLabel
+from .plotlabel import PlotLabel
 from .plottoolbar import PlotToolBar
 from .custompyqtgraph import (CustomPlotItem, CustomAxisItem, CustomDateAxisItem, 
                               CustomViewBox)
-from cycleTracks.util import floatToHourMinSec
+from tracks.util import floatToHourMinSec
 
-class CyclePlotWidget(QWidget):
+class PlotWidget(QWidget):
     """ Widget to display cycling data and labels showing data at the point
         under the mouse.
     
         Parameters
         ----------
-        parent : CycleTracks
-            CycleTracks main window object.
+        parent : Tracks
+            Tracks main window object.
         style : str, optional
             Plot style to apply.
     """
@@ -66,7 +66,7 @@ class CyclePlotWidget(QWidget):
     def _makePlot(self, *args, **kwargs):
         self.plotWidget = Plot(*args, **kwargs)
         if self.plotLabel is None:
-            self.plotLabel = CyclePlotLabel(self.plotWidget.style)
+            self.plotLabel = PlotLabel(self.plotWidget.style)
         else:
             self.plotLabel.setStyle(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
@@ -123,9 +123,8 @@ class CyclePlotWidget(QWidget):
     
     def getDefaultStyles(self):
         return self.plotWidget.style.defaultStyles
-        
 
-class Plot(PlotWidget):
+class Plot(_PlotWidget):
     """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
     
         Parameters
@@ -308,10 +307,10 @@ class Plot(PlotWidget):
         """ Scale the plot to show the most recent `months` months. 
         
             If `fromRecentSession` is True (default), the month range is calculated
-            relative to the most recent session in the `CycleData` object.
+            relative to the most recent session in the `Data` object.
             Otherwise, it is calculated from the current date.
             These two options are equivalent if there are sessions from the current
-            month in the `CycleData` object.
+            month in the `Data` object.
         """
         self.viewMonths = months
         if fromRecentSession:

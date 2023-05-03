@@ -1,5 +1,5 @@
 """
-QWidget containing QLabels for each data series in the CyclePlotWidget.
+QWidget containing QLabels for each data series in the PlotWidget.
 """
 
 from qtpy.QtWidgets import QLabel, QHBoxLayout, QWidget
@@ -49,8 +49,7 @@ class ClickableLabel(QLabel):
         html = f"<div style={style}>{text}</div>"
         super().setText(html)
 
-
-class CyclePlotLabel(QWidget):
+class PlotLabel(QWidget):
     
     labelClicked = Signal(str)
     """ **signal** labelClicked(str `name`) 
