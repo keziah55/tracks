@@ -247,8 +247,6 @@ class StyleDesigner(QWidget):
         #     widget.addItem(QIcon(pixmap), symbol)
         return widget
         
-
-
 class ColourButton(QLabel):
     """ QLabel that responds to mouse clicks by emitting a `clicked` signal.
     
@@ -434,6 +432,7 @@ class PlotPreferences(QWidget):
     def _editStyle(self, edit):
         self.customStyle.setEditMode(edit)
         if edit:
+            self.customStyle.setName(self.plotStyleList.currentText())
             self._updateCustomStyleWidget()
         else:
             # TODO call _saveStyle here?

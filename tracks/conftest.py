@@ -1,4 +1,5 @@
 from qtpy.QtCore import QCoreApplication
+from customQObjects.core import Settings
 from dataclasses import dataclass
 import os
 import pytest
@@ -23,6 +24,11 @@ def patchSettings(monkeypatch):
     monkeypatch.setenv("HOME", d)
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
+    
+    plotStyleFile = os.path.join(os.path.dirname(confFile), 'plotStyles.ini')
+    if os.path.exists(plotStyleFile):
+        os.remove(plotStyleFile)
+    monkeypatch.setattr(Settings, "fileName", lambda *args, **kwargs: confFile)
 
 @pytest.fixture()
 def variables():

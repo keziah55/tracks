@@ -4,7 +4,6 @@ import pytest
 import random
 import os.path
 import re
-import shutil
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
@@ -84,7 +83,6 @@ class TestPreferences(TracksSetupTeardown):
         qtbot.wait(variables.wait)
         assert axis.tickTimestamps[0] <= dt.timestamp()
         
-    @pytest.mark.skip("test not yet written")
     def test_plot_style(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.plotIdx)
         plotPref = self.prefDialog.pagesWidget.widget(self.plotIdx)
@@ -94,8 +92,57 @@ class TestPreferences(TracksSetupTeardown):
             
         assert plotPref.customStyle.isEnabled()
         
-        qtbot.wait(4000)
-
+        signals = [plotPref.customStyle.nameEdit.textChanged,
+                   plotPref.customStyle.validateTimer.timeout]
+        with qtbot.waitSignals(signals):
+            plotPref.customStyle.setName("dark")
+            
+        assert plotPref.customStyle.saveButton.isEnabled() is False
+        
+        signals = [plotPref.customStyle.nameEdit.textChanged,
+                   plotPref.customStyle.validateTimer.timeout]
+        with qtbot.waitSignals(signals):
+            qtbot.keyClick(plotPref.customStyle.nameEdit, "2")
+            
+        assert plotPref.customStyle.saveButton.isEnabled()
+        
+        newColours = {'speed':'#ff0000','distance':'#00ff00', 'time':'#0000ff', 
+                      'calories':'#ffff00', 'odometer':'#00ffff', 'highlightPoint': '#ff00ff', 
+                      'foreground':'#000000', 'background':'#ffffff'}
+        newSymbols = {'speed': 'h', 'distance': 't3', 'time': '+', 'calories': 'star'}
+        
+        for key, value in newColours.items():
+            plotPref.customStyle._colourButtonWidgets[key].setColour(value)
+        
+        for key, value in newSymbols.items():
+            symbolName = plotPref.customStyle.symbols[value].capitalize()
+            plotPref.customStyle._symbolListWidgets[key].setCurrentText(symbolName)
+            
+        button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
+        qtbot.mouseClick(button, Qt.LeftButton)
+        qtbot.wait(200)
+        assert plotPref.plotStyleList.currentText() == "Dark2"
+        
+        with qtbot.waitSignal(plotPref.editPlotStyleButton.clicked):
+            qtbot.mouseClick(plotPref.editPlotStyleButton, Qt.LeftButton)
+        assert plotPref.customStyle.isEnabled()
+        assert plotPref.customStyle.nameEdit.text() == "dark2"
+        plotPref.customStyle._colourButtonWidgets['speed'].setColour('#000000')
+        
+        with qtbot.waitSignal(plotPref.customStyle.saveStyle):
+            qtbot.mouseClick(plotPref.customStyle.saveButton, Qt.LeftButton)
+        
+        assert plotPref.plotStyleList.currentText() == "Dark2"
+        
+        assert "dark2" in plotPref.mainWindow.plot.getValidStyles()
+        
+        with qtbot.waitSignal(plotPref.deletePlotStyleButton.clicked):
+            qtbot.mouseClick(plotPref.deletePlotStyleButton, Qt.LeftButton)
+            
+        assert plotPref.plotStyleList.currentText() != "Dark2"
+        assert "dark2" not in plotPref.mainWindow.plot.getValidStyles()
+        assert ["dark", "light"] == plotPref.mainWindow.plot.getValidStyles()
+        
     def test_num_pb_sessions(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
         pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
