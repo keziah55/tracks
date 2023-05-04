@@ -29,7 +29,7 @@ class ReportWriter:
             Timestamp of beginning of tests, as string in ISO format.
             If not supplied, current time will be used.
         qt : list, optional
-            List of Qt APIs. If not provided, this defaults to ["PyQt5", "PySide2"]
+            List of Qt APIs. If not provided, this defaults to ["PyQt5", "PySide2", "PyQt6", "PySide6"]
     """
     
     fmt = "%a %d %b %Y, %H:%M:%S"
@@ -41,7 +41,9 @@ class ReportWriter:
         ts = float(ts) if ts is not None else ts
         self.ts = self._getTimestamp(ts)
         self.duration = self._getDuration(ts)
-        self.qtApis = qt if qt is not None else ["PyQt5", "PySide2", "PyQt6", "PySide6"]
+        
+        qtLookup = {"pyqt5":"PyQt5", "pyside2":"PySide2", "pyqt6":"PyQt6", "pyside6":"PySide6"}
+        self.qtApis = [qtLookup.get(q, q) for q in qt] if qt is not None else ["PyQt5", "PySide2", "PyQt6", "PySide6"]
         self.qtApisLower = [s.lower() for s in self.qtApis]
         
     @staticmethod
@@ -520,6 +522,10 @@ class ReportWriter:
         html = self.makeReport()
         with open(self.out, "w") as fileobj:
             fileobj.write(html)
+        print()
+        if self.duration is not None:
+            print(f"Tests completed in {self.duration}")
+        print(f"Test report written to {os.path.abspath(self.out)}")
     
 if __name__ == "__main__":
     
@@ -530,9 +536,10 @@ if __name__ == "__main__":
                         help='path to write output html to. Default is "./report.html"')
     parser.add_argument('--ts', default=None,
                         help='Timestamp of beginning of test execution. If not provided, current date and time will be used')
+    parser.add_argument('--qt', default=None,
+                        help='Qt bindings used in tests')
     
     args = parser.parse_args()
-    
-    writer = ReportWriter(args.results, args.out, args.ts)
+    qt = args.qt.split(',') if args.qt is not None else None
+    writer = ReportWriter(args.results, args.out, args.ts, qt)
     writer.writeReport()
-    

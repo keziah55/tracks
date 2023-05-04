@@ -36,8 +36,16 @@ echo "cd tracks"
 
 mkdir "$resultsDir"
 
+pythonVersion=`python3 -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')"`
+if [[ $pythonVersion == "3.11" ]]; then
+    echo "PySide2 from PyPI not compatible with Python 3.11"
+    declare -a qt_bindings=("pyqt5" "pyside6" "pyqt6")
+else
+    declare -a qt_bindings=("pyside2" "pyqt5" "pyside6" "pyqt6")
+fi
+
 # test with pyside2, then pyqt5
-for qt_api in pyside2 pyqt5 pyside6 pyqt6; do
+for qt_api in "${qt_bindings[@]}"; do
     export QT_API=$qt_api
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
@@ -54,6 +62,13 @@ if [ -d $testDataDir ]; then
     mv "$testDataDir" "$resultsDir"
 fi
 
-../bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts
+join_array () {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+qts=`join_array , "${qt_bindings[@]}"`
+
+../bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts --qt $qts
 
 mv "$resultsDir" "$origDir"
