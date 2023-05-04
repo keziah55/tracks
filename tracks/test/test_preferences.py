@@ -88,6 +88,13 @@ class TestPreferences(TracksSetupTeardown):
     def test_plot_style(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.plotIdx)
         plotPref = self.prefDialog.pagesWidget.widget(self.plotIdx)
+        
+        with qtbot.waitSignal(plotPref.addPlotStyleButton.clicked):
+            qtbot.mouseClick(plotPref.addPlotStyleButton, Qt.LeftButton)
+            
+        assert plotPref.customStyle.isEnabled()
+        
+        qtbot.wait(4000)
 
     def test_num_pb_sessions(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)

@@ -2,4 +2,4 @@
 
 export QT_API=pyqt5
 export PYTEST_QT_API=pyqt5
-python3 -m pytest -v --cov=cycleTracks --cov-report term-missing $@
+python3 -m pytest -v --cov=tracks --cov-report term-missing $@

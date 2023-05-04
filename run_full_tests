@@ -1,7 +1,7 @@
 #!/bin/bash
 
 origDir="$PWD"
-testDir="../cycleTracksTest"
+testDir="../tracksTest"
 resultsDir="results"
 ts=`date +%s%6N` # timestamp in ms
 
@@ -20,14 +20,14 @@ cd $testDir
 
 echo "cd $testDir"
 
-git clone git@github.com:keziah55/cycleTracks.git
+git clone git@github.com:keziah55/tracks.git
 
-# make venv in cycleTracksTest, not cycleTracks, because pytest was picking up
+# make venv in tracksTest, not tracks, because pytest was picking up
 # conftest.py files from modules installed in the venv (e.g. numpy)
 python3 -m venv .
 
-cd cycleTracks
-echo "cd cycleTracks"
+cd tracks
+echo "cd tracks"
 
 ../bin/python -m pip -V
 
@@ -42,11 +42,11 @@ for qt_api in pyside2 pyqt5 pyside6 pyqt6; do
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../bin/python -m pytest -v --cov=cycleTracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
+    ../bin/python -m pytest -v --cov=tracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
     mv prof "$resultsDir/$qt_api-prof"
 done
 
-testDataDir="cycleTracks/test/test_data"
+testDataDir="tracks/test/test_data"
 if [ -d $testDataDir ]; then
     echo "moving test_data to results:"
     echo $testDataDir
