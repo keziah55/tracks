@@ -129,7 +129,7 @@ class TestPreferences(TracksSetupTeardown):
         assert plotPref.customStyle.nameEdit.text() == "dark2"
         plotPref.customStyle._colourButtonWidgets['speed'].setColour('#000000')
         
-        with qtbot.waitSignal(plotPref.customStyle.cancelButton):
+        with qtbot.waitSignal(plotPref.customStyle.cancelButton.clicked):
             qtbot.mouseClick(plotPref.customStyle.cancelButton, Qt.LeftButton)
             assert plotPref.customStyle._colourButtonWidgets['speed'].colour != '#000000'
           
