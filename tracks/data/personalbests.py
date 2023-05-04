@@ -120,8 +120,10 @@ class PBMonthLabel(QLabel):
         if self.pbCount[0] is not None:
             month = self._pbCount()
             dfs = [month]
+            self.numPBs = len(month[1])
         else:
             dfs = self.data.splitMonths(returnType="Data")
+            self.numPBs = None
         
         totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
                   for monthYear, monthData in dfs]
@@ -183,13 +185,14 @@ class PBMonthLabel(QLabel):
         
     def _makeText(self):
         s = f"<b>{self.monthYear}</b>: <b>{self.distance}</b> km, <b>{self.time}</b> hours, <b>{self.calories}</b> calories"
+        if self.numPBs is not None:
+            s += f"; {self.numPBs} PBs"
         return s
 
     def setText(self):
         text = self._makeText()
         super().setText(text)
         
-
 class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
 
