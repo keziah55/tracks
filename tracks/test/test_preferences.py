@@ -88,7 +88,7 @@ class TestPreferences(TracksSetupTeardown):
         plotPref = self.prefDialog.pagesWidget.widget(self.plotIdx)
         
         with qtbot.waitSignal(plotPref.addPlotStyleButton.clicked):
-            qtbot.mouseClick(plotPref.addPlotStyleButton, Qt.LeftButton)
+             qtbot.mouseClick(plotPref.addPlotStyleButton, Qt.LeftButton)
             
         assert plotPref.customStyle.isEnabled()
         
@@ -102,7 +102,7 @@ class TestPreferences(TracksSetupTeardown):
         signals = [plotPref.customStyle.nameEdit.textChanged,
                    plotPref.customStyle.validateTimer.timeout]
         with qtbot.waitSignals(signals):
-            qtbot.keyClick(plotPref.customStyle.nameEdit, "2")
+             qtbot.keyClick(plotPref.customStyle.nameEdit, "2")
             
         assert plotPref.customStyle.saveButton.isEnabled()
         
@@ -127,6 +127,12 @@ class TestPreferences(TracksSetupTeardown):
             qtbot.mouseClick(plotPref.editPlotStyleButton, Qt.LeftButton)
         assert plotPref.customStyle.isEnabled()
         assert plotPref.customStyle.nameEdit.text() == "dark2"
+        plotPref.customStyle._colourButtonWidgets['speed'].setColour('#000000')
+        
+        with qtbot.waitSignal(plotPref.customStyle.cancelButton):
+            qtbot.mouseClick(plotPref.customStyle.cancelButton, Qt.LeftButton)
+            assert plotPref.customStyle._colourButtonWidgets['speed'].colour != '#000000'
+          
         plotPref.customStyle._colourButtonWidgets['speed'].setColour('#000000')
         
         with qtbot.waitSignal(plotPref.customStyle.saveStyle):
