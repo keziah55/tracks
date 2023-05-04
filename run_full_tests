@@ -31,18 +31,19 @@ echo "cd tracks"
 
 ../bin/python -m pip -V
 
-../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
-../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
-
-mkdir "$resultsDir"
-
 pythonVersion=`python3 -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')"`
 if [[ $pythonVersion == "3.11" ]]; then
     echo "PySide2 from PyPI not compatible with Python 3.11"
     declare -a qt_bindings=("pyqt5" "pyside6" "pyqt6")
 else
     declare -a qt_bindings=("pyside2" "pyqt5" "pyside6" "pyqt6")
+    echo "PySide2" >> requirements.txt
 fi
+
+../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
+../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
+
+mkdir "$resultsDir"
 
 # test with pyside2, then pyqt5
 for qt_api in "${qt_bindings[@]}"; do
