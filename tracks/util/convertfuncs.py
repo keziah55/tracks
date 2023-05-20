@@ -8,7 +8,7 @@ The remaining three functions convert time or date strings into floats, so value
 can be sorted.
 """
 
-from datetime import date
+from datetime import date, datetime
 import calendar
 import re
 import pandas as pd
@@ -150,7 +150,7 @@ def parseDate(value, pd_timestamp=False):
         
     return ret
 
-def floatToHourMinSec(value):
+def floatToHourMinSec(value) -> str:
     """ Convert a float of hours into hh:mm:ss. 
     
         Inverse of `hourMinSecToFloat`.
@@ -160,7 +160,7 @@ def floatToHourMinSec(value):
     s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
     return s
 
-def hourMinSecToFloat(value):
+def hourMinSecToFloat(value, mode='hour') -> float:
     """ Convert a string of hh:mm:ss to a float. Useful if you want to
         compare or sort many values.
         
@@ -168,9 +168,23 @@ def hourMinSecToFloat(value):
     """
     hours, mins, secs = value.split(':')
     value = float(hours) + (float(mins)/60) + (float(secs)/3600)
-    return value
+    
+    seconds = ['s', 'sec', 'secs', 'seconds']
+    minutes = ['m', 'min', 'mins', 'minutes']
+    hours = ['h', 'hr', 'hour', 'hours']
+    valid = seconds + minutes + hours
+    if mode not in valid:
+        msg = f"Mode '{mode}' not in valid modes: {valid}"
+        raise ValueError(msg)
+        
+    if mode in hours:
+        return value
+    elif mode in minutes:
+        return value * 60
+    else:
+        return value * 3600
 
-def monthYearToFloat(value):
+def monthYearToFloat(value) -> float:
     """ Convert a string of 'month year' to a float. Useful if you want to
         compare or sort many values.
     """
@@ -190,7 +204,7 @@ def monthYearToFloat(value):
     
     return value
 
-def dayMonthYearToFloat(value):
+def dayMonthYearToFloat(value) -> float:
     """ Convert a string of 'day month year' to a float. Useful if you want to
         compare or sort many values.
     """
@@ -212,3 +226,22 @@ def dayMonthYearToFloat(value):
     value = day + (idx*31) + (year*12*31)
     
     return value
+
+# def convertSecs(value, mode='hour') -> float:
+#     """ Convert seconds to minutes or hours. 
+    
+#         If `mode` is 'm', 'min', 'mins' or 'minutes', convert to minutes.
+#         If `mode` is 'h', 'hr', 'hour' or 'hours', convert to hours.
+#     """
+#     minutes = ['m', 'min', 'mins', 'minutes']
+#     hours = ['h', 'hr', 'hour', 'hours']
+#     valid = minutes + hours
+#     if mode not in valid:
+#         msg = f"Mode '{mode}' not in valid modes: {valid}"
+#         raise ValueError(msg)
+#     m = value / 60
+#     if mode in minutes:
+#         return m
+#     h = m / 60
+#     if mode in hours:
+#         return h

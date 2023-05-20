@@ -23,6 +23,7 @@ class TestData:
             data = list(self.data[name])
             assert data == list(self.df[name])
             
+    @pytest.mark.skip("move to test_util hourMinSecToFloat instead")
     @pytest.mark.parametrize("value,expected", [("1:23:45", 5025), ("20:05", 1205), 
                                                 ("45", None), ("65:12", None), ("invalid", None)])
     def test_time_to_secs(self, setup, value, expected):
@@ -32,6 +33,7 @@ class TestData:
         else:
             assert self.data._timeToSecs(value) == expected
             
+    @pytest.mark.skip("removed")
     @pytest.mark.parametrize("value,expected", [(12, 0.2), (60, 1), (630, 10.5), (12345, 205.75)])
     @pytest.mark.parametrize("mode", ['invalid', 'm', 'min', 'mins', 'minutes', 'h', 'hr', 'hour', 'hours'])
     def test_convert_secs(self, setup, value, expected, mode):

@@ -191,42 +191,6 @@ class Data(QObject):
         self.df = df
         self.dataChanged.emit(self.df.index)
             
-    @staticmethod
-    def _timeToSecs(t):
-        msg = ''
-        # don't actually need the datetime objects returned by strptime, but 
-        # this is probably the easist way to check the format
-        try:
-            datetime.strptime(t, "%H:%M:%S")
-            hr, mins, sec = [int(s) for s in t.split(':')]
-        except ValueError:
-            try:
-                datetime.strptime(t, "%M:%S")
-                mins, sec = [int(s) for s in t.split(':')]
-                hr = 0
-            except ValueError:
-                msg = f"Could not format time '{t}'"
-        if msg:
-            raise ValueError(msg)
-        
-        total = sec + (60*mins) + (60*60*hr)
-        return total
-    
-    @staticmethod
-    def _convertSecs(t, mode='hour'):
-        minutes = ['m', 'min', 'mins', 'minutes']
-        hours = ['h', 'hr', 'hour', 'hours']
-        valid = minutes + hours
-        if mode not in valid:
-            msg = f"Mode '{mode}' not in valid modes: {valid}"
-            raise ValueError(msg)
-        m = t / 60
-        if mode in minutes:
-            return m
-        h = m / 60
-        if mode in hours:
-            return h
-        
     @property
     def distance(self):
         """ Return 'Distance (km)' column as numpy array. """
@@ -262,8 +226,9 @@ class Data(QObject):
         """ Return numpy array of 'Time' column, where each value is converted
             to hours.
         """
-        time = [self._timeToSecs(t) for t in self.df['Time']]
-        time = np.array([self._convertSecs(s) for s in time])
+        time = [hourMinSecToFloat(t) for t in self.df['Time']]
+        # time = [self._timeToSecs(t) for t in self.df['Time']]
+        # time = np.array([self._convertSecs(s) for s in time])
         return time
     
     @property
