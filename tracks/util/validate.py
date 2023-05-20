@@ -60,12 +60,12 @@ def checkMonthYearFloat(value):
     except ValueError:
         return False
     
-def checkHourMinSecFloat(value):
+def checkHourMinSecFloat(value, strict=True):
     """ Return True if `value` is a 'hh:mm:ss' string that can be converted 
         to a float.
     """
     try:
-        hourMinSecToFloat(value)
+        hourMinSecToFloat(value, strict=strict)
         return True
     except ValueError:
         return False

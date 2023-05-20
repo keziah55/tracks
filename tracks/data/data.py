@@ -226,7 +226,7 @@ class Data(QObject):
         """ Return numpy array of 'Time' column, where each value is converted
             to hours.
         """
-        time = [hourMinSecToFloat(t) for t in self.df['Time']]
+        time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['Time']])
         # time = [self._timeToSecs(t) for t in self.df['Time']]
         # time = np.array([self._convertSecs(s) for s in time])
         return time

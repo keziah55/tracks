@@ -154,4 +154,12 @@ def test_float_to_hms(value):
     value2 = hourMinSecToFloat(s)
     assert np.isclose(value, value2, atol=1/3600) # tolerance within one second
     
-    
+@pytest.mark.parametrize("value,expected", [("1:23:45", 5025), ("20:05", 1205), 
+                                            ("45", None), ("65:12", 3912), ("invalid", None)])
+def test_hms_to_float_non_strict(value, expected):
+    if expected is None:
+        with pytest.raises(ValueError):
+            hourMinSecToFloat(value, mode="sec", strict=False)
+            # self.data._timeToSecs(value)
+    else:
+        assert hourMinSecToFloat(value, mode="sec", strict=False) == expected

@@ -160,14 +160,17 @@ def floatToHourMinSec(value) -> str:
     s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
     return s
 
-def hourMinSecToFloat(value, mode='hour') -> float:
+def hourMinSecToFloat(value, mode='hour', strict=True) -> float:
     """ Convert a string of hh:mm:ss to a float. Useful if you want to
         compare or sort many values.
         
+        If strict is False, mm:ss will be parsed. Otherwise, ValueError will be 
+        raised. Default is True.
+        
         Inverse of `floatToHourMinSec`.
     """
-    hours, mins, secs = value.split(':')
-    value = float(hours) + (float(mins)/60) + (float(secs)/3600)
+    # hours, mins, secs = value.split(':')
+    # value = float(hours) + (float(mins)/60) + (float(secs)/3600)
     
     seconds = ['s', 'sec', 'secs', 'seconds']
     minutes = ['m', 'min', 'mins', 'minutes']
@@ -176,6 +179,27 @@ def hourMinSecToFloat(value, mode='hour') -> float:
     if mode not in valid:
         msg = f"Mode '{mode}' not in valid modes: {valid}"
         raise ValueError(msg)
+
+    msg = ''    
+    try:
+        # datetime.strptime(value, "%H:%M:%S")
+        hr, mins, sec = [int(s) for s in value.split(':')]
+    except ValueError:
+        msg = f"Could not read format of time '{value}'"
+        if not strict:
+            try:
+                # datetime.strptime(value, "%M:%S")
+                mins, sec = value.split(':')
+                mins, sec = [int(s) for s in value.split(':')]
+                hr = 0
+            except ValueError:
+                pass
+            else:
+                msg = ""
+    if msg:
+        raise ValueError(msg)
+        
+    value = float(hr) + (float(mins)/60) + (float(sec)/3600)
         
     if mode in hours:
         return value
