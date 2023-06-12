@@ -602,7 +602,7 @@ class PlotStyle:
     def __init__(self, style="dark"):
         
         plotStyleFile = Path(Settings().fileName()).parent.joinpath('plotStyles.ini')
-        self.settings = Settings(plotStyleFile, Settings.NativeFormat)
+        self.settings = Settings(str(plotStyleFile), Settings.NativeFormat)
         
         self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
                      'highlightPoint', 'foreground', 'background']

@@ -2,19 +2,20 @@ from pathlib import Path
 from qtpy.QtGui import QIcon, QPixmap, QColor
 from qtpy.QtCore import Qt
 
-def getIconPath(name, ext="svg"):
+def getIconPath(name, ext="svg") -> Path:
+    """ Return Path to icon [name].[ext] """
     file = Path(__file__).parents[1].joinpath("images", "icons", f"{name}.{ext}")
     if file.exists():
         return file
     else:
         raise FileNotFoundError(f"Icon '{file}' not found.")
 
-def getIcon(name, ext="svg"):
-    """ Return QIcon of {name}.{ext} """
+def getIcon(name, ext="svg") -> QIcon:
+    """ Return QIcon of [name].[ext] """
     file = getIconPath(name, ext=ext)
     return QIcon(str(file))
         
-def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon"):
+def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon") -> QIcon | QPixmap:
     """ Open {name}.{ext} icon and change the colour to `foregroundColour`.
     
         Parameters
@@ -33,7 +34,7 @@ def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon"):
     if isinstance(foregroundColour, str):
         foregroundColour = QColor(foregroundColour)
     file = getIconPath(name, ext=ext)
-    px0 = QPixmap(file)
+    px0 = QPixmap(str(file))
     px1 = QPixmap(px0.size())
     px1.fill(foregroundColour)
     px1.setMask(px0.createMaskFromColor(Qt.transparent))

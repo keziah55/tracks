@@ -75,7 +75,7 @@ class Tracks(QMainWindow):
         self.fileChangedTimer.setInterval(100)
         self.fileChangedTimer.setSingleShot(True)
         self.fileChangedTimer.timeout.connect(self.csvFileChanged)
-        self.fileWatcher = QFileSystemWatcher([self.file])
+        self.fileWatcher = QFileSystemWatcher([str(self.file)])
         self.fileWatcher.fileChanged.connect(self.startTimer)
         
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
@@ -127,7 +127,7 @@ class Tracks(QMainWindow):
         
     @Slot()
     def backup(self):
-        bak = self.file + '.bak'
+        bak = self.file.with_suffix('.bak')
         self.data.df.to_csv(bak, sep=self.sep, index=False)
         
     @Slot(str)
