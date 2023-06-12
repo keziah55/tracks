@@ -19,7 +19,7 @@ class TracksSetupTeardown:
         makeDataFrame(random=True, size=self.size, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
-            return self.tmpfile.name
+            return Path(self.tmpfile.name)
         monkeypatch.setattr(Tracks, "getFile", mockGetFile)
         
         self._setup()
@@ -39,7 +39,7 @@ class TracksSetupTeardown:
         makeDataFrame(random=False, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
-            return self.tmpfile.name
+            return Path(self.tmpfile.name)
         monkeypatch.setattr(Tracks, "getFile", mockGetFile)
         
         self._setup()
