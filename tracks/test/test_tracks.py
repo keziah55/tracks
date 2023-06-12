@@ -3,7 +3,8 @@ from tracks.util import parseDuration
 from qtpy.QtCore import Qt, QPoint
 import random
 from . import makeDataFrame
-import tempfile, os, datetime
+import tempfile, datetime
+from pathlib import Path
 import pandas as pd
 import pytest
 
@@ -68,12 +69,11 @@ class TracksSetupTeardown:
         self.extraSetup()
     
     def _removeTmpConfig(self):
-        appName = "Cycle Tracks"
+        appName = "Tracks"
         orgName = "Tracks"
-        d = os.path.dirname(__file__)
-        confFile = os.path.join(d, ".config", orgName, appName+".conf")
-        if os.path.exists(confFile):
-            os.remove(confFile)
+        confFile = Path(__file__).parent.joinpath(".config", orgName, appName+".conf")
+        if confFile.exists():
+            confFile.unlink()
     
     def extraSetup(self):
         pass

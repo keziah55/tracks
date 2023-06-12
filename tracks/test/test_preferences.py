@@ -2,7 +2,7 @@ from .test_tracks import TracksSetupTeardown
 from tracks.util import hourMinSecToFloat, floatToHourMinSec, parseDuration
 import pytest
 import random
-import os.path
+from pathlib import Path
 import re
 import numpy as np
 import pandas as pd
@@ -181,11 +181,10 @@ class TestPreferences(TracksSetupTeardown):
                 expected = str(expected)
                 
                 if text != expected:
-                    d = os.path.dirname(os.path.realpath(__file__))
-                    d = os.path.join(d, "test_data")
-                    os.makedirs(d, exist_ok=True)
-                    df.to_csv(os.path.join(d, "test_num_pb_sessions_fail_sorted.csv"))
-                    self.data.df.to_csv(os.path.join(d, "test_num_pb_sessions_fail_unsorted.csv"))
+                    p = Path(__file__).parent.joinpath("test_data")
+                    p.mkdir(parents=True, exist_ok=True)
+                    df.to_csv(p.joinpath("test_num_pb_sessions_fail_sorted.csv"))
+                    self.data.df.to_csv(p.joinpath("test_num_pb_sessions_fail_unsorted.csv"))
                     
                     h = [re.sub(r"\n", " ", name) for name in self.pbTable.headerLabels]
                     tmpText = ", ".join(h) + "\n"
@@ -194,7 +193,7 @@ class TestPreferences(TracksSetupTeardown):
                         for c in range(len(self.pbTable.headerLabels)):
                             tmpRow.append(self.pbTable.item(r, c).text())
                         tmpText += ",".join(tmpRow) + "\n"
-                    with open(os.path.join(d, "test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
+                    with open(p.joinpath("test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
                         fileobj.write(tmpText)
                 
                 assert text == expected

@@ -5,6 +5,8 @@ Main window for Tracks.
 """
 
 import os
+from pathlib import Path
+
 from datetime import datetime
 from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
                              QMessageBox, QLabel)
@@ -31,7 +33,7 @@ class Tracks(QMainWindow):
         
         self.file = self.getFile()
         self.sep = ','
-        if not os.path.exists(self.file):
+        if not self.file.exists():
             header = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
             s = self.sep.join(header)
             with open(self.file, 'w') as fileobj:
@@ -100,9 +102,8 @@ class Tracks(QMainWindow):
         self.createActions()
         self.createMenus()
         
-        fileDir = os.path.split(__file__)[0]
-        path = os.path.join(fileDir, "..", "images/icon.png")
-        icon = QIcon(path)
+        p = Path(__file__).parents[1].joinpath("images/icon.png")
+        icon = QIcon(str(p))
         self.setWindowIcon(icon)
         
     def show(self):
@@ -111,10 +112,9 @@ class Tracks(QMainWindow):
         
     @staticmethod
     def getFile():
-        home = os.path.expanduser('~')
-        path = os.path.join(home, '.tracks')
-        os.makedirs(path, exist_ok=True)
-        file = os.path.join(path, 'tracks.csv')
+        p = Path.home().joinpath('.tracks')
+        p.mkdir(parents=True, exist_ok=True)
+        file = p.joinpath('tracks.csv')
         return file
         
     @Slot()

@@ -6,7 +6,7 @@ Script to create html report from pytest results for both PyQt5 and PySide2.
 
 import xml.etree.ElementTree as ET
 from datetime import datetime
-import os.path
+from pathlib import Path
 import re
 import pkg_resources
 import argparse
@@ -35,9 +35,9 @@ class ReportWriter:
     fmt = "%a %d %b %Y, %H:%M:%S"
         
     def __init__(self, results=None, out=None, ts=None, qt=None):
-        self.resultsDir = results
-        self.out = out
-        self.cssFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "report-styles.css")
+        self.resultsDir = Path(results)
+        self.out = Path(out)
+        self.cssFile = Path(__file__).parent.joinpath("report-styles.css")
         ts = float(ts) if ts is not None else ts
         self.ts = self._getTimestamp(ts)
         self.duration = self._getDuration(ts)
@@ -170,8 +170,8 @@ class ReportWriter:
         """ Return testsuite elements for each Qt API. """
         testsuites = {}
         for api in self.qtApisLower:
-            file = os.path.join(self.resultsDir, f"{api}-results.xml")
-            if os.path.exists(file):
+            file = self.resultsDir.joinpath(f"{api}-results.xml")
+            if file.exists():
                 tree = ET.parse(file)
                 testsuites[api] = tree.getroot().findall("testsuite")[0]
         return testsuites
@@ -179,9 +179,9 @@ class ReportWriter:
     def _getCoverage(self):
         coverage = {}
         for api in self.qtApisLower:
-            file = os.path.join(self.resultsDir, f"{api}-coverage.xml")
+            file = self.resultsDir.joinpath(f"{api}-coverage.xml")
             coverage[api] = {}
-            if os.path.exists(file):
+            if file.exists():
                 tree = ET.parse(file)
                 coverage[api]['summary'] = tree.getroot().attrib
                 coverage[api]['packages'] = tree.getroot().findall("packages")[0]
@@ -318,7 +318,7 @@ class ReportWriter:
         warnInfo = {}
 
         for api in self.qtApisLower:
-            file = os.path.join(self.resultsDir, f"{api}-output.log")
+            file = self.resultsDir.joinpath(f"{api}-output.log")
             
             files = [] # list of file lists
             msg = [] # list of strings
@@ -525,7 +525,7 @@ class ReportWriter:
         print()
         if self.duration is not None:
             print(f"Tests completed in {self.duration}")
-        print(f"Test report written to {os.path.abspath(self.out)}")
+        print(f"Test report written to {self.out.absolute()}")
     
 if __name__ == "__main__":
     

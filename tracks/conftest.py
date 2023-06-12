@@ -1,7 +1,7 @@
 from qtpy.QtCore import QCoreApplication
 from customQObjects.core import Settings
 from dataclasses import dataclass
-import os
+from pathlib import Path
 import pytest
 
 @dataclass
@@ -15,19 +15,18 @@ class Variables:
 def patchSettings(monkeypatch):
     appName = "Tracks"
     orgName = "Tracks"
-    d = os.path.dirname(__file__)
     # if conf file exists in test dir, remove it, so we're always testing with
     # defaults, unless changed in the test
-    confFile = os.path.join(d, ".config", orgName, appName+".conf")
-    if os.path.exists(confFile):
-        os.remove(confFile)
-    monkeypatch.setenv("HOME", d)
+    confFile = Path(__file__).parent.joinpath(".config", orgName, appName+".conf")
+    if confFile.exists():
+        confFile.unlink()
+    monkeypatch.setenv("HOME", str(Path(__file__).parent))
     QCoreApplication.setApplicationName(appName)
     QCoreApplication.setOrganizationName(orgName)
     
-    plotStyleFile = os.path.join(os.path.dirname(confFile), 'plotStyles.ini')
-    if os.path.exists(plotStyleFile):
-        os.remove(plotStyleFile)
+    plotStyleFile = confFile.parent.joinpath('plotStyles.ini')
+    if plotStyleFile.exists():
+        plotStyleFile.unlink()
     monkeypatch.setattr(Settings, "fileName", lambda *args, **kwargs: confFile)
 
 @pytest.fixture()

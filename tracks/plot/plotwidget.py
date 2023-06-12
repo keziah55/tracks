@@ -3,7 +3,7 @@ Widget containing plot and labels.
 """
 
 from datetime import datetime, timedelta
-import os
+from pathlib import Path
 from pyqtgraph import (PlotWidget as _PlotWidget, PlotCurveItem, mkPen, mkBrush, 
                        InfiniteLine, setConfigOptions)
 import numpy as np
@@ -601,8 +601,7 @@ class PlotStyle:
     
     def __init__(self, style="dark"):
         
-        plotStyleFile = os.path.dirname(Settings().fileName())
-        plotStyleFile = os.path.join(plotStyleFile, 'plotStyles.ini')
+        plotStyleFile = Path(Settings().fileName()).parent.joinpath('plotStyles.ini')
         self.settings = Settings(plotStyleFile, Settings.NativeFormat)
         
         self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
