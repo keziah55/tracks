@@ -1,9 +1,9 @@
 # Tracks
 
-New and improved version of [MyCycle](https://github.com/keziah55/MyCycle).
-
 This GUI centres on the plotting, and uses PyQtGraph to create interactive
 plots of my cycling stats.
+
+A simple user guide can be found [here](https://keziah55.github.io/tracks/).
 
 ![Tracks GUI](./docs/img/tracks.png)
 
@@ -22,7 +22,7 @@ plots of my cycling stats.
 
 - Click on point to select that point in the data viewer
 
-- 'Personal bests' widget shows the best month (by distance) and top five sessions
+- 'Personal bests' widget shows the best month and top five sessions
 
 
 ## Requirements
