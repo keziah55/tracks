@@ -1,0 +1,4 @@
+site_name: Tracks
+
+nav:
+    - Home: 'index.md'
