@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Tracks</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">Tracks</a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-light">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#tracks-user-guide" class="nav-link">Tracks User Guide</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#adding-data" class="nav-link">Adding data</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#plots" class="nav-link">Plots</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#personal-bests" class="nav-link">Personal bests</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="tracks-user-guide">Tracks User Guide</h1>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><img alt="Application window" src="img/tracks.png" /></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><em>Application window</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="adding-data">Adding data</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><img alt="Add data" src="img/add_data.png" title="Add data widget" /></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><em>Adding a new session</em></td>
+</tr>
+</tbody>
+</table>
+<p>Use the 'Add data' widget to add info about sessions. 
+You can add multiple sessions at once here. The values are validated as you enter
+them. Invalid values are shown in red.</p>
+<p>If a newly added session was a personal best, a pop up will notify you.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><img alt="Monthly data" src="img/monthly_data.png" title="Monthly data tree" /></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><em>All data, grouped by month</em></td>
+</tr>
+</tbody>
+</table>
+<p>The new sessions are added to the 'Monthly data' tree.
+This groups sessions by month and gives a summary of each month. 
+You can select the measure used to sumarise a category in 
+Edit-&gt;Preferences-&gt;Data-&gt;Summary criteria. 
+Available measures are sum, min, max and mean.</p>
+<p>When multiple sessions in the tree are selected, a summary of them is shown in 
+the status bar.</p>
+<h2 id="plots">Plots</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><img alt="Speed plot" src="img/plot.png" title="Speed plot" /></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><em>Plot of session speed</em></td>
+</tr>
+</tbody>
+</table>
+<p>Session data is also shown in the plot window. The speed, distance, calories and
+time are all plotted - you can switch between the series by clicking on the labels
+underneath the plot.</p>
+<p>Clicking on a point selects the corresponding session in the 'Monthly data' widget
+and vice versa.</p>
+<p>The toolbar on the right can set the plot range to show all points or reset to 
+the default range. The default range can be set in Edit-&gt;Preferences-&gt;Plot-&gt;Default plot range.</p>
+<p>The star button in the toolbar highlights all points that were personal bests. </p>
+<h2 id="personal-bests">Personal bests</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><img alt="Personal bests" src="img/personal_bests.png" title="Personal best widgets" /></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><em>Personal best widgets</em></td>
+</tr>
+</tbody>
+</table>
+<p>The two widgets in the top left show personal best info. By default, the top
+five sessions are chosen by speed. To show the top sessions by another measure,
+click on the 'Top sessions' table header. The number of sessions can be changed in
+Edit-&gt;Preferences-&gt;Data-&gt;Top sessions.</p>
+<p>The 'Best month' widget by default shows the month with the greatest number of
+PBs in the last 12 months. Again, these parameters can be changed in 
+Edit-&gt;Preferences-&gt;Data-&gt;Best month.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.4.2
+Build Date UTC : 2023-06-28 20:48:54.677450+00:00
+-->
