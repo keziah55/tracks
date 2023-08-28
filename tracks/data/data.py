@@ -9,6 +9,16 @@ from datetime import datetime
 import calendar
 import numpy as np
 import pandas as pd
+import functools
+
+def check_empty(func):
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
+        if self.df.empty:
+            return []
+        else:
+            return func(self, *args, **kwargs)
+    return wrapped
 
 class Data(QObject):
     
@@ -261,6 +271,7 @@ class Data(QObject):
             df = Data(df)
         return df
     
+    @check_empty
     def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
         """ Split `df` into months. 
         
@@ -347,6 +358,7 @@ class Data(QObject):
                 odo.append(dist)
         return dts, odo
     
+    @check_empty
     def getPBs(self, column, pbCount):
         """ Return indices where the value in `column` was a PB (at the time).
         
@@ -367,6 +379,8 @@ class Data(QObject):
             series = self.timeHours
         else:
             series = self[key]
+        if pbCount > len(series):
+            pbCount = len(series)
         best = series[:pbCount]
         idx = list(range(pbCount)) # first pbCount values will be PBs
         for n in range(pbCount, len(series)):

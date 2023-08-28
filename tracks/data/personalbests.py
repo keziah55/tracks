@@ -119,11 +119,18 @@ class PBMonthLabel(QLabel):
     def newData(self):
         if self.pbCount[0] is not None:
             month = self._pbCount()
-            dfs = [month]
-            self.numPBs = len(month[1])
+            if month is None:
+                dfs = []
+                self.numPBs = 0
+            else:
+                dfs = [month]
+                self.numPBs = len(month[1])
         else:
             dfs = self.data.splitMonths(returnType="Data")
             self.numPBs = None
+            
+        if len(dfs) == 0:
+            return None
         
         totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
                   for monthYear, monthData in dfs]
@@ -148,6 +155,10 @@ class PBMonthLabel(QLabel):
     def _pbCount(self):
         pbCount, pbMonthRange = self.pbCount
         idx = self.data.getPBs(self.column, pbCount)
+        
+        if len(idx) == 0:
+            return None
+        
         pb_df = self.data.df.loc[idx].copy()
         
         if pbMonthRange is not None:
@@ -159,7 +170,7 @@ class PBMonthLabel(QLabel):
                 year -= 1
             today = f"{date.today().year}{date.today().month:02d}{date.today().day:02d}"
             prev = f"{year}{month:02d}01"
-            pb_df = pb_df.query(f'{prev} < Date < {today}')
+            pb_df = pb_df.query(f'{prev} <= Date <= {today}')
             
         data = Data(pb_df)
         pb_dfs = data.splitMonths(returnType="Data")
@@ -357,8 +368,9 @@ class PBTable(QTableWidget):
         dates = [row['Date'] for row in self.items]
         if newDates != dates:
             i = 0
-            while newDates[i] == dates[i]:
-                i += 1
+            if len(dates) > 0:
+                while newDates[i] == dates[i]:
+                    i += 1
             self.newIdx = i
             msg = self.makeMessage(self.selectKey, i, pb[i][self.selectKey])
             return msg
@@ -367,8 +379,8 @@ class PBTable(QTableWidget):
             
     @Slot(int, int, int, int)
     def _cellChanged(self, row, column, previousRow, previousColumn):
-        dct = self.items[row]
-        if self.parent is not None:
+        if self.parent is not None and len(self.items) > 0:
+            dct = self.items[row]
             self.parent.itemSelected.emit(dct['datetime'])
 
     def makeMessage(self, key, idx, value):

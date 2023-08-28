@@ -312,6 +312,8 @@ class Plot(_PlotWidget):
             These two options are equivalent if there are sessions from the current
             month in the `Data` object.
         """
+        if self.data.df.empty:
+            return
         self.viewMonths = months
         if fromRecentSession:
             ts1 = self.data.dateTimestamps[-1]
@@ -545,7 +547,7 @@ class Plot(_PlotWidget):
         
     @Slot(object)
     def mouseMoved(self, pos):
-        if self.plotItem.sceneBoundingRect().contains(pos):
+        if not self.data.df.empty and self.plotItem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotItem.vb.mapSceneToView(pos)
             
             idx = int(mousePoint.x())
