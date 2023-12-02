@@ -5,7 +5,7 @@ testDir="../tracks-test"
 resultsDir="results"
 ts=`date +%s%6N` # timestamp in ms
 
-# remove resutlsDir from current directory, so the results can be moved over at the end of this script
+# remove resultsDir from current directory, so the results can be moved over at the end of this script
 if [ -d "$resultsDir" ]; then
     rm -rf $resultsDir/*
 fi
@@ -20,9 +20,9 @@ cd $testDir
 
 echo "cd $testDir"
 
-git clone git@github.com:keziah55/tracks.git
+git clone https://github.com/keziah55/tracks.git
 
-# make venv in tracksTest, not tracks, because pytest was picking up
+# make venv in tracks-test, not tracks, because pytest was picking up
 # conftest.py files from modules installed in the venv (e.g. numpy)
 python3 -m venv .
 
