@@ -165,8 +165,8 @@ class PBMonthLabel(QLabel):
             month = date.today().month
             year = date.today().year
             month = month - pbMonthRange
-            if month < 0:
-                month += 13
+            if month <= 0:
+                month += 12
                 year -= 1
             today = f"{date.today().year}{date.today().month:02d}{date.today().day:02d}"
             prev = f"{year}{month:02d}01"
