@@ -31,8 +31,6 @@ class Tracks(QMainWindow):
         
         self._saveLabel = QLabel()
         self._summaryLabel = QLabel()
-        # self.statusBar().addWidget(self._saveLabel)
-        # self.statusBar().addWidget(self._summaryLabel)
         
         activity = self.settings.value("activity/current", "cycling")
         
@@ -42,17 +40,8 @@ class Tracks(QMainWindow):
         self.activities.insert(0, act)
         
         df = self.load_df(act)
-        
-        # self.file = self.getFile()
-        # self.sep = ','
-        # if not self.file.exists():
-        #     header = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
-        #     s = self.sep.join(header)
-        #     with open(self.file, 'w') as fileobj:
-        #         fileobj.write(s+'\n')
-                
-        # df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
-        self.data = Data(df)
+
+        self.data = Data(df, act)
         self.save()
         
         self.summary = Summary()
@@ -192,9 +181,8 @@ class Tracks(QMainWindow):
         
         self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
         self.backup()
-        saveTime = datetime.now().strftime("%H:%M:%S")
-        # self._saveLabel.setText(f"Last saved at {saveTime}")
-        self.statusBar().showMessage(f"Last saved at {saveTime}")
+        save_time = datetime.now().strftime("%H:%M:%S")
+        self.statusBar().showMessage(f"Last saved at {save_time}")
         
     @Slot()
     def backup(self, activity=None):
@@ -213,7 +201,7 @@ class Tracks(QMainWindow):
         
     @Slot()
     def csvFileChanged(self):
-        df = pd.read_csv(self._fileChanged, sep=self.sep, parse_dates=['Date'])
+        df = pd.read_csv(self._fileChanged, sep=self._csv_sep, parse_dates=['Date'])
         try: 
             assert_frame_equal(self.data.df, df, check_exact=False)
         except AssertionError:
@@ -223,7 +211,7 @@ class Tracks(QMainWindow):
                 self.loadCsvFile()
             
     def loadCsvFile(self):
-        df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
+        df = pd.read_csv(self.file, sep=self._csv_sep, parse_dates=['Date'])
         self.backup()
         self.data.setDataFrame(df)
         

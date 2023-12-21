@@ -1,6 +1,7 @@
 """
-Object providing convenient access to the contents of a DataFrame of cycling data.
+Object providing convenient access to the contents of a DataFrame.
 """
+
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
@@ -23,41 +24,67 @@ def check_empty(func):
 class Data(QObject):
     
     dataChanged = Signal(object)
-    """ **signal** dataChanged(object `index`)
+    """ 
+    **signal** dataChanged(object `index`)
     
-        Emitted when the data in the object is changed, with the pandas index
-        of the new rows.
+    Emitted when the data in the object is changed, with the pandas index
+    of the new rows.
     """
     
     newMax = Signal(str, object)
-    """ **signal** newMax(str `column`, object `value`)
+    """ 
+    **signal** newMax(str `column`, object `value`)
         
-        Emitted when newly added data contains a new max value for a given
-        column.
+    Emitted when newly added data contains a new max value for a given column.
     """
     
-    def __init__(self, df):
-        """ Object providing convenience functions for accessing data from 
-            a given DataFrame of cycling data.
+    def __init__(self, df, activity=None):
+        """ 
+        Object providing convenience functions for accessing data from a given DataFrame.
         """
         super().__init__()
         self.df = self._makeSpeedColumn(df)
         
-        self.propertyNames = {'Distance (km)':'distance', 
-                              'Date':'date',
-                              'Time':'time',
-                              'Calories':'calories',
-                              'Speed (km/h)':'speed',
-                              'Gear':'gear',
-                              'Time (hours)':'timeHours'}
+        if activity is None:
+            # temporary workaround for whwn we create Data objects on the fly
+            from tracks.activities import load_activity
+            from pathlib import Path
+            p = Path.home().joinpath(".tracks", "cycling.json")
+            activity = load_activity(p)
         
-        shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
-        self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
+        self.propertyNames = {}
+        self._quickNames = {}
+        sig_figs = {}
         
-        sigFigs = {'Distance (km)':2, 
-                   'Calories':1,
-                   'Speed (km/h)':2}
-        self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sigFigs.items()}
+        for slug, measure in activity.measures.items():
+            self.propertyNames[measure.full_name] = slug
+            self._quickNames[slug] = measure.full_name
+            if measure.sig_figs is not None:
+                sig_figs[measure.full_name] = measure.sig_figs
+        
+        
+        # self.propertyNames = {
+        #     measure.full_name: slug for slug, measure in activity.measures.items()
+        # }
+        self.propertyNames['Time (hours)'] = 'timeHours'
+        
+        # self.propertyNames = {'Distance (km)':'distance', 
+        #                       'Date':'date',
+        #                       'Time':'time',
+        #                       'Calories':'calories',
+        #                       'Speed (km/h)':'speed',
+        #                       'Gear':'gear',
+        #                       'Time (hours)':'timeHours'}
+        
+        # shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
+        # self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
+        
+        # self._quickNames = {slug: measure.full_name for slug, measure in activity.measures.items()}
+        
+        # sigFigs = {'Distance (km)':2, 
+        #            'Calories':1,
+        #            'Speed (km/h)':2}
+        self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sig_figs.items()}
         self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
         self.fmtFuncs['Time'] = lambda t: t
         self.fmtFuncs['Time (hours)'] = floatToHourMinSec
@@ -99,13 +126,14 @@ class Data(QObject):
         return row
     
     def toString(self, headTail=None):
-        """ Return Data object as a string.
+        """ 
+        Return Data object as a string.
         
-            Parameters
-            ----------
-            headTail : int, optional
-                If provided, abridge the object to show only the first and last 
-                `headTail` rows. By default, do not abridge and return the full object.
+        Parameters
+        ----------
+        headTail : int, optional
+            If provided, abridge the object to show only the first and last 
+            `headTail` rows. By default, do not abridge and return the full object.
         """
         keys = ["Date", "Time", "Distance (km)", "Speed (km/h)", "Calories", "Gear"]
         joinStr = "  "
@@ -161,17 +189,18 @@ class Data(QObject):
         self.dataChanged.emit(index)
         
     def update(self, values):
-        """ Update items in the underlying DataFrame. 
+        """ 
+        Update items in the underlying DataFrame. 
         
-            `values` should be a dict; the keys should be indices and values 
-            should be dicts of column:value. If the value currently at the 
-            given column and index is different from that supplied in the 
-            dictionary, it will be updated.
-            
-            If changes are made, `dataChanged` is emitted.
-            
-            Example `values` structure:
-                {10: {'Distance (km)':25, 'Calories':375}}
+        `values` should be a dict; the keys should be indices and values 
+        should be dicts of column:value. If the value currently at the 
+        given column and index is different from that supplied in the 
+        dictionary, it will be updated.
+        
+        If changes are made, `dataChanged` is emitted.
+        
+        Example `values` structure:
+            {10: {'Distance (km)':25, 'Calories':375}}
         """
         changed = []
         for index, dct in values.items():
@@ -233,18 +262,18 @@ class Data(QObject):
     
     @property
     def timeHours(self):
-        """ Return numpy array of 'Time' column, where each value is converted
-            to hours.
+        """ 
+        Return numpy array of 'Time' column, where each value is converted to hours.
         """
         time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['Time']])
         return time
     
     @property
     def dateTimestamps(self):
-        """ Return 'Date' column, converted to array of timestamps (time since 
-            epoch).
+        """ 
+        Return 'Date' column, converted to array of timestamps (time since epoch).
     
-            See also: :py:meth:`datetimes`.
+        See also: :py:meth:`datetimes`.
         """
         return np.array([dt.timestamp() for dt in self.datetimes])
 
@@ -273,21 +302,22 @@ class Data(QObject):
     
     @check_empty
     def splitMonths(self, includeEmpty=False, returnType='DataFrame'):
-        """ Split `df` into months. 
+        """ 
+        Split `df` into months. 
         
-            Parameters
-            -----------
-            includeEmpty : bool
-                If True and if a month has no data, a monthYear string and empty 
-                DataFrame or Data object will be included in the returned list. 
-                Otherwise, it  will be ignored. Default is False.
-            returnType : {'DataFrame', 'Data'}
-                Type of object to return with each month's data. Default is 
-                (pandas) 'DataFrame'
-            
-            Returns
-            -------
-            list of (monthYear string, DataFrame/Data) tuples
+        Parameters
+        -----------
+        includeEmpty : bool
+            If True and if a month has no data, a monthYear string and empty 
+            DataFrame or Data object will be included in the returned list. 
+            Otherwise, it  will be ignored. Default is False.
+        returnType : {'DataFrame', 'Data'}
+            Type of object to return with each month's data. Default is 
+            (pandas) 'DataFrame'
+        
+        Returns
+        -------
+        list of (monthYear string, DataFrame/Data) tuples
         """
         validReturnTypes = ['DataFrame', 'Data']
         if returnType not in validReturnTypes:
@@ -327,10 +357,11 @@ class Data(QObject):
         return lst
     
     def getMonthlyOdometer(self):
-        """ Return list of datetime objects and list of floats.
+        """ 
+        Return list of datetime objects and list of floats.
             
-            The datetime objects are required, as they add dummy 1st of the 
-            month data points to reset the total to 0km.
+        The datetime objects are required, as they add dummy 1st of the 
+        month data points to reset the total to 0km.
         """
         dfs = self.splitMonths(includeEmpty=True)
         odo = []
@@ -360,19 +391,20 @@ class Data(QObject):
     
     @check_empty
     def getPBs(self, column, pbCount):
-        """ Return indices where the value in `column` was a PB (at the time).
-        
-            Parameters
-            ----------
-            column : str
-                Column :attr:`quickName` to look through
-            pbCount : int
-                Number of sessions that can be PBs simultaneously
-                
-            Returns
-            -------
-            idx : List[int]
-                list of indicies of PBs
+        """ 
+        Return indices where the value in `column` was a PB (at the time).
+    
+        Parameters
+        ----------
+        column : str
+            Column :attr:`quickName` to look through
+        pbCount : int
+            Number of sessions that can be PBs simultaneously
+            
+        Returns
+        -------
+        idx : List[int]
+            list of indicies of PBs
         """
         key = self.quickNames[column]
         if key == 'Time':
@@ -413,11 +445,12 @@ class Data(QObject):
         self.dataChanged.emit(i0)
         
     def removeRows(self, **kwargs):
-        """ Remove row(s) from the DataFrame by date or index. 
+        """ 
+        Remove row(s) from the DataFrame by date or index. 
         
-            Pass either 'dates' or 'index' kwarg.
-        
-            Note that this assumes dates are unique in the object.
+        Pass either 'dates' or 'index' kwarg.
+    
+        Note that this assumes dates are unique in the object.
         """
         dates = kwargs.get("dates", None)
         if dates is not None:

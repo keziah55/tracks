@@ -104,6 +104,8 @@ class Measure:
         Type of data for this measure (as string)
     summary : {'sum', 'min', 'max', 'mean'}
         Function to call to summarise multiple instances of this measure
+    sig_figs: int, optional
+        Number of significant figures to use when displaying this measure
     unit : str, optional
         Unit for this measure. If None, and this measure is a relation of two
         other meaures, attempt to infer the unit from the relation.
@@ -124,6 +126,7 @@ class Measure:
         name: str,
         dtype: str, 
         summary: str, 
+        sig_figs: int = None,
         unit: str = None,
         show_unit: bool = True,
         plottable: bool = True,
@@ -133,7 +136,7 @@ class Measure:
         self._name = name
         self._dtype = dtype
         self._summary = summary
-        
+        self._sig_figs = sig_figs
         self._show_unit = show_unit
         self._plottable = plottable
         
@@ -156,8 +159,8 @@ class Measure:
                 unit = f"{units[0]}{self._relation.op.operator}{units[1]}"
         self._unit = unit
         
-        self._properties = ["name", "dtype", "summary", "unit", "show_unit",
-                            "plottable", "cmp_func", "relation"]
+        self._properties = ["name", "dtype", "summary", "sig_figs", "unit", 
+                            "show_unit", "plottable", "cmp_func", "relation"]
         
     def __getattr__(self, name):
         if name in self._properties:
@@ -174,6 +177,7 @@ class Measure:
             "name": self.name,
             "dtype": self.dtype,
             "summary": self.summary,
+            "sig_figs": self.sig_figs,
             "unit": self.unit,
             "show_unit": self.show_unit,
             "plottable": self.plottable,
@@ -192,6 +196,13 @@ class Measure:
     @property
     def user(self):
         return self._relation is None
+    
+    @property
+    def full_name(self):
+        name = self.name
+        if self.show_unit and self.unit is not None:
+            name = f"{name} ({self.unit})"
+        return name
     
 class Activity:
     """ 
@@ -223,21 +234,14 @@ class Activity:
         
     @property
     def measures(self):
-        return list(self._measures.keys())
+        return self._measures
     
     def add_measure(self, *args, **kwargs):
         m = Measure(*args, **kwargs)
         self._measures[m.slug] = m
     
     def header(self):
-        header = []
-        
-        for measure in self._measures.values():
-            name = measure.name
-            if measure.unit is not None and measure.show_unit:
-                name = f"{name} ({measure.unit})"
-            header.append(name)
-            
+        header = [measure.full_name for measure in self._measures.values()]
         return header
     
     def to_json(self):
