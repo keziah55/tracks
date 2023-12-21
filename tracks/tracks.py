@@ -4,7 +4,6 @@
 Main window for Tracks.
 """
 
-import os
 from pathlib import Path
 
 from datetime import datetime
