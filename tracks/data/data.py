@@ -46,7 +46,7 @@ class Data(QObject):
         self.df = self._makeSpeedColumn(df)
         
         if activity is None:
-            # temporary workaround for whwn we create Data objects on the fly
+            # temporary workaround for when we create Data objects on the fly
             from tracks.activities import load_activity
             from pathlib import Path
             p = Path.home().joinpath(".tracks", "cycling.json")
@@ -54,41 +54,23 @@ class Data(QObject):
         
         self.propertyNames = {}
         self._quickNames = {}
-        sig_figs = {}
+        self.fmtFuncs = {}
         
         for slug, measure in activity.measures.items():
             self.propertyNames[measure.full_name] = slug
             self._quickNames[slug] = measure.full_name
             if measure.sig_figs is not None:
-                sig_figs[measure.full_name] = measure.sig_figs
+                self.fmtFuncs[measure.full_name] = partial(self._formatFloat, digits=measure.sig_figs)
+            elif slug == "date":
+                self.fmtFuncs[measure.full_name] = partial(self._formatDate, dateFmt="%d %b %Y")
+            elif slug == "time":
+                self.fmtFuncs[measure.full_name] = lambda t: t
+            else:
+                # assume int/no sig figs
+                self.fmtFuncs[measure.full_name] = lambda value: self._formatFloat(np.around(value), 0)
         
-        
-        # self.propertyNames = {
-        #     measure.full_name: slug for slug, measure in activity.measures.items()
-        # }
         self.propertyNames['Time (hours)'] = 'timeHours'
-        
-        # self.propertyNames = {'Distance (km)':'distance', 
-        #                       'Date':'date',
-        #                       'Time':'time',
-        #                       'Calories':'calories',
-        #                       'Speed (km/h)':'speed',
-        #                       'Gear':'gear',
-        #                       'Time (hours)':'timeHours'}
-        
-        # shortNames = ['distance', 'date', 'time', 'calories', 'speed', 'gear']
-        # self._quickNames = dict(zip(shortNames, self.propertyNames.keys()))
-        
-        # self._quickNames = {slug: measure.full_name for slug, measure in activity.measures.items()}
-        
-        # sigFigs = {'Distance (km)':2, 
-        #            'Calories':1,
-        #            'Speed (km/h)':2}
-        self.fmtFuncs = {k:partial(self._formatFloat, digits=v) for k,v in sig_figs.items()}
-        self.fmtFuncs['Date'] = partial(self._formatDate, dateFmt="%d %b %Y")
-        self.fmtFuncs['Time'] = lambda t: t
         self.fmtFuncs['Time (hours)'] = floatToHourMinSec
-        self.fmtFuncs['Gear'] = lambda value: self._formatFloat(np.around(value), 0)
         
     @staticmethod
     def _formatFloat(value, digits=2):
