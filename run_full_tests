@@ -1,4 +1,4 @@
-#!/.venv/bin/bash
+#!/bin/bash
 
 origDir="$PWD"
 testDir="../tracks-test"
