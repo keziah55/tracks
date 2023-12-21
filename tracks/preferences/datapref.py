@@ -115,11 +115,7 @@ class DataPreferences(QWidget):
             bestMonthPB = None
             
         months = self.pbRangeCombo.currentText()
-        if months == "1 year":
-            months = "12 months"
-        elif months == "Current year":
-            months = f"{date.today().month} months"
-        months = None if months == 'All' else int(months.strip(' months'))
+        months = self.mainWindow.parseMonthRange(months)
             
         self.mainWindow.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
         

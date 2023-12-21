@@ -6,7 +6,7 @@ Main window for Tracks.
 
 from pathlib import Path
 
-from datetime import datetime
+from datetime import datetime, date
 from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
                              QMessageBox, QLabel)
 from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
@@ -18,6 +18,8 @@ from .data import Data, DataViewer, AddData, PersonalBests, Summary
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
+
+from time import time
 
 class Tracks(QMainWindow):
     def __init__(self):
@@ -48,10 +50,14 @@ class Tracks(QMainWindow):
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
         self.pb = PersonalBests(self, numSessions=numTopSessions, 
                                 monthCriterion=monthCriterion)
+        
         self.viewer = DataViewer(self)
+        
         self.addData = AddData()
+        
         plotStyle = self.settings.value("plot/style", "dark")
-        self.plot = PlotWidget(self, style=plotStyle)
+        monthRange = self.parseMonthRange(self.settings.value("plot/range", "All"))
+        self.plot = PlotWidget(self, style=plotStyle, months=monthRange)
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -105,9 +111,29 @@ class Tracks(QMainWindow):
         icon = QIcon(str(p))
         self.setWindowIcon(icon)
         
-    def show(self):
-        super().show()
-        self.prefDialog.ok()
+    # def show(self):
+        # super().show()
+        # self.prefDialog.ok()
+        
+    @staticmethod
+    def parseMonthRange(s) -> int:
+        """ 
+        Parse string into int number of months.
+        
+        |        s       |            Return           |
+        |:--------------:|:---------------------------:|
+        |  "[X] months"  |              X              |
+        |    "1 year"    |              12             |
+        | "current year" | datetime.date.today().month |
+        |      "all"     |             None            |
+        """
+        s = s.lower()
+        if s == "1 year":
+            s = "12 months"
+        elif s == "current year":
+            s = f"{date.today().month} months"
+        months = None if s == 'all' else int(s.strip(' months'))
+        return months
         
     @staticmethod
     def getFile():

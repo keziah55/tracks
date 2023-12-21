@@ -2,7 +2,6 @@
 Plot preferences
 """
 
-from datetime import date
 from qtpy.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QSpinBox, 
                              QVBoxLayout, QWidget, QLineEdit, QPushButton,
                              QColorDialog, QGridLayout, QLabel, QSizePolicy)
@@ -12,6 +11,8 @@ from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, 
 from customQObjects.widgets import GroupBox, ComboBox
 from customQObjects.core import Settings
 from tracks import makeForegroundIcon 
+import warnings
+
 
 class StyleDesigner(QWidget):
     
@@ -389,10 +390,9 @@ class PlotPreferences(QWidget):
         self.setLayout(mainLayout)
         
         self.setCurrentValues()
-        # apply initial state
-        self.apply()
         
     def setCurrentValues(self):
+        """ Set widget values from `settings` """
         self.settings = Settings()
         self.settings.beginGroup("plot")
 
@@ -405,19 +405,34 @@ class PlotPreferences(QWidget):
         self.customStyle.setStyle(self.mainWindow.plot.getStyle(plotStyle), 
                                   name=plotStyle, setAsPrevious=True)
         
+        self._setMonthRange()
+        
+        self.settings.endGroup()
+        
+    def _setMonthRange(self):
+        """
+        Read month range from settings and set widget values
+        
+        NB this method assumes that `settings` is in the 'plot' group.
+        """
         customRange = self.settings.value("customRange", False)
         rng = self.settings.value("range", "All")
         
         self.setCustomRange(customRange)
         if customRange:
-            rng = int(rng)
-            self.customRangeSpinBox.setValue(rng)
+            monthRange = self.mainWindow.parseMonthRange(rng)
+            if monthRange is None:
+                # custom month range cannot be parsed
+                # set customRange to False and call this method again
+                warnings.warn(f"Could not get custom number of months from '{rng}'")
+                self.settings.setValue("customRange", False)
+                self._setMonthRange()
+            else:
+                self.customRangeSpinBox.setValue(monthRange)
         else:
             items = [self.plotRangeCombo.itemText(idx) for idx in range(self.plotRangeCombo.count())]
             idx = items.index(rng)
             self.plotRangeCombo.setCurrentIndex(idx)
-        
-        self.settings.endGroup()
         
     def _saveStyle(self, name, style, setStyle=True):
         self.mainWindow.plot.addCustomStyle(name.lower(), style, setStyle=setStyle)
@@ -452,11 +467,7 @@ class PlotPreferences(QWidget):
             months = self.customRangeSpinBox.value()
         else:
             text = self.plotRangeCombo.currentText()
-            if text == "1 year":
-                text = "12 months"
-            elif text == "Current year":
-                text = f"{date.today().month} months"
-            months = None if text == 'All' else int(text.strip(' months'))
+            months = self.mainWindow.parseMonthRange(text)
         self.mainWindow.plot.setXAxisRange(months)
         
         self.settings.beginGroup("plot")

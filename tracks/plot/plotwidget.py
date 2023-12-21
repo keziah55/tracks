@@ -26,7 +26,10 @@ class PlotWidget(QWidget):
         parent : Tracks
             Tracks main window object.
         style : str, optional
-            Plot style to apply.
+            Plot style to apply. Default is "dark"
+        months : int, optional
+            Number of months to initally zoom x-axis to. 
+            If `None`, show all (default behaviour)
     """
     
     currentPointChanged = Signal(dict)
@@ -43,7 +46,7 @@ class PlotWidget(QWidget):
         current point.
     """
     
-    def __init__(self, parent, style="dark"):
+    def __init__(self, parent, style="dark", months=None ):
         
         super().__init__()
         
@@ -52,7 +55,7 @@ class PlotWidget(QWidget):
         self.parent = parent
         
         self.plotToolBar = PlotToolBar()
-        self._makePlot(parent, style=style)
+        self._makePlot(parent, style=style, months=months)
         
         self.plotLayout = QHBoxLayout()
         self.plotLayout.addWidget(self.plotWidget)
@@ -131,6 +134,11 @@ class Plot(_PlotWidget):
         ----------
         parent : QMainWindow
             Main window.
+        style : str
+            Style name to use
+        months : int, optional
+            Number of months to initally zoom x-axis to. 
+            If `None`, show all (default behaviour)
     """
     
     currentPointChanged = Signal(dict)
@@ -147,7 +155,7 @@ class Plot(_PlotWidget):
         current point.
     """
     
-    def __init__(self, parent, style="dark"):
+    def __init__(self, parent, style="dark", months=None):
         
         self._ySeries = None
         self.plotItem = None
@@ -202,6 +210,9 @@ class Plot(_PlotWidget):
         
         self.setYSeries('speed')
         self.plotTotalDistance()
+        
+        if months is not None:
+            self.setXAxisRange(months)
         
     @property
     def data(self):
