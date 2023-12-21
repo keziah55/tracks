@@ -2,7 +2,6 @@
 Preferences for personal bests and data viewer.
 """
 
-from datetime import date
 from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget, QCheckBox
 from customQObjects.widgets import GroupBox
 from customQObjects.core import Settings
