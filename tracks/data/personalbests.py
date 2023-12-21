@@ -378,7 +378,7 @@ class PBTable(QTableWidget):
                 
     @Slot()
     def newData(self):
-        pb = self._getBestSessions(n=self.rowCount(), key=self.selectKey)
+        pb = self._getBestSessions(num=self.rowCount(), key=self.selectKey)
         newDates = [row['Date'] for row in pb]
         dates = [row['Date'] for row in self.items]
         if newDates != dates:

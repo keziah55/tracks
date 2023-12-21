@@ -117,7 +117,7 @@ class TestPersonalBests:
             assert items == expected
             
     def test_get_best_sessions(self, setup, qtbot):
-        pb = self.pb.bestSessions._getBestSessions(n=2, key="Distance (km)", order='ascending')
+        pb = self.pb.bestSessions._getBestSessions(num=2, key="Distance (km)", order='ascending')
         expected = [{'Date':"04 May 2021",
                      'Time':"00:42:11",
                      'Distance (km)':"25.08",
