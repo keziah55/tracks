@@ -19,7 +19,6 @@ from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
 
-from time import time
 
 class Tracks(QMainWindow):
     def __init__(self):
@@ -48,8 +47,10 @@ class Tracks(QMainWindow):
 
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
+        sessionsKey = self.settings.value("pb/sessionsKey", "Speed (km/h)")
         self.pb = PersonalBests(self, numSessions=numTopSessions, 
-                                monthCriterion=monthCriterion)
+                                monthCriterion=monthCriterion,
+                                sessionsKey=sessionsKey)
         
         self.viewer = DataViewer(self)
         
@@ -111,10 +112,6 @@ class Tracks(QMainWindow):
         icon = QIcon(str(p))
         self.setWindowIcon(icon)
         
-    # def show(self):
-        # super().show()
-        # self.prefDialog.ok()
-        
     @staticmethod
     def parseMonthRange(s) -> int:
         """ 
@@ -136,9 +133,15 @@ class Tracks(QMainWindow):
         return months
         
     @staticmethod
-    def getFile():
+    def getDataPath():
         p = Path.home().joinpath('.tracks')
-        p.mkdir(parents=True, exist_ok=True)
+        if not p.exists():
+            p.mkdir(parents=True)
+        return p
+    
+    @classmethod
+    def getFile(cls):
+        p = cls.getDataPath()
         file = p.joinpath('tracks.csv')
         return file
         
@@ -215,17 +218,21 @@ class Tracks(QMainWindow):
         self.settings.setValue("window/state", state)
         self.settings.setValue("window/geometry", geometry)
         
-    def createActions(self):
-        self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q",
-                               statusTip="Exit the application", 
-                               triggered=self.close)
-            
-        self.saveAct = QAction("&Save", self, shortcut="Ctrl+S", 
-                               statusTip="Save data", triggered=self.save)
+        for key, value in self.pb.state().items():
+            self.settings.setValue(f"pb/{key}", value)
         
-        self.preferencesAct = QAction("&Preferences", self, shortcut="F12",
-                                      statusTip="Edit preferences",
-                                      triggered=self.prefDialog.show)
+    def createActions(self):
+        self.exitAct = QAction(
+            "E&xit", self, shortcut="Ctrl+Q", statusTip="Exit the application", 
+            triggered=self.close)
+            
+        self.saveAct = QAction(
+            "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
+            triggered=self.save)
+        
+        self.preferencesAct = QAction(
+            "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
+            triggered=self.prefDialog.show)
         
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")

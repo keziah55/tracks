@@ -3,14 +3,14 @@ Single `PersonalBests` object to manage the two widgets that display personal be
 """
 
 from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
-                             QDialogButtonBox, QVBoxLayout, QAbstractItemView)
+                            QDialogButtonBox, QVBoxLayout, QAbstractItemView)
 from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
-from qtpy.QtGui import QFontMetrics
 from tracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
 from tracks.data import Data
 from customQObjects.widgets import TimerDialog
 import re
 from datetime import date
+
 
 class PersonalBests(QObject):
     """ Object to manage the two PB widgets.
@@ -41,15 +41,18 @@ class PersonalBests(QObject):
     
     statusMessage = Signal(str)
     
-    def __init__(self, parent, numSessions=5, monthCriterion="distance"):
+    def __init__(self, parent, numSessions=5, monthCriterion="distance", sessionsKey="Speed (km/h)"):
         super().__init__()
         self.newPBdialog = NewPBDialog()
-        self.bestMonth = PBMonthLabel(parent=self, mainWindow=parent, column=monthCriterion)
-        self.bestSessions = PBTable(parent=self, mainWindow=parent, rows=numSessions)
+        self.bestMonth = PBMonthLabel(
+            parent=self, mainWindow=parent, column=monthCriterion)
+        self.bestSessions = PBTable(
+            parent=self, mainWindow=parent, rows=numSessions, key=sessionsKey)
         
     @Slot(object)
     def newData(self, idx=None):
         self.emitStatusMessage()
+        
         bestSession = self.bestSessions.newData()
         bestMonth = self.bestMonth.newData()
         
@@ -76,6 +79,13 @@ class PersonalBests(QObject):
     
     def emitStatusMessage(self):
         self.statusMessage.emit("Checking for new PBs...")
+        
+    def state(self) -> dict:
+        """ Return dict of values to be saved in settings (that aren't set in preferences) """
+        state = {
+            "sessionsKey": self.bestSessions.selectKey,
+            }
+        return state
 
 class PBMonthLabel(QLabel):
     
@@ -88,7 +98,6 @@ class PBMonthLabel(QLabel):
         self.monthYear = self.time = self.distance = self.calories = ""
         self.newData()
         self.setText()
-        self.setToolTip("The month in which the greatest distance was cycled.")
         self.setAlignment(Qt.AlignHCenter)
         
     def sizeHint(self):
@@ -207,7 +216,7 @@ class PBMonthLabel(QLabel):
 class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
 
-        By default, it will show the five fastest sessopns. Clicking on another header
+        By default, it will show the five fastest sessions. Clicking on another header
         (except 'Date' or 'Gear') will show the top five sessions for that column.
     
         Parameters
@@ -221,33 +230,31 @@ class PBTable(QTableWidget):
             Default is 5.
     """
     
-    def __init__(self, mainWindow, parent=None, rows=5):
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Speed (km/h)', 
-                             'Calories', 'Gear']
+    def __init__(self, mainWindow, parent=None, rows=5, key="Speed (km/h)"):
+        self.headerLabels = [
+            'Date', 'Time', 'Distance (km)', 'Speed (km/h)', 'Calories', 'Gear']
         columns = len(self.headerLabels)
         super().__init__(rows, columns)
         self.mainWindow = mainWindow
         self.parent = parent
         
         # dict of columns that can be selected and the functions used to compare values
-        self.selectableColumns = {'Time':hourMinSecToFloat, 'Distance (km)':float, 
-                                  'Speed (km/h)':float, 'Calories':float}
+        self.selectableColumns = {
+            'Time': hourMinSecToFloat, 
+            'Distance (km)': float, 
+            'Speed (km/h)': float, 
+            'Calories': float
+        }
         
         self.setHorizontalHeaderLabels(self.headerLabels)
         
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         
-        self.selectKey = "Speed (km/h)"
-        
-        # # make header tall enough for two rows of text (avg speed has line break)
-        # font = self.header.font()
-        # metrics = QFontMetrics(font)
-        # height = metrics.height()
-        # self.header.setMinimumHeight(height*2)
+        self.selectKey = key
         
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
-        self.selectColumn(self.headerLabels.index('Speed (km/h)'))
+        self.selectColumn(self.headerLabels.index(self.selectKey))
         
         self.newIdx = None
         self._setToolTip(rows)
@@ -262,6 +269,8 @@ class PBTable(QTableWidget):
     
     @Slot(int)
     def setNumRows(self, rows):
+        if rows == self.rowCount():
+            return
         self.setRowCount(rows)
         self.setTable(key=self.selectKey, order=self.order)
         self._setToolTip(rows)
@@ -275,46 +284,52 @@ class PBTable(QTableWidget):
         msg += "Click on a session to highlight it in the plot."
         self.setToolTip(msg)
     
-    def _getBestSessions(self, n=5, key="Speed (km/h)", order='descending'):
+    def _getBestSessions(self, num=5, key="Speed (km/h)", order='descending'):
         validOrders = ['descending', 'ascending']
         if order not in validOrders:
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
             raise ValueError(msg)
+            
         if key == 'Time':
             series = self.data.timeHours
         else:
             series = self.data[key]
-        pb = []
-        # Get indices of series, when series is sorted in reverse order.
-        # Get indices, and make `pb` list, for whole series, not just top `n`,
-        # so that, if there are multiple tied values that would extend the table
-        # over `n` rows, only the most recent sessions will be shown here.
-        # (So that the table is always `n` rows long.)
+        
+        # sort series and get indices
         slc = -1 if order == 'descending' else 1
         indices = series.argsort()[::slc] 
+        
+        # iterate through `indices` until we have `num` unique values
+        pb = []
+        numUnique = 0
+        
         for idx in indices:
-            row = {}
-            for k in self.headerLabels:
-                value = self.data.formatted(k)[idx]
-                row[k] = value
+            # get row (as strings for display)
+            row = {k: self.data.formatted(k)[idx] for k in self.headerLabels}
             row['datetime'] = self.data['Date'][idx]
-            pb.append(row)
             
-        # sort by date first, then by speed, so if values are tied, most recent will be first 
-        # (this also means that the number for the message is correct automatically)
-        pb.sort(key=lambda dct: dayMonthYearToFloat(dct['Date']), reverse=True)
+            if row[key] not in [dct[key] for dct in pb]:
+                # increment unique count if value is new
+                numUnique += 1
+                
+            pb.append(row)
+                
+            if numUnique == num:
+                break
+        
+        # sort by both key and date, so that, if values are tied, most recent will be first
+        # use reverse=True for most recent date (and default order=descending)
+        # if order is ascending, will need to negate value
         func = self.selectableColumns[key]
-        reverse = True if order == "descending" else False        
-        pb.sort(key=lambda dct: func(dct[key]), reverse=reverse)
-        
-        # return only `n` values
-        return pb[:n]
+        scale = 1 if order == "descending" else -1
+        pb.sort(key=lambda dct: (scale*func(dct[key]), dayMonthYearToFloat(dct['Date'])), reverse=True)
+            
+        # return only `num` values
+        return pb[:num]
        
-    def setTable(self, key="Speed (km/h)", order='descending',
-                 highlightNew=False):
-        
+    def setTable(self, key="Speed (km/h)", order='descending', highlightNew=False):
         n = self.rowCount()
-        self.items = self._getBestSessions(n=n, key=key, order=order)
+        self.items = self._getBestSessions(num=n, key=key, order=order)
         
         self.selectKey = key
         self.order = order
