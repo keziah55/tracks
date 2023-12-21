@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/.venv/bin/bash
 
 origDir="$PWD"
 testDir="../tracks-test"
@@ -24,12 +24,13 @@ git clone https://github.com/keziah55/tracks.git
 
 # make venv in tracks-test, not tracks, because pytest was picking up
 # conftest.py files from modules installed in the venv (e.g. numpy)
-python3 -m venv .
+mkdir -p .venv
+python3 -m venv .venv
 
 cd tracks
 echo "cd tracks"
 
-../bin/python -m pip -V
+../.venv/bin/python -m pip -V
 
 pythonVersion=`python3 -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')"`
 if [[ $pythonVersion == "3.11" ]]; then
@@ -40,8 +41,8 @@ else
     echo "PySide2" >> requirements.txt
 fi
 
-../bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
-../bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
+../.venv/bin/python -m pip install -r requirements.txt --no-cache-dir --no-warn-script-location
+../.venv/bin/python -m pip install pytest pytest-qt pytest-cov pytest-profiling --no-cache-dir --no-warn-script-location
 
 mkdir "$resultsDir"
 
@@ -51,7 +52,7 @@ for qt_api in "${qt_bindings[@]}"; do
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../bin/python -m pytest -v --cov=tracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
+    ../.venv/bin/python -m pytest -v --cov=tracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
     mv prof "$resultsDir/$qt_api-prof"
 done
 
@@ -70,6 +71,6 @@ join_array () {
 }
 qts=`join_array , "${qt_bindings[@]}"`
 
-../bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts --qt $qts
+../.venv/bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts --qt $qts
 
 mv "$resultsDir" "$origDir"

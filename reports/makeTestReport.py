@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
 import re
-import pkg_resources
+from importlib.metadata import packages_distributions, version
 import argparse
 import platform
 import subprocess
@@ -103,7 +103,9 @@ class ReportWriter:
     @staticmethod
     def _getDependencyVersions():
         """ Get names and version numbers of installed packages. """
-        return {p.project_name: p.version for p in pkg_resources.working_set}
+        all_pkgs = [item for pkg_list in packages_distributions().values() for item in pkg_list]
+        pkg_versions = {pkg: version(pkg) for pkg in all_pkgs}
+        return pkg_versions
     
     @staticmethod
     def _escapeHtml(html):
