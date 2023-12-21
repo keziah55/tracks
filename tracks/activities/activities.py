@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Define and save Activities
+Define Activities
 """
 
 import warnings
 import re
-import pickle
-from dataclasses import dataclass
-from util import hourMinSecToFloat
+import json
+from tracks.util import hourMinSecToFloat
 
 class Operation:
     """ Base class for binary operation """
@@ -34,22 +33,64 @@ class Divide_time_min(Divide):
         b *= 60
         return a/b
     
-@dataclass
+cmp_func_dict = {
+    "float": float,
+    "int": int,
+    "str": str,
+    "hourMinSecToFloat": hourMinSecToFloat,
+}
+
+operator_dict = {
+    "Divide": Divide,
+    "Divide_time_min": Divide_time_min,
+}
+    
 class Relation:
     """ 
     Class to denote a relationship between two measures.
     
     For example, if m0 is distance, m1 is time and op is division, this 
     relationship gives the speed.
+    
+    Parameters
+    ----------
+    m0 : Measure
+        lhs measure
+    m1 : Measure
+        rhs Measure
+    op : Operation
+        Operation relating m0 and m1
+    name : str
+        Name for this realtionship
     """
-    m0: object    # measure0
-    m1: object    # measure1
-    op: Operation # operation relating m0 and m1
-    name: str     # name for this relationship
+    
+    def __init__(self, m0, m1, op, name):
+        if isinstance(m0, dict):
+            m0 = Measure(**m0)
+        self.m0 = m0
+        
+        if isinstance(m1, dict):
+            m1 = Measure(**m1)
+        self.m1 = m1
+        
+        if isinstance(op, str) and op in operator_dict:
+            op = operator_dict[op]
+        self.op = op
+        
+        self.name = name
     
     def __repr__(self):
         s = f"Relation '{self.name}' = {self.m0.name} {self.op.operator} {self.m1.name}"
         return s
+    
+    def to_json(self):
+        dct = {
+            "m0":self.m0.to_json(),
+            "m1":self.m1.to_json(),
+            "op":self.op.__name__,
+            "name":self.name,
+        }
+        return dct
     
 class Measure:
     """ 
@@ -95,8 +136,14 @@ class Measure:
         
         self._show_unit = show_unit
         self._plottable = plottable
+        
+        if isinstance(cmp_func, str):
+            if cmp_func in cmp_func_dict:
+                cmp_func = cmp_func_dict[cmp_func]
         self._cmp_func = cmp_func
         
+        if isinstance(relation, dict):
+            relation = Relation(**relation)
         self._relation = relation
         
         if unit is None and self._relation is not None:
@@ -120,11 +167,20 @@ class Measure:
         s = f"Measure '{self._name}'"
         return s
     
-    def __getstate__(self):
-        return vars(self)
-    
-    def __setstate__(self, state):
-        vars(self).update(state)
+    def to_json(self):
+        cmp_func = self.cmp_func.__name__ if self.cmp_func is not None else None
+        relation = self.relation.to_json() if self.relation is not None else None
+        dct = {
+            "name": self.name,
+            "dtype": self.dtype,
+            "summary": self.summary,
+            "unit": self.unit,
+            "show_unit": self.show_unit,
+            "plottable": self.plottable,
+            "cmp_func": cmp_func,
+            "relation": relation,
+        }
+        return dct
     
     @property
     def slug(self):
@@ -157,11 +213,13 @@ class Activity:
         s = f"Activity '{self._name}'"
         return s
     
-    def __getstate__(self):
-        return vars(self)
+    @property
+    def csv_file(self):
+        return f"{self._name.lower()}.csv"
     
-    def __setstate__(self, state):
-        vars(self).update(state)
+    @property
+    def json_file(self):
+        return f"{self._name.lower()}.json"
         
     @property
     def measures(self):
@@ -182,133 +240,16 @@ class Activity:
             
         return header
     
-    def save(self, p):
-        with open(p, 'wb') as fileobj:
-            pickle.dump(self, fileobj)
-  
+    def to_json(self):
+        measures = {k: m.to_json() for k, m in self._measures.items()}
+        dct = {
+            "name": self._name,
+            "measures": measures
+        }
+        return dct
     
-if __name__ == "__main__":
-    
-    from pathlib import Path
-    
-    p = Path.home().joinpath(".tracks")
-    
-    cycling = Activity("cycling")
-    
-    cycling.add_measure(
-        name = "Date",
-        dtype = "date", 
-        summary = None, 
-        plottable = False,
-    )
-        
-    cycling.add_measure(
-        name = "Time",
-        dtype = "time", 
-        summary = "sum", 
-        unit = "h", 
-        show_unit = False, 
-        cmp_func = hourMinSecToFloat,
-    )
-    
-    cycling.add_measure(
-        name = "Distance",
-        dtype = "float", 
-        summary = "sum", 
-        unit = "km", 
-        cmp_func = float,
-    )
-    
-    cycling.add_measure(
-        name = "Calories",
-        dtype = "float", 
-        summary = "sum", 
-        cmp_func = float,
-    )
-    
-    cycling.add_measure(
-        name = "Gear",
-        dtype = "int", 
-        summary = "mean", 
-        plottable = False, 
-        cmp_func = float,
-        )
-    
-    cycling.add_measure(
-        name = "Speed",
-        dtype = "float", 
-        summary = "max", 
-        relation = Relation(cycling.distance, cycling.time, Divide, "Speed"), 
-        cmp_func = float,
-    )
-         
-    cycling.save(p.joinpath("cycling_activity"))  
-    
-    rowing = Activity("rowing")
-     
-    rowing.add_measure(
-        name = "Date",
-        dtype = "date", 
-        summary = None, 
-        plottable = False,
-    )
-        
-    rowing.add_measure(
-        name = "Time",
-        dtype = "time", 
-        summary = "sum", 
-        unit = "h", 
-        show_unit = False, 
-        cmp_func = hourMinSecToFloat,
-    )
-    
-    rowing.add_measure(
-        name = "Distance",
-        dtype = "float", 
-        summary = "sum", 
-        unit = "km", 
-        cmp_func = float,
-    )
-    
-    rowing.add_measure(
-        name = "Calories",
-        dtype = "float", 
-        summary = "sum", 
-        cmp_func = float,
-    )
-    
-    rowing.add_measure(
-        name = "Gear",
-        dtype = "int", 
-        summary = "mean", 
-        plottable = False, 
-        cmp_func = float,
-        )
-    
-    rowing.add_measure(
-        name = "Strokes",
-        dtype = "int", 
-        summary = "sum", 
-        unit = "stroke",
-        show_unit = False,
-        cmp_func = float,
-    )
-    
-    rowing.add_measure(
-        name = "Speed",
-        dtype = "float", 
-        summary = "max", 
-        relation = Relation(cycling.distance, cycling.time, Divide, "Speed"), 
-        cmp_func = float,
-    )
-    
-    rowing.add_measure(
-        name = "Stroke rate",
-        dtype = "float", 
-        summary = "max", 
-        unit = "stroke/min",
-        relation = Relation(rowing.strokes, rowing.time, Divide_time_min, "Stroke Rate"), 
-        cmp_func = float,
-    )
-
-    rowing.save(p.joinpath("rowing_activity"))  
+    def save(self, save_dir):
+        """ Write json file to `save_dir` """
+        p = save_dir.joinpath(self.json_file)
+        with open(p, 'w') as fileobj:
+            json.dump(self.to_json(), fileobj, indent=4)

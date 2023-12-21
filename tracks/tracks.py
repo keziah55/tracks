@@ -13,6 +13,7 @@ from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
 from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
+from .activities import load_activity, Activity
 from .plot import PlotWidget
 from .data import Data, DataViewer, AddData, PersonalBests, Summary
 from .preferences import PreferencesDialog
@@ -24,6 +25,8 @@ class Tracks(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        self._csv_sep = ","
+        
         self.settings = Settings()
         
         self._saveLabel = QLabel()
@@ -31,15 +34,24 @@ class Tracks(QMainWindow):
         # self.statusBar().addWidget(self._saveLabel)
         # self.statusBar().addWidget(self._summaryLabel)
         
-        self.file = self.getFile()
-        self.sep = ','
-        if not self.file.exists():
-            header = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
-            s = self.sep.join(header)
-            with open(self.file, 'w') as fileobj:
-                fileobj.write(s+'\n')
+        activity = self.settings.value("activity/current", "cycling")
+        
+        self.activities = []
+        act = load_activity(self.get_data_path().joinpath(f"{activity}.json"))
+        print(act)
+        self.activities.insert(0, act)
+        
+        df = self.load_df(act)
+        
+        # self.file = self.getFile()
+        # self.sep = ','
+        # if not self.file.exists():
+        #     header = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        #     s = self.sep.join(header)
+        #     with open(self.file, 'w') as fileobj:
+        #         fileobj.write(s+'\n')
                 
-        df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
+        # df = pd.read_csv(self.file, sep=self.sep, parse_dates=['Date'])
         self.data = Data(df)
         self.save()
         
@@ -81,7 +93,7 @@ class Tracks(QMainWindow):
         self.fileChangedTimer.setInterval(100)
         self.fileChangedTimer.setSingleShot(True)
         self.fileChangedTimer.timeout.connect(self.csvFileChanged)
-        self.fileWatcher = QFileSystemWatcher([str(self.file)])
+        self.fileWatcher = QFileSystemWatcher([str(self.current_activity.csv_file)])
         self.fileWatcher.fileChanged.connect(self.startTimer)
         
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
@@ -133,7 +145,7 @@ class Tracks(QMainWindow):
         return months
         
     @staticmethod
-    def getDataPath():
+    def get_data_path():
         p = Path.home().joinpath('.tracks')
         if not p.exists():
             p.mkdir(parents=True)
@@ -141,22 +153,58 @@ class Tracks(QMainWindow):
     
     @classmethod
     def getFile(cls):
-        p = cls.getDataPath()
+        p = cls.get_data_path()
         file = p.joinpath('tracks.csv')
         return file
+    
+    @property
+    def current_activity(self):
+        if len(self.activities) == 0:
+            return None
+        else:
+            return self.activities[0]
+    
+    def load_df(self, activity=None) -> pd.DataFrame:
+        """ Load dataframe for activity """
         
+        if activity is None:
+            activity = self.current_activity
+            
+        p = self.get_data_path()
+        filepath = p.joinpath(activity.csv_file)
+        
+        if not filepath.exists():
+            header = activity.header()
+            s = self._csv_sep.join(header) + "\n"
+            with open(filepath, 'w') as fileobj:
+                fileobj.write(s)
+                
+        df = pd.read_csv(filepath, sep=self._csv_sep, parse_dates=['Date'])
+        
+        return df
+    
     @Slot()
-    def save(self):
-        self.data.df.to_csv(self.file, sep=self.sep, index=False)
+    def save(self, activity=None):
+        if activity is None:
+            activity = self.current_activity
+        p = self.get_data_path()
+        filepath = p.joinpath(activity.csv_file)
+        
+        self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
         self.backup()
         saveTime = datetime.now().strftime("%H:%M:%S")
         # self._saveLabel.setText(f"Last saved at {saveTime}")
         self.statusBar().showMessage(f"Last saved at {saveTime}")
         
     @Slot()
-    def backup(self):
-        bak = self.file.with_suffix('.bak')
-        self.data.df.to_csv(bak, sep=self.sep, index=False)
+    def backup(self, activity=None):
+        if activity is None:
+            activity = self.current_activity
+        p = self.get_data_path()
+        filepath = p.joinpath(activity.csv_file)
+        
+        bak = filepath.with_suffix('.bak')
+        self.data.df.to_csv(bak, sep=self._csv_sep, index=False)
         
     @Slot(str)
     def startTimer(self, file):

@@ -454,6 +454,7 @@ class Plot(_PlotWidget):
         """ Set the `currentPoint` dict from index `idx` in the `data` DataFrame
             and emit `currentPointChanged` signal.
         """
+        ## TODO data hardcoded
         self.currentPoint['index'] = idx
         self.currentPoint['date'] = self.data.datetimes[idx].strftime("%a %d %b %Y")
         self.currentPoint['speed'] = self.data.speed[idx]
@@ -542,19 +543,6 @@ class Plot(_PlotWidget):
         """ Return array of points that represent(ed) a PB in the current series. """
         num = self.parent.settings.value("pb/numSessions", cast=int)
         return self.data.getPBs(self.ySeries, num)
-        # get number of top sessions and current y series
-        col = self.data.quickNames[self.ySeries]
-        num = self.parent.settings.value("pb/numSessions", cast=int)
-        series = self.data[col]
-        best = series[:num]
-        idx = list(range(num)) # first num values will be PBs
-        for n in range(num, len(series)):
-            if series[n] >= np.min(best):
-                idx.append(n)
-                # replace value in best array
-                minIdx = np.argmin(best)
-                best[minIdx] = series[n]
-        return idx
         
     @Slot(object)
     def mouseMoved(self, pos):
