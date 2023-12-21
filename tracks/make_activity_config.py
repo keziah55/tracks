@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 30 21:49:33 2023
-
-@author: keziah
+Define and save Activities
 """
 
 import warnings
