@@ -142,7 +142,7 @@ class Tracks(QMainWindow):
     
     @classmethod
     def getFile(cls):
-        warnings.warn(f"Tracks.getFile is deprecated", DeprecationWarning)
+        warnings.warn("Tracks.getFile is deprecated", DeprecationWarning)
         p = cls.get_data_path()
         file = p.joinpath('tracks.csv')
         return file

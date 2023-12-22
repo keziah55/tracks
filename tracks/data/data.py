@@ -113,6 +113,11 @@ class Data(QObject):
         return self.toString(headTail=5)
     
     def row(self, idx, formatted=False):
+        """
+        Return row `idx` as dict.
+        
+        If `formatted` is True, also format the values.
+        """
         row = {key:self[key][idx] for key in self.propertyNames}
         if formatted:
             for key, value in row.items():
@@ -230,6 +235,9 @@ class Data(QObject):
         return df
         
     def setDataFrame(self, df):
+        """ Set new DataFrame """
+        # TODO activity, _applyRelations etc?
+        # called if csv changed on disk
         self.df = df
         self.dataChanged.emit(self.df.index)
             
