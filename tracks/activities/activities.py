@@ -100,7 +100,7 @@ class Measure:
     ----------
     name : str
         Name of this measure. NB `slug` will be derived from this
-    dtype : {'float', 'int', 'date', 'time'}
+    dtype : {'float', 'int', 'date', 'duration'}
         Type of data for this measure (as string)
     summary : {'sum', 'min', 'max', 'mean'}
         Function to call to summarise multiple instances of this measure
@@ -256,6 +256,11 @@ class Activity:
     @property
     def header(self):
         header = [measure.full_name for measure in self._measures.values()]
+        return header
+    
+    @property
+    def user_input_header(self):
+        header = [measure.full_name for measure in self._measures.values() if measure.relation is None]
         return header
     
     def to_json(self):

@@ -1,8 +1,11 @@
 from tracks.data import Data, Summary
+from tracks.activities import load_activity
 from . import makeDataFrame
 import tempfile
+from pathlib import Path
 import pandas as pd
 
+# TODO move to conftest.py?
 class MockParent:
     """ Mock Tracks object.
     
@@ -35,3 +38,6 @@ class MockParent:
         self.data = Data(self.df)
         self.dataAnalysis = None
         self.summary = Summary()
+        
+        json_path = Path(__file__).parent.parent.joinpath(".mock_test_dir", ".tracks", "cycling.json")
+        self.activity = load_activity(json_path)

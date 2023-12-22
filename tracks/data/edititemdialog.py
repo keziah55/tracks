@@ -33,8 +33,8 @@ class Row:
     
 class EditItemDialog(AddDataTableMixin, QDialog):
     
-    def __init__(self, items, itemHeader=None):
-        super().__init__(emptyDateValid=False)
+    def __init__(self, activity, items, itemHeader=None):
+        super().__init__(activity, emptyDateValid=False)
         
         if itemHeader is None:
             itemHeader = self.headerLabels
@@ -132,7 +132,7 @@ class EditItemDialog(AddDataTableMixin, QDialog):
                 dct = {}
                 for key, tableItem in row.tableItems.items():
                     value = tableItem.text()
-                    mthd = self.mthds[key]['cast']
+                    mthd = self.mthds[key].cast
                     value = mthd(value)
                     dct[key] = value
                 values[row.index] = dct

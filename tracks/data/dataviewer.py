@@ -6,13 +6,12 @@ from qtpy.QtWidgets import (QTreeWidget, QTreeWidgetItem, QHeaderView,
                              QAbstractItemView, QMessageBox, QMenu, QAction)
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtCore import Signal, Slot
-from qtpy.QtGui import QFontMetrics, QKeySequence
-import re
+from qtpy.QtGui import QKeySequence
 import calendar
 from dataclasses import dataclass
 from .edititemdialog import EditItemDialog
 from tracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
-                             hourMinSecToFloat, monthYearToFloat)
+                        hourMinSecToFloat, monthYearToFloat)
 from . import Data
 
 class CycleTreeWidgetItem(QTreeWidgetItem):
@@ -131,10 +130,11 @@ class DataViewer(QTreeWidget):
         Emitted when `newData` has finished.
     """
     
-    def __init__(self, parent, widthSpace=10):
+    def __init__(self, parent, activity, widthSpace=10):
         super().__init__()
         
         self.parent = parent
+        self._activity = activity
         
         self.widthSpace = widthSpace
         self.dateFmt = "%d %b %Y"
@@ -194,7 +194,7 @@ class DataViewer(QTreeWidget):
     def _editItems(self):
         items = [item for item in self.selectedItems() if item not in self.topLevelItems]
         if items:
-            self.dialog = EditItemDialog(items, self.headerLabels)
+            self.dialog = EditItemDialog(self._activity, items, self.headerLabels)
             result = self.dialog.exec_()
             if result == EditItemDialog.Accepted:
                 values, remove = self.dialog.getValues()

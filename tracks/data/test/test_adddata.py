@@ -1,4 +1,5 @@
 from .. import AddData
+from tracks.activities import load_activity
 from qtpy.QtCore import Qt
 from datetime import date
 import random
@@ -10,8 +11,11 @@ pytest_plugin = "pytest-qt"
 class TestAddData:
     
     @pytest.fixture
-    def setup(self, qtbot):
-        self.widget = AddData()
+    def setup(self, qtbot, activity_json_path):
+        
+        act = load_activity(activity_json_path)
+        
+        self.widget = AddData(act)
         qtbot.addWidget(self.widget)
         self.widget.move(100,100)
         self.widget.show()

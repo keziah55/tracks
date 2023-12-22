@@ -53,9 +53,9 @@ class Tracks(QMainWindow):
                                 monthCriterion=monthCriterion,
                                 sessionsKey=sessionsKey)
         
-        self.viewer = DataViewer(self)
+        self.viewer = DataViewer(self, act)
         
-        self.addData = AddData()
+        self.addData = AddData(act)
         
         plotStyle = self.settings.value("plot/style", "dark")
         monthRange = self.parseMonthRange(self.settings.value("plot/range", "All"))

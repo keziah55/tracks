@@ -45,13 +45,13 @@ class Data(QObject):
         super().__init__()
         
         if activity is None:
-            # temporary workaround for when we create Data objects on the fly
+            # TODO temporary workaround for when we create Data objects on the fly
             from tracks.activities import load_activity
             from pathlib import Path
             p = Path.home().joinpath(".tracks", "cycling.json")
             activity = load_activity(p)
             
-        self.df = self._applyRelations(df, activity)# self._makeSpeedColumn(df)
+        self.df = self._apply_relations(df, activity)
             
         self._activity = activity
         
@@ -212,7 +212,7 @@ class Data(QObject):
             self.dataChanged.emit(changed)
         
     @staticmethod
-    def _applyRelations(df, activity) -> pd.DataFrame():
+    def _apply_relations(df, activity) -> pd.DataFrame():
         """ 
         Check if relational measures in `activity` are present in `df`.
         
@@ -240,7 +240,7 @@ class Data(QObject):
         
     def setDataFrame(self, df):
         """ Set new DataFrame """
-        # TODO activity, _applyRelations etc?
+        # TODO activity, _apply_relations etc?
         # called if csv changed on disk
         self.df = df
         self.dataChanged.emit(self.df.index)

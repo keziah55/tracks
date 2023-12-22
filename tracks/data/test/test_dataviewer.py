@@ -29,7 +29,7 @@ class TestDataViewer:
             self.widget.expandItem(item)
         
     def _setup(self, qtbot):
-        self.widget = DataViewer(self.parent)
+        self.widget = DataViewer(self.parent, self.parent.activity)
         self.parent.data.dataChanged.connect(self.widget.newData)
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)
@@ -225,7 +225,7 @@ class TestDataViewer:
                           'Time': '00:42:11'}]
         newValues = dict(zip(editDates, newValues))
         
-        dialog = EditItemDialog(self.widget.selectedItems(), self.widget.headerLabels)
+        dialog = EditItemDialog(self.widget._activity, self.widget.selectedItems(), self.widget.headerLabels)
         dialog.show()
         
         # pick a check box and toggle it off then on

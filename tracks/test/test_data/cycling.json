@@ -15,7 +15,7 @@
         },
         "time": {
             "name": "Time",
-            "dtype": "time",
+            "dtype": "duration",
             "summary": "sum",
             "is_metadata": false,
             "sig_figs": null,
@@ -62,7 +62,7 @@
                 },
                 "m1": {
                     "name": "Time",
-                    "dtype": "time",
+                    "dtype": "duration",
                     "summary": "sum",
                     "is_metadata": false,
                     "sig_figs": null,

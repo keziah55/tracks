@@ -3,6 +3,9 @@ from qtpy.QtCore import Qt, QTimer, Slot, Signal
 from qtpy.QtGui import QBrush, QColor
 from tracks.util import isDate, isFloat, isInt, isDuration, parseDate, parseDuration
 from functools import partial
+from collections import namedtuple
+
+ValidateFuncs = namedtuple("ValidateFuncs", ["validate", "cast"])
 
 class AddDataTableMixin(object):
     """ Mixin providing validation and type casting for a table for adding data.
@@ -18,23 +21,38 @@ class AddDataTableMixin(object):
         Emitted if the data in cell `row`,`col` is invalid.
     """
     
-    def __init__(self, *args, emptyDateValid=True, **kwargs):
+    def __init__(self, activity, *args, emptyDateValid=True, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.headerLabels = ['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        self._activity = activity
+        
+        self.headerLabels = self._activity.user_input_header #['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
         self.headerLabelColumnOffset = 0
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
         self.table.verticalHeader().setVisible(False)
         
         # dict of methods to validate and cast types for input data in each column
-        isDatePartial = partial(isDate, allowEmpty=emptyDateValid)
-        validateMethods = [isDatePartial, isDuration, isFloat, 
-                           isFloat, isInt]
-        parseDatePartial = partial(parseDate, pd_timestamp=True)
-        castMethods = [parseDatePartial, parseDuration, float, float, int]
-        self.mthds = {name:{'validate':validateMethods[i], 'cast':castMethods[i]}
-                      for i, name in enumerate(self.headerLabels)}
+        is_date_partial = partial(isDate, allowEmpty=emptyDateValid)
+        parse_date_partial = partial(parseDate, pd_timestamp=True)
+        
+        validate_methods = {
+            "date": is_date_partial,
+            "duration": isDuration,
+            "float": isFloat,
+            "int": isInt
+        }
+        cast_methods = {
+            "date": parse_date_partial,
+            "duration": parseDuration,
+            "float": float,
+            "int": int
+        }
+        
+        self.mthds = {
+            m.full_name: ValidateFuncs(validate_methods[m.dtype], cast_methods[m.dtype])
+            for name, m in self._activity.measures.items() if m.relation is None
+        }
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)
@@ -56,8 +74,8 @@ class AddDataTableMixin(object):
     
     @Slot(int, int)
     def _invalid(self, row, col):
-        """ Set the background of cell `row`,`col` to the `invalidBrush` and 
-            disable the 'Ok' button.
+        """ 
+        Set the background of cell `row`,`col` to the `invalidBrush` and disable the 'Ok' button.
         """
         self.table.item(row, col).setBackground(self.invalidBrush)
         if hasattr(self, "okButton"):
@@ -65,9 +83,10 @@ class AddDataTableMixin(object):
         
     @Slot()
     def _validate(self):
-        """ Validate all data in the table. 
+        """ 
+        Validate all data in the table. 
         
-            If data is valid and the widget has an `okButton`, it will be enabled.
+        If data is valid and the widget has an `okButton`, it will be enabled.
         """
         # it would be more efficient to only validate a single cell, after its
         # text has been changed, but this table is unlikely to ever be more 
@@ -78,7 +97,7 @@ class AddDataTableMixin(object):
                 col += self.headerLabelColumnOffset
                 item = self.table.item(row, col)
                 value = item.text()
-                mthd = self.mthds[name]['validate']
+                mthd = self.mthds[name].validate
                 valid = mthd(value)
                 if not valid:
                     if hasattr(self, "_clicked"):
@@ -94,7 +113,6 @@ class AddDataTableMixin(object):
             
         return allValid
     
-    
     def _getValues(self):
         
         values = {name:[] for name in self.headerLabels}
@@ -105,7 +123,7 @@ class AddDataTableMixin(object):
             for col, name in enumerate(self.headerLabels):
                 item = self.table.item(row, col)
                 value = item.text()
-                mthd = self.mthds[name]['cast']
+                mthd = self.mthds[name].cast
                 value = mthd(value)
                 values[name].append(value)
                 

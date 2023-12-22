@@ -44,8 +44,8 @@ class AddData(AddDataTableMixin, QWidget):
         Emitted when the current row is removed from the table.
     """
     
-    def __init__(self, widthSpace=10):
-        super().__init__()
+    def __init__(self, activity, widthSpace=10):
+        super().__init__(activity)
         
         self.widthSpace = widthSpace
         
@@ -80,7 +80,6 @@ class AddData(AddDataTableMixin, QWidget):
         
         msg = "Add new session(s) data to viewer and plot."
         self.setToolTip(msg)
-        
         
     def sizeHint(self):
         # can't believe this is necessary...
