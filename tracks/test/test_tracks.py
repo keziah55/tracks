@@ -20,7 +20,7 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
-        monkeypatch.setattr(Tracks, "getFile", mockGetFile)
+        monkeypatch.setattr(Tracks, "get_activity_csv", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
@@ -40,7 +40,7 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
-        monkeypatch.setattr(Tracks, "getFile", mockGetFile)
+        monkeypatch.setattr(Tracks, "get_activity_csv", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)

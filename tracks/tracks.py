@@ -147,6 +147,12 @@ class Tracks(QMainWindow):
         file = p.joinpath('tracks.csv')
         return file
     
+    @classmethod
+    def get_activity_csv(cls, activity):
+        p = cls.get_data_path()
+        filepath = p.joinpath(activity.csv_file)
+        return filepath
+    
     @property
     def current_activity(self):
         if len(self.activities) == 0:
@@ -158,8 +164,7 @@ class Tracks(QMainWindow):
     def load_df(cls, activity) -> pd.DataFrame:
         """ Load dataframe for `activity` """
         
-        p = cls.get_data_path()
-        filepath = p.joinpath(activity.csv_file)
+        filepath = cls.get_activity_csv(activity)
         
         if not filepath.exists():
             header = activity.header
@@ -180,8 +185,7 @@ class Tracks(QMainWindow):
     def save(self, activity=None):
         if activity is None:
             activity = self.current_activity
-        p = self.get_data_path()
-        filepath = p.joinpath(activity.csv_file)
+        filepath = self.get_activity_csv(activity)
         
         self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
         self.backup()
