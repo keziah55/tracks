@@ -162,7 +162,7 @@ class Tracks(QMainWindow):
         filepath = p.joinpath(activity.csv_file)
         
         if not filepath.exists():
-            header = activity.header()
+            header = activity.header
             s = cls._csv_sep.join(header) + "\n"
             with open(filepath, 'w') as fileobj:
                 fileobj.write(s)

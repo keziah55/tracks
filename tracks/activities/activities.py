@@ -104,6 +104,9 @@ class Measure:
         Type of data for this measure (as string)
     summary : {'sum', 'min', 'max', 'mean'}
         Function to call to summarise multiple instances of this measure
+    is_metadata : bool
+        True if this measure is data about the session (e.g. Date), rather than 
+        measurement data (e.g. Distance). Default is False.
     sig_figs: int, optional
         Number of significant figures to use when displaying this measure
     unit : str, optional
@@ -126,6 +129,7 @@ class Measure:
         name: str,
         dtype: str, 
         summary: str, 
+        is_metadata: bool = False,
         sig_figs: int = None,
         unit: str = None,
         show_unit: bool = True,
@@ -136,6 +140,7 @@ class Measure:
         self._name = name
         self._dtype = dtype
         self._summary = summary
+        self._is_metadata = is_metadata
         self._sig_figs = sig_figs
         self._show_unit = show_unit
         self._plottable = plottable
@@ -159,7 +164,7 @@ class Measure:
                 unit = f"{units[0]}{self._relation.op.operator}{units[1]}"
         self._unit = unit
         
-        self._properties = ["name", "dtype", "summary", "sig_figs", "unit", 
+        self._properties = ["name", "dtype", "summary", "is_metadata", "sig_figs", "unit", 
                             "show_unit", "plottable", "cmp_func", "relation"]
         
     def __getattr__(self, name):
@@ -177,6 +182,7 @@ class Measure:
             "name": self.name,
             "dtype": self.dtype,
             "summary": self.summary,
+            "is_metadata":self.is_metadata,
             "sig_figs": self.sig_figs,
             "unit": self.unit,
             "show_unit": self.show_unit,
@@ -239,7 +245,14 @@ class Activity:
     def add_measure(self, *args, **kwargs):
         m = Measure(*args, **kwargs)
         self._measures[m.slug] = m
-    
+        
+    def get_measure(self, name):
+        if (m:=self._measures.get(name, None)) is not None:
+            return m
+        for m in self._measures.values():
+            if name in [m.name, m.full_name]:
+                return m
+        
     @property
     def header(self):
         header = [measure.full_name for measure in self._measures.values()]
@@ -259,6 +272,7 @@ class Activity:
         with open(p, 'w') as fileobj:
             json.dump(self.to_json(), fileobj, indent=4)
             
-    def relations(self):
+    def get_relations(self):
+        """ Return dict of measures in activity that are relations between others. """
         relations = {m.full_name: m.relation for m in self._measures.values() if m.relation is not None}
         return relations

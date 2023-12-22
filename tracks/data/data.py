@@ -219,7 +219,7 @@ class Data(QObject):
         
         If not, create them.
         """
-        relations = activity.relations()
+        relations = activity.get_relations()
         for name, relation in relations.items():
             if name not in df.columns:
                 m0 = df[relation.m0.full_name]
@@ -325,7 +325,7 @@ class Data(QObject):
                 year = date.year
             monthYear = f"{calendar.month_name[month]} {year}"
             if returnType == "Data":
-                df = Data(df)
+                df = Data(df, activity=self._activity)
             lst.append((monthYear, df))
         return lst
     
@@ -398,22 +398,33 @@ class Data(QObject):
  
     def combineRows(self, date):
         """ Combine all rows in the dataframe with the given data. """
-        i0, *idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
+        idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
         
-        combinable = ['Time', 'Distance (km)', 'Calories', 'Speed (km/h)']
+        # sum 'simple' data
+        cols = [col for col in self.df.columns if 
+                self._activity.get_measure(col).relation is None and
+                self._activity.get_measure(col).is_metadata is False]
+    
+        for col in cols:
+            series = self.df[col][idx]
+            if col == "Time":
+                series = [hourMinSecToFloat(parseDuration(value)) for value in series] #map(hourMinSecToFloat, series)
+                new_value = sum(series)
+                new_value = floatToHourMinSec(new_value)
+            else:
+                new_value = sum(series)
+            self.df.at[idx[0], col] = new_value
+            
+        i0, *idx = idx
         
-        for i in idx:
-            for name in combinable:
-                if name == 'Time':
-                    t0 = hourMinSecToFloat(parseDuration(self.df.iloc[i0][name]))
-                    t1 = hourMinSecToFloat(parseDuration(self.df.iloc[i][name]))
-                    newValue = floatToHourMinSec(t0 + t1)
-                    self.df.at[i0, name] = newValue
-                elif name == 'Speed (km/h)':
-                    self.df.at[i0, name] = self.df['Distance (km)'][i0] / hourMinSecToFloat(self.df['Time'][i0])
-                else:
-                    self.df.at[i0, name] += self.df.iloc[i][name]
-                    
+        # recalculate relational data
+        for col, relation in self._activity.get_relations().items():
+            m0 = self.df[relation.m0.full_name][i0]
+            m1 = self.df[relation.m1.full_name][i0]
+            if relation.m1.slug == "time":
+                m1 = hourMinSecToFloat(m1)
+            self.df.at[i0, col] = relation.op.call(m0, m1)
+            
         self.df.drop(idx, inplace=True)
         self.dataChanged.emit(i0)
         
