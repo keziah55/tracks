@@ -240,6 +240,7 @@ class Activity:
         m = Measure(*args, **kwargs)
         self._measures[m.slug] = m
     
+    @property
     def header(self):
         header = [measure.full_name for measure in self._measures.values()]
         return header
@@ -257,3 +258,7 @@ class Activity:
         p = save_dir.joinpath(self.json_file)
         with open(p, 'w') as fileobj:
             json.dump(self.to_json(), fileobj, indent=4)
+            
+    def relations(self):
+        relations = {m.full_name: m.relation for m in self._measures.values() if m.relation is not None}
+        return relations

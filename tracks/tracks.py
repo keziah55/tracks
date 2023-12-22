@@ -22,10 +22,11 @@ from customQObjects.core import Settings
 
 
 class Tracks(QMainWindow):
+    
+    _csv_sep = ","
+    
     def __init__(self):
         super().__init__()
-        
-        self._csv_sep = ","
         
         self.settings = Settings()
         
@@ -36,7 +37,6 @@ class Tracks(QMainWindow):
         
         self.activities = []
         act = load_activity(self.get_data_path().joinpath(f"{activity}.json"))
-        print(act)
         self.activities.insert(0, act)
         
         df = self.load_df(act)
@@ -142,6 +142,7 @@ class Tracks(QMainWindow):
     
     @classmethod
     def getFile(cls):
+        import inspect; print(f"getFile called by {inspect.stack()[1].function}")
         p = cls.get_data_path()
         file = p.joinpath('tracks.csv')
         return file
@@ -153,24 +154,27 @@ class Tracks(QMainWindow):
         else:
             return self.activities[0]
     
-    def load_df(self, activity=None) -> pd.DataFrame:
-        """ Load dataframe for activity """
+    @classmethod
+    def load_df(cls, activity) -> pd.DataFrame:
+        """ Load dataframe for `activity` """
         
-        if activity is None:
-            activity = self.current_activity
-            
-        p = self.get_data_path()
+        p = cls.get_data_path()
         filepath = p.joinpath(activity.csv_file)
         
         if not filepath.exists():
             header = activity.header()
-            s = self._csv_sep.join(header) + "\n"
+            s = cls._csv_sep.join(header) + "\n"
             with open(filepath, 'w') as fileobj:
                 fileobj.write(s)
                 
-        df = pd.read_csv(filepath, sep=self._csv_sep, parse_dates=['Date'])
+        df = pd.read_csv(filepath, sep=cls._csv_sep, parse_dates=['Date'])
         
         return df
+    
+    def load_current_df(self):
+        """ Load dataframe for current activity """
+        activity = self.current_activity
+        return self.load_df(activity)
     
     @Slot()
     def save(self, activity=None):

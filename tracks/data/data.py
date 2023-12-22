@@ -43,7 +43,6 @@ class Data(QObject):
         Object providing convenience functions for accessing data from a given DataFrame.
         """
         super().__init__()
-        self.df = self._makeSpeedColumn(df)
         
         if activity is None:
             # temporary workaround for when we create Data objects on the fly
@@ -51,6 +50,10 @@ class Data(QObject):
             from pathlib import Path
             p = Path.home().joinpath(".tracks", "cycling.json")
             activity = load_activity(p)
+            
+        self.df = self._applyRelations(df, activity)# self._makeSpeedColumn(df)
+            
+        self._activity = activity
         
         self.propertyNames = {}
         self._quickNames = {}
@@ -96,6 +99,10 @@ class Data(QObject):
             return getattr(self, name)
         else:
             raise NameError(f"{key} not a valid property name.")
+            
+    def __getattr__(self, name):
+        if name in self.quickNames:
+            return self.df[self.quickNames[name]]
          
     def __repr__(self):
         return self.toString(headTail=5)
@@ -117,7 +124,7 @@ class Data(QObject):
             If provided, abridge the object to show only the first and last 
             `headTail` rows. By default, do not abridge and return the full object.
         """
-        keys = ["Date", "Time", "Distance (km)", "Speed (km/h)", "Calories", "Gear"]
+        keys = self.df.columns
         joinStr = "  "
         columns = {key: self.formatted(key) for key in keys}
         widths = {key: max(max([len(str(item)) for item in values]), len(key))#+len(joinStr))
@@ -200,12 +207,21 @@ class Data(QObject):
                 self.df.at[index, 'Speed (km/h)'] = distance / time
             self.dataChanged.emit(changed)
         
-    def _makeSpeedColumn(self, df):
-        ## speed was not always included in csv file
-        ## If user does not have this column, create it
-        if 'Speed (km/h)' not in df.columns:
-            times = np.array([hourMinSecToFloat(t) for t in df['Time']])
-            df['Speed (km/h)'] = df['Distance (km)'] / times
+    @staticmethod
+    def _applyRelations(df, activity) -> pd.DataFrame():
+        """ 
+        Check if relational measures in `activity` are present in `df`.
+        
+        If not, create them.
+        """
+        relations = activity.relations()
+        for name, relation in relations.items():
+            if name not in df.columns:
+                m0 = df[relation.m0.full_name]
+                m1 = df[relation.m1.full_name]
+                if relation.m1.slug == "time":
+                    m1 = np.array([hourMinSecToFloat(t) for t in m1])
+                df[name] = relation.op.call(m0, m1)
         return df
         
     def setDataFrame(self, df):
