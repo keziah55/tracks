@@ -208,13 +208,7 @@ class Data(QObject):
                     self.df.at[index, col] = value
                     changed.append(index)
         if changed:
-            for index in changed:
-                # update the speed for the changed indices
-                # (simpler to do this for all changed indices than also track whether
-                # distance and/or time have changed)
-                distance = self.df['Distance (km)'][index]
-                time = hourMinSecToFloat(self.df['Time'][index])
-                self.df.at[index, 'Speed (km/h)'] = distance / time
+            self._update_relations(changed)
             self.dataChanged.emit(changed)
         
     @staticmethod
@@ -233,6 +227,16 @@ class Data(QObject):
                     m1 = np.array([hourMinSecToFloat(t) for t in m1])
                 df[name] = relation.op.call(m0, m1)
         return df
+    
+    def _update_relations(self, idx):
+        """ Recalculate relational data for all indices in iterable `idx` """
+        # recalculate relational data
+        for col, relation in self._activity.get_relations().items():
+            m0 = self.df[relation.m0.full_name][idx]
+            m1 = self.df[relation.m1.full_name][idx]
+            if relation.m1.slug == "time":
+                m1 = np.array([hourMinSecToFloat(t) for t in m1])
+            self.df.loc[idx,col] = relation.op.call(m0, m1)
         
     def setDataFrame(self, df):
         """ Set new DataFrame """
@@ -426,12 +430,14 @@ class Data(QObject):
         i0, *idx = idx
         
         # recalculate relational data
-        for col, relation in self._activity.get_relations().items():
-            m0 = self.df[relation.m0.full_name][i0]
-            m1 = self.df[relation.m1.full_name][i0]
-            if relation.m1.slug == "time":
-                m1 = hourMinSecToFloat(m1)
-            self.df.at[i0, col] = relation.op.call(m0, m1)
+        self._update_relations([i0])
+        
+        # for col, relation in self._activity.get_relations().items():
+        #     m0 = self.df[relation.m0.full_name][i0]
+        #     m1 = self.df[relation.m1.full_name][i0]
+        #     if relation.m1.slug == "time":
+        #         m1 = hourMinSecToFloat(m1)
+        #     self.df.at[i0, col] = relation.op.call(m0, m1)
             
         self.df.drop(idx, inplace=True)
         self.dataChanged.emit(i0)
