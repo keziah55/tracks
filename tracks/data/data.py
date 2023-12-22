@@ -102,7 +102,12 @@ class Data(QObject):
             
     def __getattr__(self, name):
         if name in self.quickNames:
-            return self.df[self.quickNames[name]]
+            ret = self.df[self.quickNames[name]]
+            if name in ["date", "time"]:
+                ret = list(ret)
+            else:
+                ret = ret.to_numpy()
+            return ret
          
     def __repr__(self):
         return self.toString(headTail=5)
@@ -228,36 +233,6 @@ class Data(QObject):
         self.df = df
         self.dataChanged.emit(self.df.index)
             
-    @property
-    def distance(self):
-        """ Return 'Distance (km)' column as numpy array. """
-        return np.array(self.df['Distance (km)'])
-    
-    @property
-    def time(self):
-        """ Return 'Time' column as list. """
-        return list(self.df['Time'])
-    
-    @property
-    def date(self):
-        """ Return 'Date' column as list. """
-        return list(self.df['Date'])
-    
-    @property
-    def calories(self):
-        """ Return 'Calories' column as numpy array. """
-        return np.array(self.df['Calories'])
-    
-    @property
-    def gear(self):
-        """ Return 'Gear' column as numpy array. """
-        return np.array(self.df['Gear'])
-    
-    @property 
-    def speed(self):
-        """ Return average speeds as numpy array. """
-        return np.array(self.df['Speed (km/h)'])
-    
     @property
     def timeHours(self):
         """ 
