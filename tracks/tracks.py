@@ -5,8 +5,8 @@ Main window for Tracks.
 """
 
 from pathlib import Path
-
 from datetime import datetime, date
+import warnings
 from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
                              QMessageBox, QLabel)
 from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
@@ -142,7 +142,7 @@ class Tracks(QMainWindow):
     
     @classmethod
     def getFile(cls):
-        import inspect; print(f"getFile called by {inspect.stack()[1].function}")
+        warnings.warn(f"Tracks.getFile is deprecated", DeprecationWarning)
         p = cls.get_data_path()
         file = p.joinpath('tracks.csv')
         return file
