@@ -330,7 +330,7 @@ class PBTable(QTableWidget):
         
         rowNums = ['1']
         for idx in range(1, len(self.items)):
-            if self.items[idx]['Speed (km/h)'] == self.items[idx-1]['Speed (km/h)']:
+            if self.items[idx][key] == self.items[idx-1][key]:
                 if rowNums[-1][-1] != "=":
                     # add an equals sign (unless there's one there already)
                     rowNums[-1] += "="

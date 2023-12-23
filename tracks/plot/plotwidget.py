@@ -466,7 +466,6 @@ class Plot(_PlotWidget):
     @Slot(object)
     def setCurrentPointFromDate(self, date):
         """ Find point at the given date and highlight it. """
-        print(f"setCurrentPointFromDate {date}")
         dt = datetime(date.year, date.month, date.day)
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
@@ -475,7 +474,6 @@ class Plot(_PlotWidget):
         self.setCurrentPoint(idx)
         
     def ensurePointVisible(self, pt):
-        print("ensurePointVisible")
         ts = pt.pos().x()
         x0, x1 = self.viewBoxes[0].xRange
         if ts < x0:
