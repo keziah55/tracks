@@ -1,9 +1,9 @@
 from qtpy.QtWidgets import QTableWidget
 from qtpy.QtCore import Qt, QTimer, Slot, Signal
 from qtpy.QtGui import QBrush, QColor
-from tracks.util import isDate, isFloat, isInt, isDuration, parseDate, parseDuration
 from functools import partial
 from collections import namedtuple
+from tracks.activities import get_cast_method, get_validate_method
 
 ValidateFuncs = namedtuple("ValidateFuncs", ["validate", "cast"])
 
@@ -26,33 +26,25 @@ class AddDataTableMixin(object):
         
         self._activity = activity
         
-        self.headerLabels = self._activity.user_input_header #['Date', 'Time', 'Distance (km)', 'Calories', 'Gear']
+        self.headerLabels = self._activity.user_input_header
         self.headerLabelColumnOffset = 0
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
         self.table.verticalHeader().setVisible(False)
         
-        # dict of methods to validate and cast types for input data in each column
-        is_date_partial = partial(isDate, allowEmpty=emptyDateValid)
-        parse_date_partial = partial(parseDate, pd_timestamp=True)
-        
-        validate_methods = {
-            "date": is_date_partial,
-            "duration": isDuration,
-            "float": isFloat,
-            "int": isInt
-        }
-        cast_methods = {
-            "date": parse_date_partial,
-            "duration": parseDuration,
-            "float": float,
-            "int": int
-        }
-        
-        self.mthds = {
-            m.full_name: ValidateFuncs(validate_methods[m.dtype], cast_methods[m.dtype])
-            for name, m in self._activity.measures.items() if m.relation is None
-        }
+        self.mthds = {}
+        for name, m in self._activity.measures.items():
+            if m.relation is not None:
+                continue
+            
+            if m.dtype == "date":
+                validate_method = partial(get_validate_method("date"), allowEmpty=emptyDateValid)
+                cast_method = partial(get_cast_method("date"), pd_timestamp=True)
+            else:
+                cast_method = get_cast_method(m.dtype)
+                validate_method = get_validate_method(m.dtype)
+            
+            self.mthds[m.full_name] = ValidateFuncs(validate_method, cast_method)
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)

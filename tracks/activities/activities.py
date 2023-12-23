@@ -7,44 +7,10 @@ Define Activities
 import warnings
 import re
 import json
-from tracks.util import hourMinSecToFloat
+from .operations import operator_dict
+from .dtypes import cast_methods
+    
 
-class Operation:
-    """ Base class for binary operation """
-    
-    operator: str = None
-    
-    @staticmethod
-    def call(a,b): pass
-
-class Divide(Operation):
-    """ Division operation """
-    
-    operator = "/"
-    
-    @staticmethod
-    def call(a,b): return a/b
-    
-class Divide_time_min(Divide):
-    """ Division that takes denominator as time in hours and converts to minutes before use """
-    
-    @staticmethod
-    def call(a, b):
-        b *= 60
-        return a/b
-    
-cmp_func_dict = {
-    "float": float,
-    "int": int,
-    "str": str,
-    "hourMinSecToFloat": hourMinSecToFloat,
-}
-
-operator_dict = {
-    "Divide": Divide,
-    "Divide_time_min": Divide_time_min,
-}
-    
 class Relation:
     """ 
     Class to denote a relationship between two measures.
@@ -146,8 +112,8 @@ class Measure:
         self._plottable = plottable
         
         if isinstance(cmp_func, str):
-            if cmp_func in cmp_func_dict:
-                cmp_func = cmp_func_dict[cmp_func]
+            if cmp_func in cast_methods:
+                cmp_func = cast_methods[cmp_func]
         self._cmp_func = cmp_func
         
         if isinstance(relation, dict):
