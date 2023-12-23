@@ -151,7 +151,7 @@ class PBMonthLabel(QLabel):
         except ValueError:
             totals.sort(key=lambda tup: hourMinSecToFloat(tup[1][self.column]), reverse=True)
         monthYear, summaries = totals[0]
-        self.time, self.distance, _, self.calories, *vals = summaries
+        self.time, self.distance, _, self.calories, *vals = summaries.values()
         
         self.setText()
         
@@ -232,14 +232,12 @@ class PBTable(QTableWidget):
     """
     
     def __init__(self, parent, activity, rows=5, key="Speed (km/h)"):
-        self.headerLabels = [
-            'Date', 'Time', 'Distance (km)', 'Speed (km/h)', 'Calories', 'Gear']
-        columns = len(self.headerLabels)
+        columns = len(activity.header)
         super().__init__(rows, columns)
         self._activity = activity
         self.parent = parent
         
-        self.setHorizontalHeaderLabels(self.headerLabels)
+        self.setHorizontalHeaderLabels(self._activity.header)
         
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         
@@ -247,7 +245,7 @@ class PBTable(QTableWidget):
         
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
-        self.selectColumn(self.headerLabels.index(self.selectKey))
+        self.selectColumn(self._activity.header.index(self.selectKey))
         
         self.newIdx = None
         self._setToolTip(rows)
@@ -298,7 +296,7 @@ class PBTable(QTableWidget):
         
         for idx in indices:
             # get row (as strings for display)
-            row = {k: self.data.formatted(k)[idx] for k in self.headerLabels}
+            row = {k: self.data.formatted(k)[idx] for k in self._activity.header}
             row['datetime'] = self.data['Date'][idx]
             
             if row[key] not in [dct[key] for dct in pb]:
@@ -339,7 +337,7 @@ class PBTable(QTableWidget):
                 rowNums.append(str(idx+1))
         
         for rowNum, row in enumerate(self.items):
-            for colNum, key in enumerate(self.headerLabels):
+            for colNum, key in enumerate(self._activity.header):
                 value = row[key]
                 item = QTableWidgetItem()
                 item.setText(value)
@@ -356,7 +354,7 @@ class PBTable(QTableWidget):
 
     @Slot(int)
     def selectColumn(self, idx):
-        col = self.headerLabels[idx]
+        col = self._activity.header[idx]
         
         m = self._activity.get_measure_from_full_name(col)
         

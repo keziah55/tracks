@@ -173,7 +173,7 @@ class TestPreferences(TracksSetupTeardown):
         df = self.data.df.sort_values(by=['Speed (km/h)', 'Date'], ascending=False, key=sortKey)
         
         for row in range(self.pbTable.rowCount()):
-            for colNum, colName in enumerate(self.pbTable.headerLabels):
+            for colNum, colName in enumerate(self.pbTable._activity.header):
                 text = self.pbTable.item(row, colNum).text()
                 
                 expected = df.iloc[row][colName]
@@ -186,11 +186,11 @@ class TestPreferences(TracksSetupTeardown):
                     df.to_csv(p.joinpath("test_num_pb_sessions_fail_sorted.csv"))
                     self.data.df.to_csv(p.joinpath("test_num_pb_sessions_fail_unsorted.csv"))
                     
-                    h = [re.sub(r"\n", " ", name) for name in self.pbTable.headerLabels]
+                    h = [re.sub(r"\n", " ", name) for name in self.pbTable._activity.header]
                     tmpText = ", ".join(h) + "\n"
                     for r in range(self.pbTable.rowCount()):
                         tmpRow = []
-                        for c in range(len(self.pbTable.headerLabels)):
+                        for c in range(len(self.pbTable._activity.header)):
                             tmpRow.append(self.pbTable.item(r, c).text())
                         tmpText += ",".join(tmpRow) + "\n"
                     with open(p.joinpath("test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
@@ -255,7 +255,7 @@ class TestPreferences(TracksSetupTeardown):
             
             viewerName = aliases.get(name.capitalize(), name.capitalize())
             viewerNameNoNewline = re.sub(r"\n", " ", viewerName)
-            col = self.viewer.headerLabels.index(viewerName)
+            col = self.viewer._activity.header.index(viewerName)
             
             # known data is from April and May 2021
             groups = self.data.df.groupby(self.data.df['Date'] <= pd.Timestamp(year=2021, month=4, day=30))

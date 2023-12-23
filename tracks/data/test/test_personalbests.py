@@ -36,7 +36,7 @@ class TestPersonalBests:
     def setup(self, qtbot):
         # make Data object with known data
         self.parent = MockParent(random=False)
-        self.pb = PersonalBests(self.parent)
+        self.pb = PersonalBests(self.parent, self.parent.activity)
         self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
         self.widget = QWidget()
         layout = QVBoxLayout()
@@ -109,7 +109,7 @@ class TestPersonalBests:
                    'Calories':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021']}
         
         for column, expected in columns.items():
-            idx = self.pb.bestSessions.headerLabels.index(column)
+            idx = self.pb.bestSessions._activity.header.index(column)
             
             self.pb.bestSessions.horizontalHeader().sectionClicked.emit(idx)
             qtbot.wait(variables.shortWait)

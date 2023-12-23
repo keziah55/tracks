@@ -37,7 +37,7 @@ class TestDataViewer:
         
     def test_sort(self, setup, qtbot):
         
-        columns = self.widget.headerLabels
+        columns = self.widget._activity.header
         columns = random.sample(columns, k=len(columns))
         if columns[0] == 'Date':
             # should already be sorted by Date, so make sure this isn't the first
@@ -46,7 +46,7 @@ class TestDataViewer:
             columns.append(item)
             
         for column in columns:
-            idx = self.widget.headerLabels.index(column)
+            idx = self.widget._activity.header.index(column)
             
             expected = [item.text(idx) for item in self.widget.topLevelItems]
             
@@ -225,7 +225,7 @@ class TestDataViewer:
                           'Time': '00:42:11'}]
         newValues = dict(zip(editDates, newValues))
         
-        dialog = EditItemDialog(self.widget._activity, self.widget.selectedItems(), self.widget.headerLabels)
+        dialog = EditItemDialog(self.widget._activity, self.widget.selectedItems(), self.widget._activity.header)
         dialog.show()
         
         # pick a check box and toggle it off then on
