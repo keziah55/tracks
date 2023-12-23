@@ -392,7 +392,6 @@ class PBTable(QTableWidget):
             
     @Slot(int, int, int, int)
     def _cellChanged(self, row, column, previousRow, previousColumn):
-        print(f"_cellChanged {row}, {column}, {previousRow}, {previousColumn}")
         if self.parent is not None and len(self.items) > 0:
             dct = self.items[row]
             self.parent.itemSelected.emit(dct['datetime'])
