@@ -104,10 +104,11 @@ class Data(QObject):
             s = f"{s} {measure.unit}"
         return s
     
-    def make_summary(self):
-        summaries = [self.summaryString(name) 
+    def make_summary(self) -> dict:
+        # TODO TG-122
+        summaries = {self._activity.get_measure(name).slug: self.summaryString(name) 
                      for name in self._activity.header 
-                     if self._activity.get_measure(name).summary is not None]
+                     if self._activity.get_measure(name).summary is not None}
         return summaries
         
     def __len__(self):

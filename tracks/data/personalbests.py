@@ -107,6 +107,10 @@ class PBMonthLabel(QLabel):
         size = super().sizeHint()
         height = int(1.5*size.height())
         return QSize(size.width(), height)
+    
+    @property
+    def data(self):
+        return self.parent.data
         
     def setColumn(self, column, pbCount=None, pbMonthRange=None):
         self.column = column
@@ -141,12 +145,11 @@ class PBMonthLabel(QLabel):
             return None
         
         totals = [(monthYear, monthData.make_summary()) for monthYear, monthData in dfs]
-        idx = self._matchColumn(self.column, [item[0] for item in self.mainWindow.summary.summaryArgs])
         
         try:
-            totals.sort(key=lambda tup: float(tup[1][idx]), reverse=True)
+            totals.sort(key=lambda tup: float(tup[1][self.column]), reverse=True)
         except ValueError:
-            totals.sort(key=lambda tup: hourMinSecToFloat(tup[1][idx]), reverse=True)
+            totals.sort(key=lambda tup: hourMinSecToFloat(tup[1][self.column]), reverse=True)
         monthYear, summaries = totals[0]
         self.time, self.distance, _, self.calories, *vals = summaries
         
@@ -257,7 +260,7 @@ class PBTable(QTableWidget):
         
     @property
     def data(self):
-        return self.mainWindow.data
+        return self.parent.data
     
     @property
     def header(self):

@@ -254,7 +254,7 @@ class DataViewer(QTreeWidget):
         # update top level items of changed months
         for month, year in changed:
             data = self.data.getMonth(month, year, returnType="Data")
-            summaries = data.make_summary()
+            summaries = list(data.make_summary().values())
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             rootText = [monthYear] + summaries
             rootItem = self.topLevelItemsDict[monthYear]
@@ -265,7 +265,7 @@ class DataViewer(QTreeWidget):
             date = self.data.df.iloc[idx]['Date']
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             data = self.data.getMonth(date.month, date.year, returnType="Data")
-            summaries = data.make_summary()
+            summaries = list(data.make_summary().values())
             rootText = [monthYear] + summaries
             if monthYear not in self.topLevelItemsDict:
                 rootItem = CycleTreeWidgetItem(self, row=rootText)
@@ -303,7 +303,7 @@ class DataViewer(QTreeWidget):
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            summaries = data.make_summary()
+            summaries = list(data.make_summary().values())
             rootText = [monthYear] + summaries
             rootItem = self.topLevelItemsDict[monthYear]
             rootItem.setRow(rootText)
@@ -350,7 +350,7 @@ class DataViewer(QTreeWidget):
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            summaries = data.make_summary()
+            summaries = list(data.make_summary().values())
             rootText = [monthYear] + summaries
             rootItem = CycleTreeWidgetItem(self, row=rootText)
                 
@@ -425,7 +425,7 @@ class DataViewer(QTreeWidget):
             
     def _summariseData(self, data):
         """ Return string of summarised `data`, where `data` is a :class:`Data` object """
-        summary = data.make_summary()
+        summary = list(data.make_summary().values())
         s = f"{len(data)} sessions: "
         s += "; ".join(summary)
         return s
