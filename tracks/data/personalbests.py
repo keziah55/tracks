@@ -41,13 +41,16 @@ class PersonalBests(QObject):
     
     statusMessage = Signal(str)
     
-    def __init__(self, parent, numSessions=5, monthCriterion="distance", sessionsKey="Speed (km/h)"):
+    def __init__(self, parent, activity, numSessions=5, monthCriterion="distance", sessionsKey="Speed (km/h)"):
         super().__init__()
+        self.parent = parent
         self.newPBdialog = NewPBDialog()
-        self.bestMonth = PBMonthLabel(
-            parent=self, mainWindow=parent, column=monthCriterion)
-        self.bestSessions = PBTable(
-            parent=self, mainWindow=parent, rows=numSessions, key=sessionsKey)
+        self.bestMonth = PBMonthLabel(parent=self, activity=activity, column=monthCriterion)
+        self.bestSessions = PBTable(parent=self, activity=activity, rows=numSessions, key=sessionsKey)
+        
+    @property
+    def data(self):
+        return self.parent.data
         
     @Slot(object)
     def newData(self, idx=None):
@@ -89,10 +92,10 @@ class PersonalBests(QObject):
 
 class PBMonthLabel(QLabel):
     
-    def __init__(self, mainWindow, parent=None, column='Distance (km)'):
+    def __init__(self, parent, activity, column='Distance (km)'):
         super().__init__()
-        self.mainWindow = mainWindow
         self.parent = parent
+        self._activity = activity
         self.column = column
         self.pbCount = (None, None)
         self.monthYear = self.time = self.distance = self.calories = ""
@@ -105,10 +108,6 @@ class PBMonthLabel(QLabel):
         height = int(1.5*size.height())
         return QSize(size.width(), height)
         
-    @property
-    def data(self):
-        return self.mainWindow.data
-    
     def setColumn(self, column, pbCount=None, pbMonthRange=None):
         self.column = column
         self.pbCount = (pbCount, pbMonthRange)
@@ -141,8 +140,7 @@ class PBMonthLabel(QLabel):
         if len(dfs) == 0:
             return None
         
-        totals = [(monthYear, [monthData.summaryString(*args) for args in self.mainWindow.summary.summaryArgs])
-                  for monthYear, monthData in dfs]
+        totals = [(monthYear, monthData.make_summary()) for monthYear, monthData in dfs]
         idx = self._matchColumn(self.column, [item[0] for item in self.mainWindow.summary.summaryArgs])
         
         try:
@@ -221,8 +219,6 @@ class PBTable(QTableWidget):
     
         Parameters
         ----------
-        mainWindow : QWidget
-            Main window/widget with :class:`Data` object
         parent : QObject
          PersonalBests object that manages this object.
         rows : int
@@ -230,12 +226,12 @@ class PBTable(QTableWidget):
             Default is 5.
     """
     
-    def __init__(self, mainWindow, parent=None, rows=5, key="Speed (km/h)"):
+    def __init__(self, parent, activity, rows=5, key="Speed (km/h)"):
         self.headerLabels = [
             'Date', 'Time', 'Distance (km)', 'Speed (km/h)', 'Calories', 'Gear']
         columns = len(self.headerLabels)
         super().__init__(rows, columns)
-        self.mainWindow = mainWindow
+        self._activity = activity
         self.parent = parent
         
         # dict of columns that can be selected and the functions used to compare values

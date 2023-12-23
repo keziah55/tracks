@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt, QTimer, Slot, Signal
 from qtpy.QtGui import QBrush, QColor
 from functools import partial
 from collections import namedtuple
-from tracks.activities import get_cast_method, get_validate_method
+from tracks.activities import get_cast_func, get_validate_func
 
 ValidateFuncs = namedtuple("ValidateFuncs", ["validate", "cast"])
 
@@ -38,13 +38,13 @@ class AddDataTableMixin(object):
                 continue
             
             if m.dtype == "date":
-                validate_method = partial(get_validate_method("date"), allowEmpty=emptyDateValid)
-                cast_method = partial(get_cast_method("date"), pd_timestamp=True)
+                validate_func = partial(get_validate_func("date"), allowEmpty=emptyDateValid)
+                cast_func = partial(get_cast_func("date"), pd_timestamp=True)
             else:
-                cast_method = get_cast_method(m.dtype)
-                validate_method = get_validate_method(m.dtype)
+                cast_func = get_cast_func(m.dtype)
+                validate_func = get_validate_func(m.dtype)
             
-            self.mthds[m.full_name] = ValidateFuncs(validate_method, cast_method)
+            self.mthds[m.full_name] = ValidateFuncs(validate_func, cast_func)
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)

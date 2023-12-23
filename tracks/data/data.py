@@ -87,8 +87,28 @@ class Data(QObject):
     def formatted(self, key):
         return [self.fmtFuncs[key](v) for v in self[key]]
     
-    def summaryString(self, key, func=sum):
-        return self.fmtFuncs[key](func(self[key]))
+    def summaryString(self, key, func=sum, unit=False):
+        if key.startswith("Time"):
+            # TODO TG-122, TG-124
+            measure = self._activity.get_measure("time")
+            key = "Time (hours)"
+        else:
+            measure = self._activity.get_measure(key)
+        fmt_func = self.fmtFuncs[key]
+            
+        summary_func = measure.summary
+
+        s = fmt_func(summary_func(self[key]))
+        
+        if unit and measure.show_unit and measure.unit is not None:
+            s = f"{s} {measure.unit}"
+        return s
+    
+    def make_summary(self):
+        summaries = [self.summaryString(name) 
+                     for name in self._activity.header 
+                     if self._activity.get_measure(name).summary is not None]
+        return summaries
         
     def __len__(self):
         return len(self.df)
@@ -282,7 +302,7 @@ class Data(QObject):
         ts1 = pd.Timestamp(day=1, month=month, year=year)
         df = self.df[(self.df['Date'] >= ts0) & (self.df['Date'] < ts1)]
         if returnType == "Data":
-            df = Data(df)
+            df = Data(df, activity=self._activity)
         return df
     
     @check_empty

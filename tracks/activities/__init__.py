@@ -1,5 +1,5 @@
 from .activities import Activity, Relation
-from .dtypes import get_cast_method, get_validate_method
+from .dtypes import get_cast_func, get_validate_func, get_reduce_func
 from .operations import Divide, Divide_time_min
 import json
 
@@ -15,4 +15,4 @@ def load_activity(p):
     return activity
 
 __all__ = ["Activity", "Relation", "Divide", "Divide_time_min", "load_activity",
-           "get_cast_method", "get_validate_method"]
+           "get_cast_func", "get_validate_func", "get_reduce_func"]

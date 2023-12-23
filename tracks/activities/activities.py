@@ -8,7 +8,7 @@ import warnings
 import re
 import json
 from .operations import operator_dict
-from .dtypes import cast_methods
+from .dtypes import get_cast_func, get_reduce_func
     
 
 class Relation:
@@ -105,15 +105,17 @@ class Measure:
     ):
         self._name = name
         self._dtype = dtype
-        self._summary = summary
         self._is_metadata = is_metadata
         self._sig_figs = sig_figs
         self._show_unit = show_unit
         self._plottable = plottable
         
+        if isinstance(summary, str):
+            summary = get_reduce_func(summary)
+        self._summary = summary
+        
         if isinstance(cmp_func, str):
-            if cmp_func in cast_methods:
-                cmp_func = cast_methods[cmp_func]
+            cmp_func = get_cast_func(cmp_func)
         self._cmp_func = cmp_func
         
         if isinstance(relation, dict):
@@ -142,12 +144,13 @@ class Measure:
         return s
     
     def to_json(self):
+        summary = self.summary.__name__ if self.summary is not None else None
         cmp_func = self.cmp_func.__name__ if self.cmp_func is not None else None
         relation = self.relation.to_json() if self.relation is not None else None
         dct = {
             "name": self.name,
             "dtype": self.dtype,
-            "summary": self.summary,
+            "summary": summary,
             "is_metadata":self.is_metadata,
             "sig_figs": self.sig_figs,
             "unit": self.unit,

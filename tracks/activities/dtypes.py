@@ -6,31 +6,46 @@ Get functions to validate/cast Activity types.
 
 from tracks.util import (hourMinSecToFloat, isDate, isFloat, isInt, isDuration, 
                          parseDate, parseDuration)
+import numpy as np
 
-validate_methods = {
+reduce_funcs = {
+    'sum': sum, 
+    'min': min, 
+    'max': max, 
+    'mean': np.mean
+}
+
+validate_funcs = {
     "date": isDate,
     "duration": isDuration,
     "float": isFloat,
     "int": isInt
 }
 
-cast_methods = {
+cast_funcs = {
     "date": parseDate,
     "duration": parseDuration,
     "float": float,
     "int": int,
     "str": str,
-    "time_to_float": hourMinSecToFloat
+    "hourMinSecToFloat": hourMinSecToFloat
 }
 
-def get_validate_method(dtype):
-    m = validate_methods.get(dtype, None)
-    if m is None:
-        raise ValueError(f"Could not get vaildate method for '{dtype}'")
-    return m
+def get_reduce_func(name):
+    f = reduce_funcs.get(name, None)
+    if f is None:
+        raise ValueError(f"Could not get reduce func for '{name}'")
+    return f
 
-def get_cast_method(dtype):
-    m = cast_methods.get(dtype, None)
-    if m is None:
-        raise ValueError(f"Could not get cast method for '{dtype}'")
-    return m
+def get_validate_func(dtype):
+    f = validate_funcs.get(dtype, None)
+    if f is None:
+        raise ValueError(f"Could not get vaildate func for '{dtype}'")
+    return f
+
+def get_cast_func(dtype):
+    f = cast_funcs.get(dtype, None)
+    if f is None:
+        msg = f"Could not get cast func for '{dtype}'"
+        raise ValueError(msg)
+    return f
