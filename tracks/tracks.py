@@ -44,7 +44,7 @@ class Tracks(QMainWindow):
         self.data = Data(df, act)
         self.save()
         
-        self.summary = Summary()
+        # self.summary = Summary()
 
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
@@ -69,7 +69,7 @@ class Tracks(QMainWindow):
         self.viewer.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
-        self.summary.valueChanged.connect(self._summaryValueChanged)
+        # self.summary.valueChanged.connect(self._summaryValueChanged)
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self._dataChanged)
         self.plot.pointSelected.connect(self.viewer.highlightItem)

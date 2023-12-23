@@ -53,7 +53,10 @@ class DataPreferences(QWidget):
         topSessionsGroup.addWidget(self.numSessionsBox, 0, 1)
         
         summaryCriteriaGroup = GroupBox("Summary criteria", layout="grid")
-        names = ["Time", "Distance", "Calories", "Speed", "Gear"]
+        
+        names = [m.name 
+                 for m in self.mainWindow.current_activity.measures.values() 
+                 if m.summary is not None]
         self.summaryComboBoxes = {}
         for row, name in enumerate(names):
             summaryCriteriaGroup.addWidget(QLabel(name), row, 0)
@@ -93,10 +96,12 @@ class DataPreferences(QWidget):
         self.pbRangeCombo.setCurrentIndex(idx)
     
         for name, widget in self.summaryComboBoxes.items():
-            funcName = self.settings.value(f"summary/{name}", None)
-            if funcName is None:
-                funcName = self.mainWindow.summary.getFunc(name)
-            widget.setCurrentText(funcName)
+            func_name = self.settings.value(f"summary/{name}", None)
+            if func_name is None:
+                m = self.mainWindow.current_activity.get_measure(name)
+                func_name = m.summary.__name__
+                
+            widget.setCurrentText(func_name)
         
         self.settings.endGroup()
         
@@ -126,12 +131,19 @@ class DataPreferences(QWidget):
         self.settings.setValue("range", self.pbRangeCombo.currentText())
         
         # make dict to pass to `setFunc` so it doesn't remake the viewer five times
-        summaryFuncs = {}
+        # summaryFuncs = {}
+        changed = False
         for name, widget in self.summaryComboBoxes.items():
-            funcName = widget.currentText()
-            self.settings.setValue(f"summary/{name}", funcName)
-            summaryFuncs[name] = funcName
-        self.mainWindow.summary.setFunc(summaryFuncs)
+            func_name = widget.currentText()
+            self.settings.setValue(f"summary/{name}", func_name)
+            # summaryFuncs[name] = funcName
+            m = self.mainWindow.current_activity.get_measure(name)
+            if m.summary.__name__ != func_name:
+                changed = True
+                m.set_summary(func_name)
+        if changed:
+            self.mainWindow._summaryValueChanged()
+        # self.mainWindow.summary.setFunc(summaryFuncs)
         
         self.settings.endGroup()
         

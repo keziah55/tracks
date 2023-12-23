@@ -399,8 +399,7 @@ class Plot(_PlotWidget):
             self.vb2.addItem(self.backgroundItem)
         elif mode == 'set':
              self.backgroundItem.setData(dts, odo, **style)
-        self.plotItem.getAxis('right').setLabel('Total monthly distance', 
-            color=colour)
+        self.plotItem.getAxis('right').setLabel('Total monthly distance', color=colour)
         
     @Slot(str)
     def switchSeries(self, key):

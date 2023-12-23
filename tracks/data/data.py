@@ -373,12 +373,12 @@ class Data(QObject):
         odo = []
         dts = []
         for i, df in enumerate(dfs):
-            monthYear, df = df
+            month_year, df = df
             # at the start of every month, insert 0km entry
             if df.empty:
                 # if there's no data in the df, get the month and year from the
-                # associated monthYear string
-                month, year = monthYear.split(' ')
+                # associated month_year string
+                month, year = month_year.split(' ')
                 month = list(calendar.month_name).index(month)
                 year = int(year)
             else:
@@ -393,6 +393,16 @@ class Data(QObject):
                 dist = odo[-1] + row['Distance (km)']
                 dts.append(dt)
                 odo.append(dist)
+                
+            # add dummy point on last day of month, if required
+            # but not at current month (as we assume that's not over yet)
+            # if i < len(dfs):
+            #     _, last_day = calendar.monthrange(year, month)
+            #     if last_day != dt.day:
+            #         tmp = datetime(year, month, last_day)
+            #         dts.append(tmp)
+            #         odo.append(dist)
+                
         return dts, odo
     
     @check_empty

@@ -110,9 +110,7 @@ class Measure:
         self._show_unit = show_unit
         self._plottable = plottable
         
-        if isinstance(summary, str):
-            summary = get_reduce_func(summary)
-        self._summary = summary
+        self.set_summary(summary)
         
         if isinstance(cmp_func, str):
             cmp_func = get_cast_func(cmp_func)
@@ -178,6 +176,11 @@ class Measure:
         if self.show_unit and self.unit is not None:
             name = f"{name} ({self.unit})"
         return name
+    
+    def set_summary(self, summary):
+        if isinstance(summary, str):
+            summary = get_reduce_func(summary)
+        self._summary = summary
     
 class Activity:
     """ 
