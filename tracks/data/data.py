@@ -453,13 +453,6 @@ class Data(QObject):
         # recalculate relational data
         self._update_relations([i0])
         
-        # for col, relation in self._activity.get_relations().items():
-        #     m0 = self.df[relation.m0.full_name][i0]
-        #     m1 = self.df[relation.m1.full_name][i0]
-        #     if relation.m1.slug == "time":
-        #         m1 = hourMinSecToFloat(m1)
-        #     self.df.at[i0, col] = relation.op.call(m0, m1)
-            
         self.df.drop(idx, inplace=True)
         self.dataChanged.emit(i0)
         

@@ -221,7 +221,12 @@ class Activity:
         for m in self._measures.values():
             if name in [m.name, m.full_name]:
                 return m
-        
+            
+    def get_measure_from_full_name(self, name):
+        for m in self._measures.values():
+            if name == m.full_name:
+                return m
+            
     @property
     def header(self):
         header = [measure.full_name for measure in self._measures.values()]

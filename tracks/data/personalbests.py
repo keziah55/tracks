@@ -223,7 +223,9 @@ class PBTable(QTableWidget):
         Parameters
         ----------
         parent : QObject
-         PersonalBests object that manages this object.
+            PersonalBests object that manages this object.
+        actvity : Activity
+            Activity that is represented here
         rows : int
             Number of rows to display, i.e. the number of top sessions to show.
             Default is 5.
@@ -236,14 +238,6 @@ class PBTable(QTableWidget):
         super().__init__(rows, columns)
         self._activity = activity
         self.parent = parent
-        
-        # dict of columns that can be selected and the functions used to compare values
-        self.selectableColumns = {
-            'Time': hourMinSecToFloat, 
-            'Distance (km)': float, 
-            'Speed (km/h)': float, 
-            'Calories': float
-        }
         
         self.setHorizontalHeaderLabels(self.headerLabels)
         
@@ -319,7 +313,7 @@ class PBTable(QTableWidget):
         # sort by both key and date, so that, if values are tied, most recent will be first
         # use reverse=True for most recent date (and default order=descending)
         # if order is ascending, will need to negate value
-        func = self.selectableColumns[key]
+        func = self._activity.get_measure(key).cmp_func
         scale = 1 if order == "descending" else -1
         pb.sort(key=lambda dct: (scale*func(dct[key]), dayMonthYearToFloat(dct['Date'])), reverse=True)
             
@@ -363,17 +357,22 @@ class PBTable(QTableWidget):
     @Slot(int)
     def selectColumn(self, idx):
         col = self.headerLabels[idx]
-        if col in self.selectableColumns:
-            self.clearContents()
-            self.setTable(key=col)
-            
-            for i in range(self.header.count()):
-                font = self.horizontalHeaderItem(i).font()
-                if i == idx:
-                    font.setItalic(True)
-                else:
-                    font.setItalic(False)
-                self.horizontalHeaderItem(i).setFont(font)
+        
+        m = self._activity.get_measure_from_full_name(col)
+        
+        if m is None or m.is_metadata:
+            return
+        
+        self.clearContents()
+        self.setTable(key=col)
+        
+        for i in range(self.header.count()):
+            font = self.horizontalHeaderItem(i).font()
+            if i == idx:
+                font.setItalic(True)
+            else:
+                font.setItalic(False)
+            self.horizontalHeaderItem(i).setFont(font)
                 
     @Slot()
     def newData(self):
@@ -393,6 +392,7 @@ class PBTable(QTableWidget):
             
     @Slot(int, int, int, int)
     def _cellChanged(self, row, column, previousRow, previousColumn):
+        print(f"_cellChanged {row}, {column}, {previousRow}, {previousColumn}")
         if self.parent is not None and len(self.items) > 0:
             dct = self.items[row]
             self.parent.itemSelected.emit(dct['datetime'])
