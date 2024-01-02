@@ -114,19 +114,19 @@ class TestPlotWidget:
             pos = QPoint(x, y)
             qtbot.mouseMove(plotWidget, pos)
         
-            if plotWidget.currentPoint and idx != plotWidget.currentPoint['index']:
-                idx = plotWidget.currentPoint['index']
+            if plotWidget._current_point and idx != plotWidget._current_point['index']:
+                idx = plotWidget._current_point['index']
                 pt = plotWidget.dataItem.scatter.data[idx]
                 
                 dateLabel = plotLabel.data['date']['widget']
                 expected = f"<div style='font-size: {dateLabel.fontSize}pt'>"
-                expected += f"{self.widget.plotWidget.currentPoint['date']}</div>"
+                expected += f"{self.widget.plotWidget._current_point['date']}</div>"
                 assert dateLabel.text() == expected
                 
                 distLabel = plotLabel.data['distance']['widget']
                 expected = f"<div style='font-size: {distLabel.fontSize}pt; "
                 expected += f"color: {distLabel.colour}'>"
-                expected += f"Distance: {self.widget.plotWidget.currentPoint['distance']} km</div>"
+                expected += f"Distance: {self.widget.plotWidget._current_point['distance']} km</div>"
                 assert distLabel.text() == expected
                 
         # move mouse back to middle before next test

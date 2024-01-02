@@ -61,21 +61,17 @@ class PlotLabel(QWidget):
         
         super().__init__()
         
-        self.activity = activity
+        self._activity = activity
         self.style = style
         
         self.layout = QHBoxLayout()
         
-        self.data = {key:measure for key,measure in self.activity.measures.items() if measure.plottable}
+        self._widgets = {}
         
-        self.data = {}
-        self.data['date'] = {'string':"{}"}
-        self.data['speed'] = {'string':"Speed: {:.3f} km/h"}
-        self.data['distance'] = {'string':"Distance: {} km"}
-        self.data['calories'] = {'string':"Calories: {}"}
-        self.data['time'] = {'string':"Time: {}"}
+        self._names = [key for key,measure in self._activity.measures.items() if measure.plottable]
+        self._names.insert(0, 'date')
         
-        for key in self.data:
+        for key in self._names:
             # make ClickableLabel with given size
             colour = self.style[key]['colour'] if key in self.style.keys else None
             widget = ClickableLabel(key, colour=colour, fontSize=fontSize)
@@ -83,7 +79,7 @@ class PlotLabel(QWidget):
             # connect to labelClicked signal
             widget.clicked.connect(self.labelClicked)
             # add to dict and layout
-            self.data[key]['widget'] = widget
+            self._widgets[key] = widget
             self.layout.addWidget(widget)
             
         self.setLayout(self.layout)
@@ -91,13 +87,20 @@ class PlotLabel(QWidget):
     def setLabels(self, dct):
         """ For given `dct` set label text. """
         for key, data in dct.items():
-            if key in self.data.keys():
-                text = self.data[key]['string'].format(data)
-                label = self.data[key]['widget']
+            if key in self._names:
+                measure = self._activity.get_measure(key)
+                kwargs = {"include_unit":True}
+                if key == "date":
+                    kwargs["date_fmt"] = "%a %d %b %Y"
+                else:
+                    kwargs["include_name"] = True
+        
+                text = measure.formatted(data, **kwargs)
+                label = self._widgets[key]
                 label.setText(text)
 
     def setStyle(self, style):
         self.style = style
-        for key, value in self.data.items():
+        for key, widget in self._widgets.items():
             colour = self.style[key]['colour'] if key in self.style.keys else None
-            value['widget'].colour = colour
+            widget.colour = colour

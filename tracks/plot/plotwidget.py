@@ -174,7 +174,7 @@ class Plot(_PlotWidget):
         
         self.parent = parent
         
-        self.activity = activity
+        self._activity = activity
         
         self.plottable = ['speed', 'distance', 'time', 'calories']
         
@@ -200,7 +200,7 @@ class Plot(_PlotWidget):
         self.updateViews()
         self.plotItem.vb.sigResized.connect(self.updateViews)
         
-        self.currentPoint = {}
+        self._current_point = {}
         
         self._prevHgltPointColour = None
         
@@ -252,8 +252,8 @@ class Plot(_PlotWidget):
         for n, vb in enumerate(self.viewBoxes):
             key = f"vb{n}State"
             state[key] = vb.getState()
-        if self.currentPoint:
-            state['currentPoint'] = self.currentPoint['index']
+        if self._current_point:
+            state['currentPoint'] = self._current_point['index']
         return state
     
     def setState(self, state):
@@ -424,7 +424,7 @@ class Plot(_PlotWidget):
         
         pos = event.scenePos()
         if xMin <= pos.x() <= xMax and yMin <= pos.y() <= yMax: # event.double() and 
-            idx = self.currentPoint['index']
+            idx = self._current_point['index']
             date = self.data.datetimes[idx]
             self.pointSelected.emit(date)
         
@@ -444,26 +444,14 @@ class Plot(_PlotWidget):
         d = {'pen':pen, 'brush':brush, 'fillLevel':0}
         return d
     
-    @property
-    def currentPoint(self):
-        return self._point
-    
-    @currentPoint.setter
-    def currentPoint(self, value):
-        self._point = value
-    
     def setCurrentPoint(self, idx):
-        """ Set the `currentPoint` dict from index `idx` in the `data` DataFrame
+        """ Set the `current_point` dict from index `idx` in the `data` DataFrame
             and emit `currentPointChanged` signal.
         """
-        ## TODO data hardcoded
-        self.currentPoint['index'] = idx
-        self.currentPoint['date'] = self.data.datetimes[idx].strftime("%a %d %b %Y")
-        self.currentPoint['speed'] = self.data.speed[idx]
-        self.currentPoint['distance'] = self.data.distance[idx]
-        self.currentPoint['calories'] = self.data.calories[idx]
-        self.currentPoint['time'] = self.data.time[idx]
-        self.currentPointChanged.emit(self.currentPoint)
+        self._current_point['index'] = idx
+        for name in self._activity.measures.keys():
+            self._current_point[name] = getattr(self.data, name)[idx]
+        self.currentPointChanged.emit(self._current_point)
         
     @Slot(object)
     def setCurrentPointFromDate(self, date):
@@ -603,6 +591,7 @@ class PlotStyle:
     defaultStyles = ["dark", "light"]
     
     def __init__(self, style="dark"):
+        # TODO use activities
         
         plotStyleFile = Path(Settings().fileName()).parent.joinpath('plotStyles.ini')
         self.settings = Settings(str(plotStyleFile), Settings.NativeFormat)

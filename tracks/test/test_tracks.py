@@ -154,7 +154,7 @@ class TestTracks(TracksSetupTeardown):
         with qtbot.waitSignals(signals):
             self.viewer.setCurrentItem(item.child(0))
         expectedIdx = self.size - 1
-        assert self.plotWidget.currentPoint['index'] == expectedIdx
+        assert self.plotWidget._current_point['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
     
     def test_pb_table_clicked(self, setup, qtbot):
@@ -166,7 +166,7 @@ class TestTracks(TracksSetupTeardown):
             self.pbTable.setCurrentItem(item)
         
         expectedIdx = self.app.data.formatted("Date").index(item.text())
-        assert self.plotWidget.currentPoint['index'] == expectedIdx
+        assert self.plotWidget._current_point['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
         
     def test_plot_update(self, setup, qtbot):

@@ -183,7 +183,7 @@ class Measure:
             summary = get_reduce_func(summary)
         self._summary = summary
         
-    def formatted(self, value, include_unit=False, **kwargs):
+    def formatted(self, value, include_name=False, include_unit=False, **kwargs):
         """ Return formatted string with value and, if requested, units """
         s = ""
         match self.dtype:
@@ -202,8 +202,10 @@ class Measure:
                     s = floatToHourMinSec(value)
             case _:
                 raise RuntimeError(f"Don't know how to format measure of type {self.dtype}")
-        if include_unit and self.show_unit:
-            s += f"  {self.unit}"
+        if include_name:
+            s = f"{self.name} {s}"
+        if include_unit and self.show_unit and self.unit is not None:
+            s = f"{s} {self.unit}"
         return s
     
     def summarised(self, value, **kwargs):
