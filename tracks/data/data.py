@@ -5,7 +5,6 @@ Object providing convenient access to the contents of a DataFrame.
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
-from functools import partial
 from datetime import datetime
 import calendar
 import numpy as np
@@ -64,15 +63,6 @@ class Data(QObject):
         
         self.propertyNames['Time (hours)'] = 'timeHours'
         
-    @staticmethod
-    def _formatFloat(value, digits=2):
-        fmt = "{" + f":.{digits}f" + "}"
-        return fmt.format(value)
-    
-    @staticmethod
-    def _formatDate(value, dateFmt="%d %b %Y"):
-        return value.strftime(dateFmt)
-    
     def formatted(self, key):
         measure = self._activity.get_measure(key)
         return [measure.formatted(v) for v in self[key]]
