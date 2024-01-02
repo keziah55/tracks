@@ -177,7 +177,7 @@ class TestPreferences(TracksSetupTeardown):
                 text = self.pbTable.item(row, colNum).text()
                 
                 expected = df.iloc[row][colName]
-                expected = self.data.fmtFuncs[colName](expected)
+                expected = self.pbTable._activity.get_measure(colName).formatted(expected)
                 expected = str(expected)
                 
                 if text != expected:
@@ -274,7 +274,7 @@ class TestPreferences(TracksSetupTeardown):
                 if name == 'time':
                     expected = floatToHourMinSec(expected)
                 
-                expected = self.data.fmtFuncs[viewerNameNoNewline](expected)
+                expected = self.pbTable._activity.get_measure(viewerNameNoNewline).formatted(expected)
                 
                 assert self.viewer.topLevelItems[idx].text(col) == expected
                 idx += 1

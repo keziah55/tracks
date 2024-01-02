@@ -57,23 +57,12 @@ class Data(QObject):
         
         self.propertyNames = {}
         self._quickNames = {}
-        self.fmtFuncs = {}
         
         for slug, measure in activity.measures.items():
             self.propertyNames[measure.full_name] = slug
             self._quickNames[slug] = measure.full_name
-            if measure.sig_figs is not None:
-                self.fmtFuncs[measure.full_name] = partial(self._formatFloat, digits=measure.sig_figs)
-            elif slug == "date":
-                self.fmtFuncs[measure.full_name] = partial(self._formatDate, dateFmt="%d %b %Y")
-            elif slug == "time":
-                self.fmtFuncs[measure.full_name] = lambda t: t
-            else:
-                # assume int/no sig figs
-                self.fmtFuncs[measure.full_name] = lambda value: self._formatFloat(np.around(value), 0)
         
         self.propertyNames['Time (hours)'] = 'timeHours'
-        self.fmtFuncs['Time (hours)'] = floatToHourMinSec
         
     @staticmethod
     def _formatFloat(value, digits=2):
