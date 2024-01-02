@@ -27,7 +27,7 @@ class TestPlotWidget:
     def setup(self, qtbot):
         self.parent = MockParent()
         
-        self.widget = PlotWidget(self.parent)
+        self.widget = PlotWidget(self.parent, self.parent.activity)
         qtbot.addWidget(self.widget)
         self.widget.showMaximized()
         
@@ -35,7 +35,7 @@ class TestPlotWidget:
     def setup_reduced_points(self, qtbot):
         self.parent = MockParent(size=50)
         
-        self.widget = PlotWidget(self.parent)
+        self.widget = PlotWidget(self.parent, self.parent.activity)
         qtbot.addWidget(self.widget)
         self.widget.showMaximized()
         

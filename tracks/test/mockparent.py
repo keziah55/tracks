@@ -1,4 +1,4 @@
-from tracks.data import Data, Summary
+from tracks.data import Data
 from tracks.activities import load_activity
 from . import makeDataFrame
 import tempfile
@@ -37,7 +37,6 @@ class MockParent:
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
         self.data = Data(self.df)
         self.dataAnalysis = None
-        self.summary = Summary()
         
         json_path = Path(__file__).parent.parent.joinpath(".mock_test_dir", ".tracks", "cycling.json")
         self.activity = load_activity(json_path)

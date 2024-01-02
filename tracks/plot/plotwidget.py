@@ -46,16 +46,17 @@ class PlotWidget(QWidget):
         current point.
     """
     
-    def __init__(self, parent, style="dark", months=None ):
+    def __init__(self, parent, activity, style="dark", months=None ):
         
         super().__init__()
         
         self.plotState = None
         self.plotLabel = None
         self.parent = parent
+        self._activity = activity
         
         self.plotToolBar = PlotToolBar()
-        self._makePlot(parent, style=style, months=months)
+        self._makePlot(parent, activity, style=style, months=months)
         
         self.plotLayout = QHBoxLayout()
         self.plotLayout.addWidget(self.plotWidget)
@@ -69,7 +70,7 @@ class PlotWidget(QWidget):
     def _makePlot(self, *args, **kwargs):
         self.plotWidget = Plot(*args, **kwargs)
         if self.plotLabel is None:
-            self.plotLabel = PlotLabel(self.plotWidget.style)
+            self.plotLabel = PlotLabel(self._activity, self.plotWidget.style)
         else:
             self.plotLabel.setStyle(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
@@ -98,7 +99,7 @@ class PlotWidget(QWidget):
             self.plotState = self.plotWidget.getState()
             self.plotLayout.removeWidget(self.plotWidget)
             self.plotWidget.deleteLater()
-            self._makePlot(self.parent, style=style)
+            self._makePlot(self.parent, self._activity, style=style)
             self.plotWidget.setState(self.plotState)
             self.plotLayout.insertWidget(0, self.plotWidget)
             
@@ -155,7 +156,7 @@ class Plot(_PlotWidget):
         current point.
     """
     
-    def __init__(self, parent, style="dark", months=None):
+    def __init__(self, parent, activity, style="dark", months=None):
         
         self._ySeries = None
         self.plotItem = None
@@ -172,6 +173,8 @@ class Plot(_PlotWidget):
         self.hgltPnt = None
         
         self.parent = parent
+        
+        self.activity = activity
         
         self.plottable = ['speed', 'distance', 'time', 'calories']
         

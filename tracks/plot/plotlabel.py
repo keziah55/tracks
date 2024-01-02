@@ -57,13 +57,16 @@ class PlotLabel(QWidget):
         Emitted when a label is clicked.
     """
     
-    def __init__(self, style, fontSize=12):
+    def __init__(self, activity, style, fontSize=12):
         
         super().__init__()
         
+        self.activity = activity
         self.style = style
         
         self.layout = QHBoxLayout()
+        
+        self.data = {key:measure for key,measure in self.activity.measures.items() if measure.plottable}
         
         self.data = {}
         self.data['date'] = {'string':"{}"}

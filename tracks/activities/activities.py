@@ -9,6 +9,7 @@ import re
 import json
 from .operations import operator_dict
 from .dtypes import get_cast_func, get_reduce_func
+from tracks.util import floatToHourMinSec
     
 
 class Relation:
@@ -181,6 +182,33 @@ class Measure:
         if isinstance(summary, str):
             summary = get_reduce_func(summary)
         self._summary = summary
+        
+    def formatted(self, value, include_unit=False, **kwargs):
+        """ Return formatted string with value and, if requested, units """
+        s = ""
+        match self.dtype:
+            case "float":
+                s = f"{value:.{self.sig_figs}f}"
+            case "int":
+                s = f"{int(value)}"
+            case "date":
+                date_fmt = kwargs.get("date_fmt", "%d %b %Y")
+                s = value.strftime(date_fmt)
+            case "duration":
+                if isinstance(value, str):
+                    # TODO TG-122
+                    s = value
+                else:
+                    s = floatToHourMinSec(value)
+            case _:
+                raise RuntimeError(f"Don't know how to format measure of type {self.dtype}")
+        if include_unit and self.show_unit:
+            s += f"  {self.unit}"
+        return s
+    
+    def summarised(self, value, **kwargs):
+        """ Call `summary` func on `value`, then call `formatted` with this and kwargs """
+        return self.formatted(self.summary(value), **kwargs)
     
 class Activity:
     """ 
@@ -224,11 +252,13 @@ class Activity:
         for m in self._measures.values():
             if name in [m.name, m.full_name]:
                 return m
+        raise ValueError(f"Unknown measure '{name}'")
             
     def get_measure_from_full_name(self, name):
         for m in self._measures.values():
             if name == m.full_name:
                 return m
+        raise ValueError(f"Unknown measure '{name}'")
             
     @property
     def header(self):

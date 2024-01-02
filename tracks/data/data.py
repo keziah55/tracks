@@ -85,7 +85,8 @@ class Data(QObject):
         return value.strftime(dateFmt)
     
     def formatted(self, key):
-        return [self.fmtFuncs[key](v) for v in self[key]]
+        measure = self._activity.get_measure(key)
+        return [measure.formatted(v) for v in self[key]]
     
     def summaryString(self, key, func=sum, unit=False):
         if key.startswith("Time"):
@@ -94,15 +95,7 @@ class Data(QObject):
             key = "Time (hours)"
         else:
             measure = self._activity.get_measure(key)
-        fmt_func = self.fmtFuncs[key]
-            
-        summary_func = measure.summary
-
-        s = fmt_func(summary_func(self[key]))
-        
-        if unit and measure.show_unit and measure.unit is not None:
-            s = f"{s} {measure.unit}"
-        return s
+        return measure.summarised(self[key], include_unit=unit)
     
     def make_summary(self) -> dict:
         # TODO TG-122
@@ -139,10 +132,9 @@ class Data(QObject):
         
         If `formatted` is True, also format the values.
         """
-        row = {key:self[key][idx] for key in self.propertyNames}
+        row = dict(self.df.iloc[idx])
         if formatted:
-            for key, value in row.items():
-                row[key] = self.fmtFuncs[key](value)
+            row = {name: self._activity.get_measure(name).formatted(value) for name, value in row.items()}
         return row
     
     def toString(self, headTail=None):

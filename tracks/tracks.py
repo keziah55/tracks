@@ -15,7 +15,7 @@ import pandas as pd
 from pandas._testing import assert_frame_equal
 from .activities import load_activity, Activity
 from .plot import PlotWidget
-from .data import Data, DataViewer, AddData, PersonalBests, Summary
+from .data import Data, DataViewer, AddData, PersonalBests
 from .preferences import PreferencesDialog
 from .util import intToStr
 from customQObjects.core import Settings
@@ -60,7 +60,11 @@ class Tracks(QMainWindow):
         
         plotStyle = self.settings.value("plot/style", "dark")
         monthRange = self.parseMonthRange(self.settings.value("plot/range", "All"))
-        self.plot = PlotWidget(self, style=plotStyle, months=monthRange)
+        self.plot = PlotWidget(
+            self, 
+            act,
+            style=plotStyle, 
+            months=monthRange)
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
