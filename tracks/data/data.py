@@ -170,15 +170,16 @@ class Data(QObject):
             msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
             
-        # TODO format of time?
-        times = np.array([hourMinSecToFloat(t) for t in dct['time']])
-        dct['speed'] = dct['distance'] / times
+        # print(dct)
+        # dct['time'] = np.array([hourMinSecToFloat(t) for t in dct['time']])
+        # dct['speed'] = dct['distance'] / times
         
-        tmpDf = pd.DataFrame.from_dict(dct)
-        tmpDf = pd.concat([self.df, tmpDf], ignore_index=True)
-        index = tmpDf[~tmpDf.isin(self.df)].dropna().index
-        self.df = tmpDf
-        self.df.sort_values('date', inplace=True)
+        tmp_df = pd.DataFrame.from_dict(dct)
+        tmp_df = pd.concat([self.df, tmp_df], ignore_index=True)
+        tmp_df.sort_values('date', inplace=True)
+        index = tmp_df[~tmp_df.isin(self.df)].dropna(how='all').index
+        self.df = tmp_df
+        self._update_relations(index)
         self.dataChanged.emit(index)
         
     def update(self, values):
@@ -226,8 +227,8 @@ class Data(QObject):
         """ Recalculate relational data for all indices in iterable `idx` """
         # recalculate relational data
         for col, relation in self._activity.get_relations().items():
-            m0 = self.df[relation.m0.full_name][idx]
-            m1 = self.df[relation.m1.full_name][idx]
+            m0 = self.df[relation.m0.slug][idx]
+            m1 = self.df[relation.m1.slug][idx]
             # if relation.m1.slug == "time":
             #     m1 = np.array([hourMinSecToFloat(t) for t in m1])
             self.df.loc[idx,col] = relation.op.call(m0, m1)
@@ -403,7 +404,7 @@ class Data(QObject):
         series = self[column]
         if pbCount > len(series):
             pbCount = len(series)
-        best = series[:pbCount]
+        best = series[:pbCount].copy()
         idx = list(range(pbCount)) # first pbCount values will be PBs
         for n in range(pbCount, len(series)):
             if series[n] >= np.min(best):

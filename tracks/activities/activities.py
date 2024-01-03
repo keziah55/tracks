@@ -195,13 +195,10 @@ class Measure:
                 date_fmt = kwargs.get("date_fmt", "%d %b %Y")
                 s = value.strftime(date_fmt)
             case "duration":
-                if isinstance(value, str):
-                    # TODO TG-122
-                    s = value
-                else:
-                    s = floatToHourMinSec(value)
+                s = floatToHourMinSec(value)
             case _:
                 raise RuntimeError(f"Don't know how to format measure of type {self.dtype}")
+                
         if include_unit and self.show_unit and self.unit is not None:
             s = f"{s} {self.unit}"
         return s
@@ -241,6 +238,10 @@ class Activity:
     @property
     def measures(self):
         return self._measures
+    
+    @property
+    def measure_slugs(self):
+        return list(self._measures.keys())
     
     def add_measure(self, *args, **kwargs):
         m = Measure(*args, **kwargs)

@@ -46,14 +46,14 @@ class TestAddData:
                   'Calories':[255.3, 165.3, 275.9, 300.4],
                   'Gear':[6, 6, 7, 5]}
         
-        expected = {'Date':[pd.Timestamp(year=2020, month=12, day=31),
+        expected = {'date':[pd.Timestamp(year=2020, month=12, day=31),
                             pd.Timestamp(year=2021, month=1, day=1),
                             pd.Timestamp(year=2021, month=1, day=15),
                             pd.Timestamp(year=2021, month=2, day=9)],
-                    'Time':["00:45:02", "00:31:15", "00:36:04", "00:21:36"],
-                    'Distance (km)':[22.5, 17.0, 18.75, 11.23],
-                    'Calories':[275.9, 255.3, 300.4, 165.3],
-                    'Gear':[7, 6, 5, 6]}
+                    'time':["00:45:02", "00:31:15", "00:36:04", "00:21:36"],
+                    'distance':[22.5, 17.0, 18.75, 11.23],
+                    'calories':[275.9, 255.3, 300.4, 165.3],
+                    'gear':[7, 6, 5, 6]}
         
         def check_values(newValues):
             return newValues == expected

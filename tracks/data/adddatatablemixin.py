@@ -26,13 +26,15 @@ class AddDataTableMixin(object):
         
         self._activity = activity
         
-        self.headerLabels = self._activity.user_input_header
+        self._measures = self._activity.filter_measures("relation", lambda r: r is None)
+        
+        self.headerLabels = [m.full_name for m in self._measures.values()]
         self.headerLabelColumnOffset = 0
         self.table = QTableWidget(0, len(self.headerLabels))
         self.table.setHorizontalHeaderLabels(self.headerLabels)
         self.table.verticalHeader().setVisible(False)
         
-        self.mthds = {}
+        self.funcs = {}
         for name, m in self._activity.measures.items():
             if m.relation is not None:
                 continue
@@ -44,7 +46,7 @@ class AddDataTableMixin(object):
                 cast_func = get_cast_func(m.dtype)
                 validate_func = get_validate_func(m.dtype)
             
-            self.mthds[m.full_name] = ValidateFuncs(validate_func, cast_func)
+            self.funcs[m.slug] = ValidateFuncs(validate_func, cast_func)
         
         self.validateTimer = QTimer()
         self.validateTimer.setInterval(100)
@@ -85,11 +87,11 @@ class AddDataTableMixin(object):
         # than a few rows long, so this isn't too inefficient
         allValid = True
         for row in range(self.table.rowCount()):
-            for col, name in enumerate(self.headerLabels):
+            for col, name in enumerate(self._measures):
                 col += self.headerLabelColumnOffset
                 item = self.table.item(row, col)
                 value = item.text()
-                mthd = self.mthds[name].validate
+                mthd = self.funcs[name].validate
                 valid = mthd(value)
                 if not valid:
                     if hasattr(self, "_clicked"):
@@ -107,16 +109,18 @@ class AddDataTableMixin(object):
     
     def _getValues(self):
         
-        values = {name:[] for name in self.headerLabels}
+        values = {name:[] for name in self._measures}
         
         self.table.sortItems(0, Qt.AscendingOrder)
 
         for row in range(self.table.rowCount()):
-            for col, name in enumerate(self.headerLabels):
+            for col, name in enumerate(self._measures):
                 item = self.table.item(row, col)
                 value = item.text()
-                mthd = self.mthds[name].cast
-                value = mthd(value)
+                func = self.funcs[name].cast
+                print(name, func)
+                value = func(value)
                 values[name].append(value)
                 
+        print(values)
         return values

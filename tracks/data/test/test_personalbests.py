@@ -1,6 +1,6 @@
 from .. import PersonalBests
 from ..personalbests import NewPBDialog
-from tracks.util import parseDate, parseDuration
+from tracks.util import parseDate, parseDuration, hourMinSecToFloat
 from tracks.test import MockParent
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
@@ -9,25 +9,41 @@ pytest_plugin = "pytest-qt"
 
 # parameters for test_new_data
 def getNewData(key):
-    newDataParams = {'best month and best session':
-                     ({'Date':[parseDate("6 May 2021", pd_timestamp=True)], 
-                       'Time':[parseDuration("00:42:15")], 
-                       'Distance (km)':[25.1], 'Calories':[375.4], 'Gear':[6]},
-                      "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br>and<br><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
-                      "<b>May 2021</b>: <b>150.72</b> km, <b>04:16:35</b> hours, <b>2254.2</b> calories"),
-                     'best month':
-                     ({'Date':[parseDate("6 May 2021", pd_timestamp=True)], 
-                       'Time':[parseDuration("00:45:15")], 
-                       'Distance (km)':[25.1], 'Calories':[375.4], 'Gear':[6]},
-                      "<center><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
-                      "<b>May 2021</b>: <b>150.72</b> km, <b>04:19:35</b> hours, <b>2254.2</b> calories"
-                      ),
-                     'best session':
-                     ({'Date':[parseDate("6 April 2021", pd_timestamp=True)], 
-                       'Time':[parseDuration("00:42:15")], 
-                       'Distance (km)':[25.1], 'Calories':[375.4], 'Gear':[6]},
-                      "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64km/h</span>!<br><span>Congratulations!</span></center>",
-                      "<b>April 2021</b>: <b>155.93</b> km, <b>04:27:03</b> hours, <b>2332.1</b> calories")}
+    newDataParams = {
+        'best month and best session': (
+            {
+                'date':[parseDate("6 May 2021", pd_timestamp=True)], 
+                'time':[hourMinSecToFloat(parseDuration("00:42:15"))], 
+                'distance':[25.1], 
+                'calories':[375.4], 
+                'gear':[6]
+            },
+            "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64 km/h</span>!<br>and<br><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
+            "<b>May 2021</b>: <b>150.72</b> km, <b>04:16:35</b> hours, <b>2254.2</b> calories"
+        ),
+        'best month':(
+            {
+                'date':[parseDate("6 May 2021", pd_timestamp=True)], 
+                'time':[hourMinSecToFloat(parseDuration("00:45:15"))], 
+                'distance':[25.1], 
+                'calories':[375.4], 
+                'gear':[6]
+            },
+            "<center><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
+            "<b>May 2021</b>: <b>150.72</b> km, <b>04:19:35</b> hours, <b>2254.2</b> calories"
+        ),
+        'best session': (
+            {
+                'date':[parseDate("6 April 2021", pd_timestamp=True)], 
+                 'time':[hourMinSecToFloat(parseDuration("00:42:15"))], 
+                 'distance':[25.1], 
+                 'calories':[375.4], 
+                 'gear':[6]
+            },
+            "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64 km/h</span>!<br><span>Congratulations!</span></center>",
+            "<b>April 2021</b>: <b>155.93</b> km, <b>04:27:03</b> hours, <b>2332.1</b> calories"
+        )
+    }
     return newDataParams[key]
     
 class TestPersonalBests:
@@ -66,9 +82,9 @@ class TestPersonalBests:
         
     def test_new_data_different_column(self, setup, qtbot, monkeypatch, variables):
         # test dialog message when table is sorted by Time
-        new = {'Date':[parseDate("7 April 2021", pd_timestamp=True)], 
-               'Time':[parseDuration("01:05:03")], 
-               'Distance (km)':[25.08], 'Calories':[375.1], 'Gear':[6]}
+        new = {'date':[parseDate("7 April 2021", pd_timestamp=True)], 
+               'time':[hourMinSecToFloat(parseDuration("01:05:03"))], 
+               'distance':[25.08], 'calories':[375.1], 'gear':[6]}
         
         self.pb.bestSessions.horizontalHeader().sectionClicked.emit(1)
         qtbot.wait(variables.shortWait)
@@ -82,9 +98,9 @@ class TestPersonalBests:
         assert self.pb.newPBdialog.label.text() == expected   
         
     def test_tied_data(self, setup, qtbot, monkeypatch):
-        new = {'Date':[parseDate("7 May 2021", pd_timestamp=True)], 
-               'Time':[parseDuration("00:42:11")], 
-               'Distance (km)':[25.08], 'Calories':[375.1], 'Gear':[6]}
+        new = {'date':[parseDate("7 May 2021", pd_timestamp=True)], 
+               'time':[hourMinSecToFloat(parseDuration("00:42:11"))], 
+               'distance':[25.08], 'calories':[375.1], 'gear':[6]}
         
         # don't need dialog to pop up
         monkeypatch.setattr(NewPBDialog, "exec_", lambda *args: QDialog.Accepted)
@@ -103,13 +119,13 @@ class TestPersonalBests:
         
     def test_sort_column(self, setup, qtbot, variables):
         # dict of sortable columns and list of expected dates
-        columns = {'Time':['26 Apr 2021', '05 May 2021', '01 May 2021', '29 Apr 2021', '03 May 2021'], 
-                   'Distance (km)':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021'], 
-                   'Speed (km/h)':['04 May 2021', '02 May 2021', '30 Apr 2021', '29 Apr 2021', '28 Apr 2021'], 
-                   'Calories':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021']}
+        columns = {'time':['26 Apr 2021', '05 May 2021', '01 May 2021', '29 Apr 2021', '03 May 2021'], 
+                   'distance':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021'], 
+                   'speed':['04 May 2021', '02 May 2021', '30 Apr 2021', '29 Apr 2021', '28 Apr 2021'], 
+                   'calories':['26 Apr 2021', '29 Apr 2021', '03 May 2021', '27 Apr 2021', '02 May 2021']}
         
         for column, expected in columns.items():
-            idx = self.pb.bestSessions._activity.header.index(column)
+            idx = self.pb.bestSessions._activity.measure_slugs.index(column)
             
             self.pb.bestSessions.horizontalHeader().sectionClicked.emit(idx)
             qtbot.wait(variables.shortWait)
@@ -117,17 +133,17 @@ class TestPersonalBests:
             assert items == expected
             
     def test_get_best_sessions(self, setup, qtbot):
-        pb = self.pb.bestSessions._getBestSessions(num=2, key="Distance (km)", order='ascending')
-        expected = [{'Date':"04 May 2021",
-                     'Time':"00:42:11",
-                     'Distance (km)':"25.08",
-                     'Gear':"6",
-                     'Calories':"375.1"},
-                    {'Date':"01 May 2021",
-                     'Time':"00:43:19",
-                     'Distance (km)':"25.08",
-                     'Gear':"6",
-                     'Calories':"375.1"}]
+        pb = self.pb.bestSessions._getBestSessions(num=2, key="distance", order='ascending')
+        expected = [{'date':"04 May 2021",
+                     'time':"00:42:11",
+                     'distance':"25.08",
+                     'gear':"6",
+                     'calories':"375.1"},
+                    {'date':"01 May 2021",
+                     'time':"00:43:19",
+                     'distance':"25.08",
+                     'gear':"6",
+                     'calories':"375.1"}]
         for n, pb_data in enumerate(pb):
             for key, value in expected[n].items():
                 assert pb_data[key] == value

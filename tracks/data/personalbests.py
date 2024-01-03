@@ -41,7 +41,7 @@ class PersonalBests(QObject):
     
     statusMessage = Signal(str)
     
-    def __init__(self, parent, activity, numSessions=5, monthCriterion="distance", sessionsKey="Speed (km/h)"):
+    def __init__(self, parent, activity, numSessions=5, monthCriterion="distance", sessionsKey="speed"):
         super().__init__()
         self.parent = parent
         self.newPBdialog = NewPBDialog()
@@ -283,10 +283,6 @@ class PBTable(QTableWidget):
             raise ValueError(msg)
             
         series = self.data[key]
-        # if key == 'time':
-        #     series = self.data.timeHours
-        # else:
-        #     series = self.data[key]
         
         # sort series and get indices
         slc = -1 if order == 'descending' else 1
@@ -297,9 +293,9 @@ class PBTable(QTableWidget):
         numUnique = 0
         
         for idx in indices:
-            # get row (as strings for display)
-            row = {k: self.data.formatted(k)[idx] for k in self._activity.measures}
-            row['datetime'] = self.data['date'][idx]
+            # get row (as strings)
+            # formatting as strings now allows comparison of values to desired sig_figs
+            row = {k: measure.formatted(self.data[k][idx]) for k, measure in self._activity.measures.items()}
             
             if row[key] not in [dct[key] for dct in pb]:
                 # increment unique count if value is new
@@ -321,6 +317,7 @@ class PBTable(QTableWidget):
         return pb[:num]
        
     def setTable(self, key="speed", order='descending', highlightNew=False):
+        """ Find top N sessions and display in table. """
         n = self.rowCount()
         self.items = self._getBestSessions(num=n, key=key, order=order)
         
@@ -356,6 +353,7 @@ class PBTable(QTableWidget):
 
     @Slot(int)
     def selectColumn(self, idx):
+        """ When column selected, set table to PBs for that measure. """
         col = self._activity.header[idx]
         
         m = self._activity.get_measure_from_full_name(col)
@@ -376,6 +374,13 @@ class PBTable(QTableWidget):
                 
     @Slot()
     def newData(self):
+        """ 
+        Check for new PBs. 
+        
+        Return message string if there is a new PB. Otherwise return None.
+        """
+        # TODO this calls _getBestSessions but not setTable?
+        # is _getBestSessions being called multiple times?
         pb = self._getBestSessions(num=self.rowCount(), key=self.selectKey)
         newDates = [row['date'] for row in pb]
         dates = [row['date'] for row in self.items]
@@ -392,25 +397,20 @@ class PBTable(QTableWidget):
             
     @Slot(int, int, int, int)
     def _cellChanged(self, row, column, previousRow, previousColumn):
+        """ Emit `itemSelected` with date of selected row """
         if self.parent is not None and len(self.items) > 0:
             dct = self.items[row]
-            self.parent.itemSelected.emit(dct['datetime'])
+            self.parent.itemSelected.emit(dct['date'])
 
     def makeMessage(self, key, idx, value):
-        # check for units
-        m = re.search(r"\((?P<unit>.+)\)", key)
-        if m is not None:
-            unit = m.group('unit')
-            key = re.sub(r"\(.+\)", "", key) # remove units in brackets
-        else:
-            unit = ""
-        key = key.strip()
-        key = key.lower()
-        
+        """ Return message string for new PB """
+        measure = self._activity[key]
+        if measure.show_unit and measure.unit is not None:
+            value = f"{value} {measure.unit}"
         colour = "#f7f13b"
         
         msg = f"<span>New #{idx+1} {key} - </span>"
-        msg += f"<span style='color: {colour}'>{value}{unit}</span>!"
+        msg += f"<span style='color: {colour}'>{value}</span>!"
         
         return msg
 

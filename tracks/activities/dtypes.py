@@ -24,7 +24,7 @@ validate_funcs = {
 
 cast_funcs = {
     "date": parseDate,
-    "duration": parseDuration,
+    "duration": lambda value: hourMinSecToFloat(parseDuration(value)),
     "float": float,
     "int": int,
     "str": str,

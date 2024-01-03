@@ -73,7 +73,9 @@ class EditItemDialog(AddDataTableMixin, QDialog):
                     tableItem.setTextAlignment(Qt.AlignCenter)
                     tableItem.setFlags(Qt.ItemIsEditable|Qt.ItemIsEnabled)
                     self.table.setItem(rowNum, col, tableItem)
-                    tableItems[itemHeader[idx]] = tableItem
+                    
+                    measure = self._activity.get_measure(itemHeader[idx])
+                    tableItems[measure.slug] = tableItem
                     col += 1
             
             self.rows.append(Row(item.index, tableItems, checkBox))
@@ -132,10 +134,9 @@ class EditItemDialog(AddDataTableMixin, QDialog):
                 dct = {}
                 for key, tableItem in row.tableItems.items():
                     value = tableItem.text()
-                    mthd = self.mthds[key].cast
-                    value = mthd(value)
+                    func = self.funcs[key].cast
+                    value = func(value)
                     dct[key] = value
                 values[row.index] = dct
         
         return values, remove
-                

@@ -7,7 +7,7 @@ Make a pandas DataFrame of random cycling data.
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, date
-from tracks.util import hourMinSecToFloat
+from tracks.util import hourMinSecToFloat, parseDate
 
 def time_to_secs(t):
     msg = ''
@@ -75,29 +75,33 @@ def make_dataframe(random=True, size=100, path=None):
     return df
     
 def random_data(size):
-    d = {'Date':make_dates(size),
-         'Time':make_times(size),
-         'Distance (km)':make_floats(size, 3, 80, ".2f"),
-         'Calories':make_floats(size, 50, 1200, ".1f"),
-         'Gear':np.random.default_rng().integers(1, 8, size=size)}
+    d = {'date':make_dates(size),
+         'time':make_times(size),
+         'distance':make_floats(size, 3, 80, ".2f"),
+         'calories':make_floats(size, 50, 1200, ".1f"),
+         'gear':np.random.default_rng().integers(1, 8, size=size)}
     
-    speed = d['Distance (km)'] / np.array([convert_secs(time_to_secs(t)) for t in d['Time']])
-    d['Speed (km/h)'] = speed
+    speed = np.array(d['distance']) / np.array(d['time']) #np.array([convert_secs(time_to_secs(t)) for t in d['time']])
+    d['speed'] = speed
     
     return d
 
 def known_data():
-    dates = [f"2021-04-{i:02}" for i in range(26, 31)]
-    dates += [f"2021-05-{i:02}" for i in range(1, 6)] 
-    dct = {'Date':dates,
-            'Time':["00:53:27", "00:43:04", "00:42:40", "00:43:09", "00:42:28",
-                    "00:43:19", "00:42:21", "00:43:04", "00:42:11", "00:43:25"],
-            'Distance (km)':[30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 
-                            25.21, 25.08, 25.12],
-            'Gear':[6]*10}
-    dct['Calories'] = [d*14.956 for d in dct['Distance (km)']]
-    times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
-    dct['Speed (km/h)'] = dct['Distance (km)'] / times
+    dates = [f"{i:02}-04-2021" for i in range(26, 31)]
+    dates += [f"{i:02}-05-2021" for i in range(1, 6)] 
+    dates = [parseDate(d, pd_timestamp=True) for d in dates]
+    
+    times = ["00:53:27", "00:43:04", "00:42:40", "00:43:09", "00:42:28",
+            "00:43:19", "00:42:21", "00:43:04", "00:42:11", "00:43:25"]
+    times = np.array([hourMinSecToFloat(t) for t in times])
+    
+    dct = {'date': dates,
+            'time': times,
+            'distance':np.array([30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 
+                                 25.21, 25.08, 25.12]),
+            'gear':[6]*10}
+    dct['calories'] = dct['distance'] * 14.956 
+    dct['speed'] = dct['distance'] / times
     return dct
 
 def make_dates(size, start_date=None, end_date=None, fmt="%Y-%m-%d", include_bounds=True):
@@ -174,7 +178,7 @@ def make_times(size, min_minutes=10, max_minutes=150):
         
     rng = np.random.default_rng()
     seconds = rng.integers(min_minutes*60, high=max_minutes*60, size=size)
-    times = [_make_time_string(s) for s in seconds]
+    times = [s/60 for s in seconds] # [_make_time_string(s) for s in seconds]
     return times
 
 def make_floats(size, min_value, max_value, fmt):

@@ -200,6 +200,8 @@ class DataViewer(QTreeWidget):
             result = self.dialog.exec_()
             if result == EditItemDialog.Accepted:
                 values, remove = self.dialog.getValues()
+                print(f"{values=}")
+                print(f"{remove=}")
                 self.data.update(values)
                 if remove:
                     self.data.removeRows(index=remove)
@@ -373,9 +375,9 @@ class DataViewer(QTreeWidget):
             return None
         
         # TODO gear hardcoded here
-        idx = self._activity.header.index('date')
+        idx = self._activity.measure_slugs.index('date')
         dates = [item.text(idx) for item in selected]
-        idx = self._activity.header.index('gear')
+        idx = self._activity.measure_slugs.index('gear')
         gears = [item.text(idx) for item in selected]
         
         if len(set(dates)) > 1:
