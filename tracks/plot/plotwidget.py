@@ -30,6 +30,8 @@ class PlotWidget(QWidget):
         months : int, optional
             Number of months to initally zoom x-axis to. 
             If `None`, show all (default behaviour)
+        y_series : str
+            y series to show initially. Default is "time"
     """
     
     currentPointChanged = Signal(dict)
@@ -46,7 +48,7 @@ class PlotWidget(QWidget):
         current point.
     """
     
-    def __init__(self, parent, activity, style="dark", months=None ):
+    def __init__(self, parent, activity, style="dark", months=None, y_series="time"):
         
         super().__init__()
         
@@ -56,7 +58,7 @@ class PlotWidget(QWidget):
         self._activity = activity
         
         self.plotToolBar = PlotToolBar()
-        self._makePlot(parent, activity, style=style, months=months)
+        self._makePlot(parent, activity, style=style, months=months, y_series=y_series)
         
         self.plotLayout = QHBoxLayout()
         self.plotLayout.addWidget(self.plotWidget)
@@ -80,6 +82,12 @@ class PlotWidget(QWidget):
         self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
         self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
         self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
+        
+    def state(self):
+        state = {
+            "current_series": self.plotWidget.ySeries
+            }
+        return state
         
     @Slot(object)
     def newData(self, idx=None):
@@ -156,7 +164,7 @@ class Plot(_PlotWidget):
         current point.
     """
     
-    def __init__(self, parent, activity, style="dark", months=None):
+    def __init__(self, parent, activity, style="dark", months=None, y_series="time"):
         
         self._ySeries = None
         self.plotItem = None
@@ -176,9 +184,9 @@ class Plot(_PlotWidget):
         
         self._activity = activity
         
-        self.plottable = ['speed', 'distance', 'time', 'calories']
+        plottable = list(self._activity.filter_measures("plottable", lambda b: b))
         
-        self._initRightAxis()
+        self._init_right_axis()
         
         # axis labels
         self.plotItem.setLabel('bottom',text='Date')
@@ -206,12 +214,12 @@ class Plot(_PlotWidget):
         
         # all points that are/were PBs can be highlighted
         self._showPBs = False
-        self._regenerateCachedPBs = {key:False for key in self.plottable}
-        self.hgltPBs = {key:[] for key in self.plottable}
+        self._regenerateCachedPBs = {key:False for key in plottable}
+        self.hgltPBs = {key:[] for key in plottable}
         
         self.viewMonths = None
         
-        self.setYSeries('speed')
+        self.setYSeries(y_series)
         self.plotTotalDistance()
         
         if months is not None:
@@ -221,7 +229,7 @@ class Plot(_PlotWidget):
     def data(self):
         return self.parent.data
         
-    def _initRightAxis(self):
+    def _init_right_axis(self):
         self.vb2 = CustomViewBox()
         self.plotItem.showAxis('right')
         self.plotItem.scene().addItem(self.vb2)
@@ -406,7 +414,7 @@ class Plot(_PlotWidget):
         
     @Slot(str)
     def switchSeries(self, key):
-        if key in self.plottable and key in self.data.quickNames.keys():
+        if key in self._activity.measures and self._activity[key].plottable:
             self.plotItem.removeItem(self.dataItem)
             self.ySeries = key
             

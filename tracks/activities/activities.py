@@ -218,7 +218,7 @@ class Activity:
         self._name = name
         self._measures = {}
     
-    def __getattr__(self, name):
+    def __getitem__(self, name):
         if (m:=self._measures.get(name, None)) is not None:
             return m
         for m in self._measures.values():
@@ -259,6 +259,14 @@ class Activity:
             if name == m.full_name:
                 return m
         raise ValueError(f"Unknown measure '{name}'")
+        
+    def filter_measures(self, attr, func):
+        """ Return measures dict, filtered by func(measure.attr) is True """
+        measures = {
+            key: measure for key, measure in self._measures.items() 
+            if func(getattr(measure, attr))
+        }
+        return measures
             
     @property
     def header(self):

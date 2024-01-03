@@ -30,14 +30,6 @@ def patchSettings(monkeypatch, patch_dir, activity_json_path):
     app_name = "Tracks"
     org_name = "Tracks"
     
-    # patch_dir = Path(__file__).parent.joinpath(".mock_test_dir")
-    # if not patch_dir.exists():
-    #     patch_dir.mkdir(parents=True)
-        
-    # json_path = patch_dir.joinpath(".tracks", "cycling.json")
-    # if not json_path.exists():
-    #     json_path.symlink_to(Path(__file__).parent.joinpath("test", "test_data", "cycling.json"))
-        
     # if conf file exists in test dir, remove it, so we're always testing with
     # defaults, unless changed in the test
     conf_file = patch_dir.joinpath(".config", org_name, app_name+".conf")

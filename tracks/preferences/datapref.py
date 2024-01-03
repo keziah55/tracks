@@ -119,7 +119,7 @@ class DataPreferences(QWidget):
             bestMonthPB = None
             
         months = self.pbRangeCombo.currentText()
-        months = self.mainWindow.parseMonthRange(months)
+        months = self.mainWindow.parse_month_range(months)
             
         self.mainWindow.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
         

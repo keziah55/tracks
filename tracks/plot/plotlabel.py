@@ -62,27 +62,27 @@ class PlotLabel(QWidget):
         super().__init__()
         
         self._activity = activity
-        self.style = style
+        self._style = style
         
-        self.layout = QHBoxLayout()
+        layout = QHBoxLayout()
         
         self._widgets = {}
         
-        self._names = [key for key,measure in self._activity.measures.items() if measure.plottable]
+        self._names = list(self._activity.filter_measures("plottable", lambda b: b))
         self._names.insert(0, 'date')
         
         for key in self._names:
             # make ClickableLabel with given size
-            colour = self.style[key]['colour'] if key in self.style.keys else None
+            colour = self._style[key]['colour'] if key in self._style.keys else None
             widget = ClickableLabel(key, colour=colour, fontSize=fontSize)
             widget.setAlignment(Qt.AlignCenter)
             # connect to labelClicked signal
             widget.clicked.connect(self.labelClicked)
             # add to dict and layout
             self._widgets[key] = widget
-            self.layout.addWidget(widget)
+            layout.addWidget(widget)
             
-        self.setLayout(self.layout)
+        self.setLayout(layout)
             
     def set_labels(self, series_dct):
         """ For given `series_dct` set label text. """
@@ -101,7 +101,7 @@ class PlotLabel(QWidget):
                 label.setText(text)
 
     def set_style(self, style):
-        self.style = style
+        self._style = style
         for key, widget in self._widgets.items():
-            colour = self.style[key]['colour'] if key in self.style.keys else None
+            colour = self._style[key]['colour'] if key in self._style.keys else None
             widget.colour = colour

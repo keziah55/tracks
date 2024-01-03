@@ -35,7 +35,7 @@ class TestPlotWidget:
     def setup_reduced_points(self, qtbot):
         self.parent = MockParent(size=50)
         
-        self.widget = PlotWidget(self.parent, self.parent.activity)
+        self.widget = PlotWidget(self.parent, self.parent.activity, y_series="speed")
         qtbot.addWidget(self.widget)
         self.widget.showMaximized()
         
@@ -46,7 +46,7 @@ class TestPlotWidget:
         def callback(name):
             return name == key
         
-        keys = list(plotLabel.data.keys())
+        keys = plotLabel._names.copy()
         random.shuffle(keys)
         if keys[0] == 'distance':
             # make sure 'distance' ins't first, as nothing will change in that case
@@ -54,8 +54,7 @@ class TestPlotWidget:
             keys.append(name)
         
         for key in keys:
-            dct = plotLabel.data[key]
-            label = dct['widget']
+            label = plotLabel._widgets[key]
             
             with qtbot.waitSignal(plotLabel.labelClicked, check_params_cb=callback):
                 qtbot.mouseClick(label, Qt.LeftButton)
@@ -113,20 +112,22 @@ class TestPlotWidget:
         for x in range(0, size.width(), 5):
             pos = QPoint(x, y)
             qtbot.mouseMove(plotWidget, pos)
-        
+            
             if plotWidget._current_point and idx != plotWidget._current_point['index']:
                 idx = plotWidget._current_point['index']
                 pt = plotWidget.dataItem.scatter.data[idx]
                 
-                dateLabel = plotLabel.data['date']['widget']
-                expected = f"<div style='font-size: {dateLabel.fontSize}pt'>"
-                expected += f"{self.widget.plotWidget._current_point['date']}</div>"
+                dateLabel = plotLabel._widgets['date']
+                value = self.widget.plotWidget._current_point['date']
+                value = value.strftime("%a %d %b %Y")
+                expected = f"<div style='font-size: {dateLabel.fontSize}pt'>{value}</div>"
                 assert dateLabel.text() == expected
                 
-                distLabel = plotLabel.data['distance']['widget']
+                distLabel = plotLabel._widgets['distance']
+                value = f"{self.widget.plotWidget._current_point['distance']:.2f}"
                 expected = f"<div style='font-size: {distLabel.fontSize}pt; "
                 expected += f"color: {distLabel.colour}'>"
-                expected += f"Distance: {self.widget.plotWidget._current_point['distance']} km</div>"
+                expected += f"Distance: {value} km</div>"
                 assert distLabel.text() == expected
                 
         # move mouse back to middle before next test

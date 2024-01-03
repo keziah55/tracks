@@ -420,7 +420,7 @@ class PlotPreferences(QWidget):
         
         self.setCustomRange(customRange)
         if customRange:
-            monthRange = self.mainWindow.parseMonthRange(rng)
+            monthRange = self.mainWindow.parse_month_range(rng)
             if monthRange is None:
                 # custom month range cannot be parsed
                 # set customRange to False and call this method again
@@ -467,7 +467,7 @@ class PlotPreferences(QWidget):
             months = self.customRangeSpinBox.value()
         else:
             text = self.plotRangeCombo.currentText()
-            months = self.mainWindow.parseMonthRange(text)
+            months = self.mainWindow.parse_month_range(text)
         self.mainWindow.plot.setXAxisRange(months)
         
         self.settings.beginGroup("plot")

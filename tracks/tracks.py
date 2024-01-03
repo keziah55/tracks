@@ -58,13 +58,15 @@ class Tracks(QMainWindow):
         
         self.addData = AddData(act)
         
-        plotStyle = self.settings.value("plot/style", "dark")
-        monthRange = self.parseMonthRange(self.settings.value("plot/range", "All"))
+        plot_style = self.settings.value("plot/style", "dark")
+        month_range = self.parse_month_range(self.settings.value("plot/range", "All"))
+        y_series = self.settings.value("plot/current_series", "time")
         self.plot = PlotWidget(
             self, 
             act,
-            style=plotStyle, 
-            months=monthRange)
+            style=plot_style, 
+            months=month_range,
+            y_series=y_series)
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -117,7 +119,7 @@ class Tracks(QMainWindow):
         self.setWindowIcon(icon)
         
     @staticmethod
-    def parseMonthRange(s) -> int:
+    def parse_month_range(s) -> int:
         """ 
         Parse string into int number of months.
         
@@ -267,6 +269,9 @@ class Tracks(QMainWindow):
         
         for key, value in self.pb.state().items():
             self.settings.setValue(f"pb/{key}", value)
+            
+        for key, value in self.plot.state().items():
+            self.settings.setValue(f"plot/{key}", value)
         
     def createActions(self):
         self.exitAct = QAction(
