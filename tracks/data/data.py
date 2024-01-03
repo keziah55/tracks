@@ -68,7 +68,7 @@ class Data(QObject):
         return [measure.formatted(v) for v in self[key]]
     
     def summaryString(self, key, func=sum, unit=False):
-        if key.startswith("Time"):
+        if key.startswith("time"):
             # TODO TG-122, TG-124
             measure = self._activity["time"]
             key = "Time (hours)"
@@ -78,7 +78,7 @@ class Data(QObject):
     
     def make_summary(self) -> dict:
         # TODO TG-122
-        summaries = {self._activity.get_measure(name).slug: self.summaryString(name) 
+        summaries = {self._activity.get_measure(name).slug: self.summaryString(self._activity.get_measure(name).slug) 
                      for name in self._activity.header 
                      if self._activity.get_measure(name).summary is not None}
         return summaries
@@ -87,8 +87,8 @@ class Data(QObject):
         return len(self.df)
     
     def __getitem__(self, key):
-        if key in self.propertyNames.keys():
-            name = self.propertyNames[key]
+        if key in self._quickNames.keys():
+            name = self._quickNames[key]
             return getattr(self, name)
         else:
             raise NameError(f"{key} not a valid property name.")
@@ -169,14 +169,14 @@ class Data(QObject):
             msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
             
-        times = np.array([hourMinSecToFloat(t) for t in dct['Time']])
-        dct['Speed (km/h)'] = dct['Distance (km)'] / times
+        times = np.array([hourMinSecToFloat(t) for t in dct['time']])
+        dct['speed'] = dct['distance'] / times
         
         tmpDf = pd.DataFrame.from_dict(dct)
         tmpDf = pd.concat([self.df, tmpDf], ignore_index=True)
         index = tmpDf[~tmpDf.isin(self.df)].dropna().index
         self.df = tmpDf
-        self.df.sort_values('Date', inplace=True)
+        self.df.sort_values('date', inplace=True)
         self.dataChanged.emit(index)
         
     def update(self, values):
@@ -191,7 +191,7 @@ class Data(QObject):
         If changes are made, `dataChanged` is emitted.
         
         Example `values` structure:
-            {10: {'Distance (km)':25, 'Calories':375}}
+            {10: {'distance':25, 'Calories':375}}
         """
         changed = []
         for index, dct in values.items():
@@ -213,8 +213,8 @@ class Data(QObject):
         relations = activity.get_relations()
         for name, relation in relations.items():
             if name not in df.columns:
-                m0 = df[relation.m0.full_name]
-                m1 = df[relation.m1.full_name]
+                m0 = df[relation.m0.slug]
+                m1 = df[relation.m1.slug]
                 if relation.m1.slug == "time":
                     m1 = np.array([hourMinSecToFloat(t) for t in m1])
                 df[name] = relation.op.call(m0, m1)
@@ -242,13 +242,13 @@ class Data(QObject):
         """ 
         Return numpy array of 'Time' column, where each value is converted to hours.
         """
-        time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['Time']])
+        time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['time']])
         return time
     
     @property
     def dateTimestamps(self):
         """ 
-        Return 'Date' column, converted to array of timestamps (time since epoch).
+        Return 'date' column, converted to array of timestamps (time since epoch).
     
         See also: :py:meth:`datetimes`.
         """
@@ -256,13 +256,13 @@ class Data(QObject):
 
     @property
     def datetimes(self):
-        """ Return 'Date' column, converted to list of datetime objects. """
+        """ Return 'date' column, converted to list of datetime objects. """
         fmt = "%Y-%m-%d"
         # 'strptime(d.strftime(fmt), fmt)' this is ugly and is required 
-        # because the Date column is a pandas datetime object, but it adds an
+        # because the date column is a pandas datetime object, but it adds an
         # empty time to the date, which we need to get rid of here, before
         # calling datetime.strptime
-        return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['Date']]
+        return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df['date']]
     
     def getMonth(self, month, year, returnType='DataFrame'):
         """ Return DataFrame or Data of data from the given month and year. """
@@ -272,7 +272,7 @@ class Data(QObject):
             month %= 12
             year += 1
         ts1 = pd.Timestamp(day=1, month=month, year=year)
-        df = self.df[(self.df['Date'] >= ts0) & (self.df['Date'] < ts1)]
+        df = self.df[(self.df['date'] >= ts0) & (self.df['date'] < ts1)]
         if returnType == "Data":
             df = Data(df, activity=self._activity)
         return df
@@ -300,7 +300,7 @@ class Data(QObject):
         if returnType not in validReturnTypes:
             msg = f"Invalid returnType '{returnType}'. Valid values are {', '.join(validReturnTypes)}"
             raise ValueError(msg)
-        grouped = self.df.groupby(pd.Grouper(key='Date', freq='M'))
+        grouped = self.df.groupby(pd.Grouper(key='date', freq='M'))
         dfs = [group for _,group in grouped]
         lst = []
         for df in dfs:
@@ -314,7 +314,7 @@ class Data(QObject):
                         i += 1
                         df = lst[-i][1]
                     # get the first date
-                    date = df['Date'].iloc[0]
+                    date = df['date'].iloc[0]
                     # get the month and year and adjust to find the missing month and year
                     month = date.month + i
                     year = date.year
@@ -324,7 +324,7 @@ class Data(QObject):
                     # make empty dataframe to add to lst
                     df = pd.DataFrame()
             else:
-                date = df['Date'].iloc[0]
+                date = df['date'].iloc[0]
                 month = date.month
                 year = date.year
             monthYear = f"{calendar.month_name[month]} {year}"
@@ -353,15 +353,15 @@ class Data(QObject):
                 month = list(calendar.month_name).index(month)
                 year = int(year)
             else:
-                month = df['Date'].iloc[0].month
-                year = df['Date'].iloc[0].year
+                month = df['date'].iloc[0].month
+                year = df['date'].iloc[0].year
             tmp = datetime(year, month, 1)
             dts.append(tmp)
             odo.append(0)
             
             for _, row in df.iterrows():
-                dt = row['Date'].to_pydatetime()
-                dist = odo[-1] + row['Distance (km)']
+                dt = row['date'].to_pydatetime()
+                dist = odo[-1] + row['distance']
                 dts.append(dt)
                 odo.append(dist)
                 
@@ -412,7 +412,7 @@ class Data(QObject):
  
     def combineRows(self, date):
         """ Combine all rows in the dataframe with the given data. """
-        idx = self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index
+        idx = self.df[self.df['date'] == parseDate(date, pd_timestamp=True)].index
         
         # sum 'simple' data
         cols = [col for col in self.df.columns if 
@@ -454,7 +454,7 @@ class Data(QObject):
                 
             idx = []
             for date in dates:
-                idx += list(self.df[self.df['Date'] == parseDate(date, pd_timestamp=True)].index)
+                idx += list(self.df[self.df['date'] == parseDate(date, pd_timestamp=True)].index)
                 
             self.df.drop(idx, inplace=True)
             self.dataChanged.emit(None)

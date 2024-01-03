@@ -92,7 +92,7 @@ class PersonalBests(QObject):
 
 class PBMonthLabel(QLabel):
     
-    def __init__(self, parent, activity, column='Distance (km)'):
+    def __init__(self, parent, activity, column='distance'):
         super().__init__()
         self.parent = parent
         self._activity = activity
@@ -180,7 +180,7 @@ class PBMonthLabel(QLabel):
                 year -= 1
             today = f"{date.today().year}{date.today().month:02d}{date.today().day:02d}"
             prev = f"{year}{month:02d}01"
-            pb_df = pb_df.query(f'{prev} <= Date <= {today}')
+            pb_df = pb_df.query(f'{prev} <= date <= {today}')
             
         data = Data(pb_df)
         pb_dfs = data.splitMonths(returnType="Data")
@@ -218,7 +218,7 @@ class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
 
         By default, it will show the five fastest sessions. Clicking on another header
-        (except 'Date' or 'Gear') will show the top five sessions for that column.
+        (except 'date' or 'Gear') will show the top five sessions for that column.
     
         Parameters
         ----------
@@ -231,7 +231,7 @@ class PBTable(QTableWidget):
             Default is 5.
     """
     
-    def __init__(self, parent, activity, rows=5, key="Speed (km/h)"):
+    def __init__(self, parent, activity, rows=5, key="speed"):
         columns = len(activity.header)
         super().__init__(rows, columns)
         self._activity = activity
@@ -275,13 +275,13 @@ class PBTable(QTableWidget):
         msg += "Click on a session to highlight it in the plot."
         self.setToolTip(msg)
     
-    def _getBestSessions(self, num=5, key="Speed (km/h)", order='descending'):
+    def _getBestSessions(self, num=5, key="speed", order='descending'):
         validOrders = ['descending', 'ascending']
         if order not in validOrders:
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
             raise ValueError(msg)
             
-        if key == 'Time':
+        if key == 'time':
             series = self.data.timeHours
         else:
             series = self.data[key]
@@ -297,7 +297,7 @@ class PBTable(QTableWidget):
         for idx in indices:
             # get row (as strings for display)
             row = {k: self.data.formatted(k)[idx] for k in self._activity.header}
-            row['datetime'] = self.data['Date'][idx]
+            row['datetime'] = self.data['date'][idx]
             
             if row[key] not in [dct[key] for dct in pb]:
                 # increment unique count if value is new
@@ -313,18 +313,18 @@ class PBTable(QTableWidget):
         # if order is ascending, will need to negate value
         func = self._activity.get_measure(key).cmp_func
         scale = 1 if order == "descending" else -1
-        pb.sort(key=lambda dct: (scale*func(dct[key]), dayMonthYearToFloat(dct['Date'])), reverse=True)
+        pb.sort(key=lambda dct: (scale*func(dct[key]), dayMonthYearToFloat(dct['date'])), reverse=True)
             
         # return only `num` values
         return pb[:num]
        
-    def setTable(self, key="Speed (km/h)", order='descending', highlightNew=False):
+    def setTable(self, key="speed", order='descending', highlightNew=False):
         n = self.rowCount()
         self.items = self._getBestSessions(num=n, key=key, order=order)
         
         self.selectKey = key
         self.order = order
-        self.dates = [row['Date'] for row in self.items]
+        self.dates = [row['date'] for row in self.items]
         
         rowNums = ['1']
         for idx in range(1, len(self.items)):
@@ -375,8 +375,8 @@ class PBTable(QTableWidget):
     @Slot()
     def newData(self):
         pb = self._getBestSessions(num=self.rowCount(), key=self.selectKey)
-        newDates = [row['Date'] for row in pb]
-        dates = [row['Date'] for row in self.items]
+        newDates = [row['date'] for row in pb]
+        dates = [row['date'] for row in self.items]
         if newDates != dates:
             i = 0
             if len(dates) > 0:

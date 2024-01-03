@@ -247,7 +247,7 @@ class DataViewer(QTreeWidget):
                 indices.remove(idx)
                 # store month and year of changed items, so top level items can be 
                 # updated where necessary
-                date = self.data.df.iloc[idx]['Date']
+                date = self.data.df.iloc[idx]['date']
                 if (monthYear := (date.month, date.year)) not in changed:
                     changed.append(monthYear)
                     
@@ -262,7 +262,7 @@ class DataViewer(QTreeWidget):
         
         # for remaining indices add new rows to tree
         for idx in indices:
-            date = self.data.df.iloc[idx]['Date']
+            date = self.data.df.iloc[idx]['date']
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             data = self.data.getMonth(date.month, date.year, returnType="Data")
             summaries = list(data.make_summary().values())
@@ -276,7 +276,7 @@ class DataViewer(QTreeWidget):
             item = IndexTreeWidgetItem(rootItem, index=idx, 
                                        headerLabels=self._activity.header,
                                        row=self.data.row(idx, formatted=True))
-            itemData = TreeItem(self.data['Date'][idx], rootItem, item)
+            itemData = TreeItem(self.data['date'][idx], rootItem, item)
             self.items.append(itemData)
             
         self.sortTree(self.sortColumn, switchOrder=False)
@@ -359,7 +359,7 @@ class DataViewer(QTreeWidget):
                 item = IndexTreeWidgetItem(rootItem, index=data.df.index[rowIdx], 
                                            headerLabels=self._activity.header,
                                            row=data.row(rowIdx, formatted=True))
-                itemData = TreeItem(data['Date'][rowIdx], rootItem, item)
+                itemData = TreeItem(data['date'][rowIdx], rootItem, item)
                 self.items.append(itemData)
                     
         self.header().resizeSections(QHeaderView.ResizeToContents)
@@ -371,9 +371,10 @@ class DataViewer(QTreeWidget):
         if len(selected) <= 1:
             return None
         
-        idx = self._activity.header.index('Date')
+        # TODO gear hardcoded here
+        idx = self._activity.header.index('date')
         dates = [item.text(idx) for item in selected]
-        idx = self._activity.header.index('Gear')
+        idx = self._activity.header.index('gear')
         gears = [item.text(idx) for item in selected]
         
         if len(set(dates)) > 1:

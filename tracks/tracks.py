@@ -177,7 +177,7 @@ class Tracks(QMainWindow):
             with open(filepath, 'w') as fileobj:
                 fileobj.write(s)
                 
-        df = pd.read_csv(filepath, sep=cls._csv_sep, parse_dates=['Date'])
+        df = pd.read_csv(filepath, sep=cls._csv_sep, parse_dates=['date'])
         
         return df
     
