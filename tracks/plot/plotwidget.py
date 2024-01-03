@@ -167,7 +167,7 @@ class Plot(_PlotWidget):
         
         self._ySeries = None
         self.plotItem = None
-        self.style = PlotStyle(style)
+        self.style = PlotStyle(activity, style)
         self.setStyle(style)
         
         self.dateAxis = CustomDateAxisItem()

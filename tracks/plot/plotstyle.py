@@ -8,34 +8,47 @@ from pathlib import Path
 from customQObjects.core import Settings
 
 class PlotStyle:
-    """ Class to manage plot styles. 
+    """ 
+    Class to manage plot styles. 
     
-        Does not store the style directly, but gets (and sets) from a 
-        Settings object, which manages the plotStyles.ini file.
-        
-        The default styles "dark" and "light" will be written to the file in 
-        the constructor, if they do not exist in the file.
+    Does not store the style directly, but gets (and sets) from a 
+    Settings object, which manages the plotStyles.ini file.
+    
+    The default styles "dark" and "light" will be written to the file in 
+    the constructor, if they do not exist in the file.
     """
     
     defaultStyles = ["dark", "light"]
     
-    def __init__(self, style="dark"):
-        # TODO use activities
+    def __init__(self, activity, style="dark"):
         
         plotStyleFile = Path(Settings().fileName()).parent.joinpath('plotStyles.ini')
         self.settings = Settings(str(plotStyleFile), Settings.NativeFormat)
         
-        self.keys = ['speed', 'distance', 'time', 'calories', 'odometer', 
-                     'highlightPoint', 'foreground', 'background']
-        self.symbolKeys = ['speed', 'distance', 'time', 'calories']
+        self.symbolKeys = list(activity.filter_measures("plottable", lambda b: b))
+        self.keys = self.symbolKeys + ['odometer', 'highlightPoint', 'foreground', 'background']
         
-        # make defaults
-        darkDefault = ["#024aeb", "#cf0202", "#19b536", "#ff9100", "#4d4d4d",
-                       "#faed00", "#969696", "#000000"]
-        lightDefault = ["#0981cb", "#d80d0d", "#2bb512", "#ff9100", "#9f9f9f",
-                        "#deb009", "#4d4d4d", "#ffffff"]
-        defaults = {'dark':dict(zip(self.keys, darkDefault)),
-                    'light':dict(zip(self.keys, lightDefault))}
+        # default colours for series
+        default_colours = {
+            "dark":# green,  red,       blue,      orange,    pink,      cyan,      brown,     purple
+                ["#19b536", "#cf0202", "#024aeb", "#ff9100", "#ff2be3", "#2aa0a6", "#6f420a", "#8b3bcc"],
+            "light":# green, red,       blue,      orange,    pink,      cyan,      brown,     purple
+                ["#2bb512", "#d80d0d", "#0981cb", "#ff9100", "#c621b3", "#007069", "#442806", "#4a1f6c"]
+        }
+        if len(self.symbolKeys) > len(default_colours["dark"]):
+            # repeat colour list, if necessary
+            repeat, mod = divmod(len(default_colours["dark"]), len(self.symbolKeys))
+            dark_default = default_colours["dark"] * repeat + default_colours["dark"][:mod]
+            light_default = default_colours["light"] * repeat + default_colours["light"][:mod]
+        else:
+            dark_default = default_colours["dark"][:len(self.symbolKeys)]
+            light_default = default_colours["light"][:len(self.symbolKeys)]
+        
+        # append default colours for odometer etc
+        dark_default += ["#4d4d4d", "#faed00", "#969696", "#000000"]
+        light_default = [ "#9f9f9f", "#deb009", "#4d4d4d", "#ffffff"]
+        defaults = {'dark':dict(zip(self.keys, dark_default)),
+                    'light':dict(zip(self.keys, light_default))}
         defaultSymbols = {key:'x' for key in self.symbolKeys}
         
         for styleName, styleDct in defaults.items():
