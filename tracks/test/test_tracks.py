@@ -2,7 +2,7 @@ from tracks.tracks import Tracks
 from tracks.util import parseDuration
 from qtpy.QtCore import Qt, QPoint
 import random
-from . import makeDataFrame
+from . import make_dataframe
 import tempfile, datetime
 from pathlib import Path
 import pandas as pd
@@ -16,7 +16,7 @@ class TracksSetupTeardown:
     def setup(self, qtbot, monkeypatch, patchSettings):
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.size = 100
-        makeDataFrame(random=True, size=self.size, path=self.tmpfile.name)
+        make_dataframe(random=True, size=self.size, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
@@ -36,7 +36,7 @@ class TracksSetupTeardown:
     @pytest.fixture
     def setupKnownData(self, qtbot, monkeypatch, patchSettings):
         self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(random=False, path=self.tmpfile.name)
+        make_dataframe(random=False, path=self.tmpfile.name)
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)

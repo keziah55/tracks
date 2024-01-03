@@ -1,6 +1,6 @@
 from .. import Data
 from tracks.util import parseDuration, hourMinSecToFloat, floatToHourMinSec
-from tracks.test import makeDataFrame
+from tracks.test import make_dataframe
 import pandas as pd
 import numpy as np
 import tempfile
@@ -13,7 +13,7 @@ class TestData:
     @pytest.fixture
     def setup(self):
         self.tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(500, path=self.tmpfile.name)
+        make_dataframe(500, path=self.tmpfile.name)
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['Date'])
         self.data = Data(self.df)
     
@@ -76,7 +76,7 @@ class TestData:
     def test_monthly_odometer(self, setup):
         
         tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(100, path=tmpfile.name)
+        make_dataframe(100, path=tmpfile.name)
         df = pd.read_csv(tmpfile.name, parse_dates=['Date'])
         data = Data(df)
         

@@ -9,7 +9,7 @@ import numpy as np
 from datetime import datetime, timedelta, date
 from tracks.util import hourMinSecToFloat
 
-def timeToSecs(t):
+def time_to_secs(t):
     msg = ''
     # don't actually need the datetime objects returned by strptime, but 
     # this is probably the easist way to check the format
@@ -29,7 +29,7 @@ def timeToSecs(t):
     total = sec + (60*mins) + (60*60*hr)
     return total
 
-def convertSecs(t, mode='hour'):
+def convert_secs(t, mode='hour'):
     minutes = ['m', 'min', 'mins', 'minutes']
     hours = ['h', 'hr', 'hour', 'hours']
     valid = minutes + hours
@@ -43,7 +43,7 @@ def convertSecs(t, mode='hour'):
     if mode in hours:
         return h
 
-def makeDataFrame(random=True, size=100, path=None):
+def make_dataframe(random=True, size=100, path=None):
     """ Return DataFrame of random cycling data.
     
         Parameters
@@ -63,9 +63,9 @@ def makeDataFrame(random=True, size=100, path=None):
             DataFrame of random data
     """
     if random:
-        d = randomData(size)
+        d = random_data(size)
     else:
-        d = knownData()
+        d = known_data()
     
     df = pd.DataFrame.from_dict(d)
     
@@ -74,19 +74,19 @@ def makeDataFrame(random=True, size=100, path=None):
     
     return df
     
-def randomData(size):
-    d = {'Date':makeDates(size),
-         'Time':makeTimes(size),
-         'Distance (km)':makeFloats(size, 3, 80, ".2f"),
-         'Calories':makeFloats(size, 50, 1200, ".1f"),
+def random_data(size):
+    d = {'Date':make_dates(size),
+         'Time':make_times(size),
+         'Distance (km)':make_floats(size, 3, 80, ".2f"),
+         'Calories':make_floats(size, 50, 1200, ".1f"),
          'Gear':np.random.default_rng().integers(1, 8, size=size)}
     
-    speed = d['Distance (km)'] / np.array([convertSecs(timeToSecs(t)) for t in d['Time']])
+    speed = d['Distance (km)'] / np.array([convert_secs(time_to_secs(t)) for t in d['Time']])
     d['Speed (km/h)'] = speed
     
     return d
 
-def knownData():
+def known_data():
     dates = [f"2021-04-{i:02}" for i in range(26, 31)]
     dates += [f"2021-05-{i:02}" for i in range(1, 6)] 
     dct = {'Date':dates,
@@ -100,48 +100,53 @@ def knownData():
     dct['Speed (km/h)'] = dct['Distance (km)'] / times
     return dct
 
-def makeDates(size, startDate=None, endDate=None, fmt="%Y-%m-%d"):
-    """ Return list of `size` random dates, between `startDate` and `endDate`.
+def make_dates(size, start_date=None, end_date=None, fmt="%Y-%m-%d", include_bounds=True):
+    """ Return list of `size` random dates, between `start_date` and `end_date`.
     
         Parameters
         ----------
         size : int
             Number of random dates to generate
-        startDate : str, optional
+        start_date : str, optional
             Start of range of random dates. If provided, should be string in 
             format `fmt`. Default is current date minus two years.
-        endDate : str, optional
+        end_date : str, optional
             End of range of random dates. If provided, should be string in 
             format `fmt`. Default is current date.
         fmt : str, optional
-            If `startDate` and `endDate` strings are provided, this arg should
+            If `start_date` and `end_date` strings are provided, this arg should
             give their format. Default is "%Y-%m-%d".
-            
+        include_bounds : bool
+            If True (default), `start_date` and `end_date` will always be included.
         Returns
         -------
         dates : list
             list of datetime objects
     """
-    if endDate is None:
-        endDate = date.today().strftime(fmt)
-    if startDate is None:
+    if end_date is None:
+        end_date = date.today().strftime(fmt)
+    if start_date is None:
         today = date.today()
         d = date(year=today.year-2, month=today.month, day=today.day)
-        startDate = d.strftime(fmt)
+        start_date = d.strftime(fmt)
     
-    start = datetime.strptime(startDate, fmt)
-    dt = datetime.strptime(endDate, fmt) - datetime.strptime(startDate, fmt)
+    start = datetime.strptime(start_date, fmt)
+    dt = datetime.strptime(end_date, fmt) - datetime.strptime(start_date, fmt)
     diff = dt.days
     
+    if include_bounds:
+        size -= 2
     rng = np.random.default_rng()
     days = rng.choice(np.arange(diff), size=size, replace=False, shuffle=False)
     days = np.sort(days)
     dates = [start + timedelta(days=int(d)) for d in days]
+    if include_bounds:
+        dates.insert(0, start_date)
+        dates.append(end_date)
     return dates
 
-
-def makeTimes(size, minMinutes=10, maxMinutes=150):
-    """ Return list of `size` random times, between `minMinutes` and `maxMinutes`. 
+def make_times(size, min_minutes=10, max_minutes=150):
+    """ Return list of `size` random times, between `min_minutes` and `max_minutes`. 
     
         Times will be returned as strings in the format "%H:%M:%S" or "%M:%S", if
         hours is 0.
@@ -150,9 +155,9 @@ def makeTimes(size, minMinutes=10, maxMinutes=150):
         ----------
         size : int
             Number of random times to generate
-        minMinutes : int
+        min_minutes : int
             Lower value of minutes to generate times between. Default is 10.
-        maxMinutes : int
+        max_minutes : int
             Upper value of minutes to generate times between. Default is 150.
             
         Returns
@@ -160,7 +165,7 @@ def makeTimes(size, minMinutes=10, maxMinutes=150):
         times : list
             list of time strings
     """
-    def _makeTimeString(s):
+    def _make_time_string(s):
         mins, secs = divmod(s, 60)
         hours, mins = divmod(mins, 60)
         t = f"{hours:02d}:" if hours != 0 else ""
@@ -168,21 +173,20 @@ def makeTimes(size, minMinutes=10, maxMinutes=150):
         return t
         
     rng = np.random.default_rng()
-    seconds = rng.integers(minMinutes*60, high=maxMinutes*60, size=size)
-    times = [_makeTimeString(s) for s in seconds]
+    seconds = rng.integers(min_minutes*60, high=max_minutes*60, size=size)
+    times = [_make_time_string(s) for s in seconds]
     return times
 
-
-def makeFloats(size, minValue, maxValue, fmt):
+def make_floats(size, min_value, max_value, fmt):
     """ Return list of random floats, as formatted strings. 
     
         Parameters
         ----------
         size : int
             Number of random times to generate
-        minValue : float
+        min_value : float
             Lower limit to generate numbers between
-        maxValue : float
+        max_value : float
             Upper limit to generate numbers between
         fmt : str
             String format specifier for the floats.
@@ -192,9 +196,9 @@ def makeFloats(size, minValue, maxValue, fmt):
         floats : list
             list of formatted float strings
     """
-    diff = maxValue - minValue
+    diff = max_value - min_value
     rng = np.random.default_rng()
-    floats = [minValue + r*diff for r in rng.random(size)]
+    floats = [min_value + r*diff for r in rng.random(size)]
     floats = [float(f"{value:{fmt}}") for value in floats]
     return floats
     

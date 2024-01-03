@@ -1,6 +1,6 @@
 from tracks.data import Data
 from tracks.activities import load_activity
-from . import makeDataFrame
+from . import make_dataframe
 import tempfile
 from pathlib import Path
 import pandas as pd
@@ -30,7 +30,7 @@ class MockParent:
         random = kwargs.get('random', True)
         if dct is None:
             size = kwargs.get('size', 500)
-            makeDataFrame(random=random, size=size, path=self.tmpfile.name)
+            make_dataframe(random=random, size=size, path=self.tmpfile.name)
         else:
             df = pd.DataFrame.from_dict(dct)
             df.to_csv(self.tmpfile.name, index=False)

@@ -1,7 +1,7 @@
 from .. import DataViewer, Data
 from ..edititemdialog import EditItemDialog
 from tracks.util import monthYearToFloat, hourMinSecToFloat
-from tracks.test import makeDataFrame, MockParent
+from tracks.test import make_dataframe, MockParent
 from qtpy.QtWidgets import QMessageBox, QDialog
 from qtpy.QtCore import Qt
 import random
@@ -78,7 +78,7 @@ class TestDataViewer:
             
         # new data
         tmpfile = tempfile.NamedTemporaryFile()
-        makeDataFrame(100, path=tmpfile.name)
+        make_dataframe(100, path=tmpfile.name)
         df = pd.read_csv(tmpfile.name, parse_dates=['Date'])
         data = Data(df)
         self.parent.data = data    
