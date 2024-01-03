@@ -390,7 +390,7 @@ class Plot(_PlotWidget):
         elif mode == 'set':
             self.dataItem.setData(self.data.dateTimestamps, series, **style)
         # set axis label
-        self.plotItem.setLabel('left', text=self._activity[key].name, color=styleDict['colour'])
+        self.plotItem.setLabel('left', text=self._activity[key].full_name, color=styleDict['colour'])
         # retain plot range when switching series
         if self.viewBoxes[0].xRange is not None:
             self.setPlotRange(*self.viewBoxes[0].xRange)

@@ -124,7 +124,8 @@ class PBMonthLabel(QLabel):
                 t += f"{pbMonthRange} months" if pbMonthRange is not None else "All time"
             else:
                 t = ""
-            self.parent.monthCriterionChanged.emit(f"{col}{t}")
+            c = self._activity[col].full_name
+            self.parent.monthCriterionChanged.emit(f"{c}{t}")
         
     @Slot()
     def newData(self):
