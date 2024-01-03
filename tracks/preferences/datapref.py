@@ -23,8 +23,9 @@ class DataPreferences(QWidget):
         
         bestMonthGroup = GroupBox("Best month", layout="grid")
         self.bestMonthCriteria = QComboBox()
-        self.bestMonthCriteria.addItems([
-            "Time", "Distance", "Speed",  "Calories", "Gear"])
+        items = self.mainWindow.current_activity.filter_measures("summary", lambda s: s is not None)
+        items = [item.name for item in items.values()]
+        self.bestMonthCriteria.addItems(items)
         
         self.bestMonthPB = QCheckBox()
         self.bestMonthPB.setToolTip("Find best month by number of PBs in the chosen category")
