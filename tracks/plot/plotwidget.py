@@ -372,13 +372,12 @@ class Plot(_PlotWidget):
     
     def plotSeries(self, key, mode='new'):
         """ Plot given series on y1 axis. """
-        label = self.data.quickNames[key]
         # get series and set axis tick formatter
         if key == 'time':
             series = self.data.timeHours
             self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
         else:
-            series = self.data[label]
+            series = self.data[key]
             self.plotItem.getAxis('left').tickFormatter = None
         # make style
         styleDict = self.style[key]
@@ -391,7 +390,7 @@ class Plot(_PlotWidget):
         elif mode == 'set':
             self.dataItem.setData(self.data.dateTimestamps, series, **style)
         # set axis label
-        self.plotItem.setLabel('left', text=label, color=styleDict['colour'])
+        self.plotItem.setLabel('left', text=self._activity[key].name, color=styleDict['colour'])
         # retain plot range when switching series
         if self.viewBoxes[0].xRange is not None:
             self.setPlotRange(*self.viewBoxes[0].xRange)

@@ -304,5 +304,5 @@ class Activity:
             
     def get_relations(self):
         """ Return dict of measures in activity that are relations between others. """
-        relations = {m.full_name: m.relation for m in self._measures.values() if m.relation is not None}
+        relations = {m.slug: m.relation for m in self._measures.values() if m.relation is not None}
         return relations

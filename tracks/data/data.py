@@ -54,26 +54,27 @@ class Data(QObject):
             
         self._activity = activity
         
-        self.propertyNames = {}
-        self._quickNames = {}
+        # self.propertyNames = {}
+        # self._quickNames = {}
         
-        for slug, measure in activity.measures.items():
-            self.propertyNames[measure.full_name] = slug
-            self._quickNames[slug] = measure.full_name
+        # for slug, measure in activity.measures.items():
+        #     self.propertyNames[measure.full_name] = slug
+        #     self._quickNames[slug] = measure.full_name
         
-        self.propertyNames['Time (hours)'] = 'timeHours'
+        # self.propertyNames['Time (hours)'] = 'timeHours'
         
     def formatted(self, key):
-        measure = self._activity.get_measure(key) # TODO switch to [] TG-124
-        return [measure.formatted(v) for v in self[key]]
+        measure = self._activity[key]
+        return [measure.formatted(v) for v in self.df[key]]
     
     def summaryString(self, key, func=sum, unit=False):
-        if key.startswith("time"):
-            # TODO TG-122, TG-124
-            measure = self._activity["time"]
-            key = "Time (hours)"
-        else:
-            measure = self._activity.get_measure(key)
+        # if key.startswith("time"):
+        #     # TODO TG-122, TG-124
+        #     measure = self._activity["time"]
+        #     key = "Time (hours)"
+        # else:
+            
+        measure = self._activity[key]
         return measure.summarised(self[key], include_unit=unit)
     
     def make_summary(self) -> dict:
@@ -87,20 +88,20 @@ class Data(QObject):
         return len(self.df)
     
     def __getitem__(self, key):
-        if key in self._quickNames.keys():
-            name = self._quickNames[key]
-            return getattr(self, name)
+        if key in self.df.columns:
+            # return self.df[key]
+            # name = self._quickNames[key]
+            return getattr(self, key)
         else:
             raise NameError(f"{key} not a valid property name.")
             
     def __getattr__(self, name):
-        if name in self.quickNames:
-            ret = self.df[self.quickNames[name]]
-            if name in ["date", "time"]:
-                ret = list(ret)
-            else:
-                ret = ret.to_numpy()
-            return ret
+        ret = self.df[name]
+        if name in ["date"]:
+            ret = list(ret)
+        else:
+            ret = ret.to_numpy()
+        return ret
          
     def __repr__(self):
         return self.toString(headTail=5)
@@ -158,9 +159,9 @@ class Data(QObject):
         
         return "\n".join(rows)
     
-    @property
-    def quickNames(self):
-        return self._quickNames
+    # @property
+    # def quickNames(self):
+    #     return self._quickNames
     
     @Slot(dict)
     def append(self, dct):
@@ -169,6 +170,7 @@ class Data(QObject):
             msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
             
+        # TODO format of time?
         times = np.array([hourMinSecToFloat(t) for t in dct['time']])
         dct['speed'] = dct['distance'] / times
         
@@ -215,8 +217,8 @@ class Data(QObject):
             if name not in df.columns:
                 m0 = df[relation.m0.slug]
                 m1 = df[relation.m1.slug]
-                if relation.m1.slug == "time":
-                    m1 = np.array([hourMinSecToFloat(t) for t in m1])
+                # if relation.m1.slug == "time":
+                #     m1 = np.array([hourMinSecToFloat(t) for t in m1])
                 df[name] = relation.op.call(m0, m1)
         return df
     
@@ -226,8 +228,8 @@ class Data(QObject):
         for col, relation in self._activity.get_relations().items():
             m0 = self.df[relation.m0.full_name][idx]
             m1 = self.df[relation.m1.full_name][idx]
-            if relation.m1.slug == "time":
-                m1 = np.array([hourMinSecToFloat(t) for t in m1])
+            # if relation.m1.slug == "time":
+            #     m1 = np.array([hourMinSecToFloat(t) for t in m1])
             self.df.loc[idx,col] = relation.op.call(m0, m1)
         
     def setDataFrame(self, df):
@@ -237,13 +239,13 @@ class Data(QObject):
         self.df = df
         self.dataChanged.emit(self.df.index)
             
-    @property
-    def timeHours(self):
-        """ 
-        Return numpy array of 'Time' column, where each value is converted to hours.
-        """
-        time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['time']])
-        return time
+    # @property
+    # def timeHours(self):
+    #     """ 
+    #     Return numpy array of 'Time' column, where each value is converted to hours.
+    #     """
+    #     time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['time']])
+    #     return time
     
     @property
     def dateTimestamps(self):
@@ -393,11 +395,12 @@ class Data(QObject):
         idx : List[int]
             list of indicies of PBs
         """
-        key = self.quickNames[column]
-        if key == 'Time':
-            series = self.timeHours
-        else:
-            series = self[key]
+        # key = self.quickNames[column]
+        # if key == 'Time':
+        #     series = self.timeHours
+        # else:
+        #     series = self[key]
+        series = self[column]
         if pbCount > len(series):
             pbCount = len(series)
         best = series[:pbCount]

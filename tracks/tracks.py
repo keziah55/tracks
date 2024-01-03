@@ -46,7 +46,7 @@ class Tracks(QMainWindow):
         
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
-        sessionsKey = self.settings.value("pb/sessionsKey", "Speed (km/h)")
+        sessionsKey = self.settings.value("pb/sessionsKey", "speed")
         self.pb = PersonalBests(
             self, 
             act,

@@ -124,8 +124,7 @@ class PBMonthLabel(QLabel):
                 t += f"{pbMonthRange} months" if pbMonthRange is not None else "All time"
             else:
                 t = ""
-            c = self.data.quickNames[col]
-            self.parent.monthCriterionChanged.emit(f"{c}{t}")
+            self.parent.monthCriterionChanged.emit(f"{col}{t}")
         
     @Slot()
     def newData(self):
@@ -245,7 +244,8 @@ class PBTable(QTableWidget):
         
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
-        self.selectColumn(self._activity.header.index(self.selectKey))
+        measure = self._activity[self.selectKey]
+        self.selectColumn(self._activity.header.index(measure.full_name))
         
         self.newIdx = None
         self._setToolTip(rows)
@@ -281,10 +281,11 @@ class PBTable(QTableWidget):
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
             raise ValueError(msg)
             
-        if key == 'time':
-            series = self.data.timeHours
-        else:
-            series = self.data[key]
+        series = self.data[key]
+        # if key == 'time':
+        #     series = self.data.timeHours
+        # else:
+        #     series = self.data[key]
         
         # sort series and get indices
         slc = -1 if order == 'descending' else 1
@@ -296,7 +297,7 @@ class PBTable(QTableWidget):
         
         for idx in indices:
             # get row (as strings for display)
-            row = {k: self.data.formatted(k)[idx] for k in self._activity.header}
+            row = {k: self.data.formatted(k)[idx] for k in self._activity.measures}
             row['datetime'] = self.data['date'][idx]
             
             if row[key] not in [dct[key] for dct in pb]:
@@ -337,7 +338,7 @@ class PBTable(QTableWidget):
                 rowNums.append(str(idx+1))
         
         for rowNum, row in enumerate(self.items):
-            for colNum, key in enumerate(self._activity.header):
+            for colNum, key in enumerate(self._activity.measures):
                 value = row[key]
                 item = QTableWidgetItem()
                 item.setText(value)
@@ -362,7 +363,7 @@ class PBTable(QTableWidget):
             return
         
         self.clearContents()
-        self.setTable(key=col)
+        self.setTable(key=m.slug)
         
         for i in range(self.header.count()):
             font = self.horizontalHeaderItem(i).font()

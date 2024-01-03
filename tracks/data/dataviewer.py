@@ -70,15 +70,16 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
 class IndexTreeWidgetItem(QTreeWidgetItem):
     """ QTreeWidgetItem that stores the index of the DataFrame row it represents. """
     
-    def __init__(self, *args, index=None, headerLabels=[], row={}, **kwargs):
+    def __init__(self, *args, activity=None, index=None, headerLabels=[], row={}, **kwargs):
         super().__init__(*args, **kwargs)
+        self._activity = activity
         self.index = index
         self.headerLabels = headerLabels
         self.setRow(row)
         
     def setRow(self, row):
         self.row = row
-        for idx, col in enumerate(self.headerLabels):
+        for idx, col in enumerate(self._activity.measures):
             value = self.row[col]
             self.setText(idx, value)
             self.setTextAlignment(idx, Qt.AlignCenter)
@@ -273,7 +274,7 @@ class DataViewer(QTreeWidget):
                 rootItem = self.topLevelItemsDict[monthYear]
                 rootItem.setRow(rootText)
                 
-            item = IndexTreeWidgetItem(rootItem, index=idx, 
+            item = IndexTreeWidgetItem(rootItem, activity=self._activity, index=idx, 
                                        headerLabels=self._activity.header,
                                        row=self.data.row(idx, formatted=True))
             itemData = TreeItem(self.data['date'][idx], rootItem, item)
@@ -356,7 +357,7 @@ class DataViewer(QTreeWidget):
                 
             # make rows of data for tree
             for rowIdx in reversed(range(len(data))):
-                item = IndexTreeWidgetItem(rootItem, index=data.df.index[rowIdx], 
+                item = IndexTreeWidgetItem(rootItem, activity=self._activity, index=data.df.index[rowIdx], 
                                            headerLabels=self._activity.header,
                                            row=data.row(rowIdx, formatted=True))
                 itemData = TreeItem(data['date'][rowIdx], rootItem, item)
