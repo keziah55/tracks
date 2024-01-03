@@ -72,9 +72,9 @@ class PlotWidget(QWidget):
         if self.plotLabel is None:
             self.plotLabel = PlotLabel(self._activity, self.plotWidget.style)
         else:
-            self.plotLabel.setStyle(self.plotWidget.style)
+            self.plotLabel.set_style(self.plotWidget.style)
         self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
-        self.plotWidget.currentPointChanged.connect(self.plotLabel.setLabels)
+        self.plotWidget.currentPointChanged.connect(self.plotLabel.set_labels)
         self.plotWidget.pointSelected.connect(self.pointSelected)
         
         self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)

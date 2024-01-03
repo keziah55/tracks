@@ -84,22 +84,23 @@ class PlotLabel(QWidget):
             
         self.setLayout(self.layout)
             
-    def setLabels(self, dct):
-        """ For given `dct` set label text. """
-        for key, data in dct.items():
+    def set_labels(self, series_dct):
+        """ For given `series_dct` set label text. """
+        for key, data in series_dct.items():
             if key in self._names:
                 measure = self._activity.get_measure(key)
+                text = ""
                 kwargs = {"include_unit":True}
                 if key == "date":
                     kwargs["date_fmt"] = "%a %d %b %Y"
                 else:
-                    kwargs["include_name"] = True
+                    text = f"{measure.name}: "
         
-                text = measure.formatted(data, **kwargs)
+                text += measure.formatted(data, **kwargs)
                 label = self._widgets[key]
                 label.setText(text)
 
-    def setStyle(self, style):
+    def set_style(self, style):
         self.style = style
         for key, widget in self._widgets.items():
             colour = self.style[key]['colour'] if key in self.style.keys else None
