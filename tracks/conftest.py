@@ -22,7 +22,7 @@ def patch_dir():
 def activity_json_path(patch_dir):
     json_path = patch_dir.joinpath(".tracks", "cycling.json")
     if not json_path.exists():
-        json_path.symlink_to(Path(__file__).parent.joinpath("test", "test_data", "cycling.json"))
+        json_path.symlink_to(Path(__file__).parent.joinpath("test", "data", "cycling.json"))
     return json_path
 
 @pytest.fixture(autouse=True)
