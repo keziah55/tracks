@@ -259,15 +259,15 @@ class TestDataViewer:
                           'date': pd.Timestamp('2021-04-16 00:00:00'),
                           'distance': 30.1,
                           'gear': 6,
-                          'time': '00:53:27'},
+                          'time': hourMinSecToFloat('00:53:27')},
                       2: {'calories': 375.1,
                           'date': pd.Timestamp('2021-04-28 00:00:00'),
                           'distance': 42.3,
                           'gear': 6,
-                          'time': '01:00:05'},
+                          'time': hourMinSecToFloat('01:00:05')},
                       8: {'calories': 375.1,
                           'date': pd.Timestamp('2021-05-04 00:00:00'),
                           'distance': 25.08,
                           'gear': 6,
-                          'time': '00:42:11'}}
+                          'time': hourMinSecToFloat('00:42:11')}}
         assert values == expected

@@ -1,5 +1,6 @@
 from .. import AddData
 from tracks.activities import load_activity
+from tracks.util import hourMinSecToFloat
 from qtpy.QtCore import Qt
 from datetime import date
 import random
@@ -50,7 +51,8 @@ class TestAddData:
                             pd.Timestamp(year=2021, month=1, day=1),
                             pd.Timestamp(year=2021, month=1, day=15),
                             pd.Timestamp(year=2021, month=2, day=9)],
-                    'time':["00:45:02", "00:31:15", "00:36:04", "00:21:36"],
+                    'time':[hourMinSecToFloat("00:45:02"), hourMinSecToFloat("00:31:15"), 
+                            hourMinSecToFloat("00:36:04"), hourMinSecToFloat("00:21:36")],
                     'distance':[22.5, 17.0, 18.75, 11.23],
                     'calories':[275.9, 255.3, 300.4, 165.3],
                     'gear':[7, 6, 5, 6]}
