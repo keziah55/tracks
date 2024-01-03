@@ -261,10 +261,20 @@ class Activity:
         raise ValueError(f"Unknown measure '{name}'")
         
     def filter_measures(self, attr, func):
-        """ Return measures dict, filtered by func(measure.attr) is True """
+        """ 
+        Return measures dict, filtered by func(measure.attr) is True.
+        
+        `attr` and `func` can be lists of attributes and functions; measures 
+        for which all the functions return True will be returned.
+        """
+        if not isinstance(attr, (tuple, list)):
+            attr = [attr]
+        if not isinstance(func, (tuple, list)):
+            func = [func]
+        funcs_attrs = list(zip(func, attr))
         measures = {
             key: measure for key, measure in self._measures.items() 
-            if func(getattr(measure, attr))
+            if all([f(getattr(measure, a)) for f, a in funcs_attrs])
         }
         return measures
             

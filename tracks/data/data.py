@@ -64,13 +64,13 @@ class Data(QObject):
         self.propertyNames['Time (hours)'] = 'timeHours'
         
     def formatted(self, key):
-        measure = self._activity.get_measure(key)
+        measure = self._activity.get_measure(key) # TODO switch to [] TG-124
         return [measure.formatted(v) for v in self[key]]
     
     def summaryString(self, key, func=sum, unit=False):
         if key.startswith("Time"):
             # TODO TG-122, TG-124
-            measure = self._activity.get_measure("time")
+            measure = self._activity["time"]
             key = "Time (hours)"
         else:
             measure = self._activity.get_measure(key)
