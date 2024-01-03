@@ -1,5 +1,5 @@
 from tracks.tracks import Tracks
-from tracks.util import parseDuration
+from tracks.util import parseDuration, hourMinSecToFloat
 from qtpy.QtCore import Qt, QPoint
 import random
 from . import make_dataframe
@@ -165,7 +165,7 @@ class TestTracks(TracksSetupTeardown):
         with qtbot.waitSignals(signals):
             self.pbTable.setCurrentItem(item)
         
-        expectedIdx = self.app.data.formatted("Date").index(item.text())
+        expectedIdx = self.app.data.formatted("date").index(item.text())
         assert self.plotWidget._current_point['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
         
@@ -174,7 +174,7 @@ class TestTracks(TracksSetupTeardown):
         
         self.plot.setXAxisRange(months=6)
         
-        lastDate = self.data['Date'][-1]
+        lastDate = self.data['date'][-1]
         year = lastDate.year
         month = lastDate.month
         day = 28 # latest date that appears in all months
@@ -183,11 +183,11 @@ class TestTracks(TracksSetupTeardown):
             year += 1
         newDate = pd.Timestamp(year=year, month=month+1, day=day)
         
-        newData = {'Date':[newDate],
-                   'Time':[parseDuration("40:20")],
-                   'Distance (km)':[25.08],
-                   'Calories':[375.1],
-                   'Gear':[6]}
+        newData = {'date':[newDate],
+                   'time':[hourMinSecToFloat(parseDuration("40:20"))],
+                   'distance':[25.08],
+                   'calories':[375.1],
+                   'gear':[6]}
         
         oldXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
         

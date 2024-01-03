@@ -374,7 +374,7 @@ class Plot(_PlotWidget):
         """ Plot given series on y1 axis. """
         # get series and set axis tick formatter
         if key == 'time':
-            series = self.data.timeHours
+            series = self.data.time
             self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
         else:
             series = self.data[key]

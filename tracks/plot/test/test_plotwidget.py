@@ -62,7 +62,7 @@ class TestPlotWidget:
             if key != 'date':
                 axis = self.widget.plotWidget.plotItem.getAxis('left')
                 axisLabel = axis.labelText
-                assert axisLabel == self.parent.data.quickNames[key]
+                assert axisLabel == self.parent.activity[key].full_name
     
     @pytest.mark.skip("Cannot get click in right place, test is flaky. Test this manually")
     def test_month_zoom(self, setup, qtbot, variables):

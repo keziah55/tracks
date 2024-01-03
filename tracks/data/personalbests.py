@@ -301,6 +301,7 @@ class PBTable(QTableWidget):
                 # increment unique count if value is new
                 numUnique += 1
                 
+            row["idx"] = idx
             pb.append(row)
                 
             if numUnique == num:
@@ -399,8 +400,8 @@ class PBTable(QTableWidget):
     def _cellChanged(self, row, column, previousRow, previousColumn):
         """ Emit `itemSelected` with date of selected row """
         if self.parent is not None and len(self.items) > 0:
-            dct = self.items[row]
-            self.parent.itemSelected.emit(dct['date'])
+            idx = self.items[row]['idx']
+            self.parent.itemSelected.emit(self.data.row(idx)['date'])
 
     def makeMessage(self, key, idx, value):
         """ Return message string for new PB """

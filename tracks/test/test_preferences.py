@@ -170,10 +170,10 @@ class TestPreferences(TracksSetupTeardown):
                 # if it's a Date (pd.Timestamp) return directly
                 return item
         
-        df = self.data.df.sort_values(by=['Speed (km/h)', 'Date'], ascending=False, key=sortKey)
+        df = self.data.df.sort_values(by=['speed', 'date'], ascending=False, key=sortKey)
         
         for row in range(self.pbTable.rowCount()):
-            for colNum, colName in enumerate(self.pbTable._activity.header):
+            for colNum, colName in enumerate(self.pbTable._activity.measure_slugs):
                 text = self.pbTable.item(row, colNum).text()
                 
                 expected = df.iloc[row][colName]
@@ -208,8 +208,6 @@ class TestPreferences(TracksSetupTeardown):
             val = indices.pop(0)
             indices.append(val)
             
-        keys = {"Distance":"Distance (km)", "Speed":"Speed (km/h)"}
-        
         for idx in indices:
             pbPref.bestMonthCriteria.setCurrentIndex(idx)
             
@@ -218,14 +216,14 @@ class TestPreferences(TracksSetupTeardown):
                 qtbot.mouseClick(button, Qt.LeftButton)
                 
             criterion = pbPref.bestMonthCriteria.currentText()
-            column = keys.get(criterion, criterion)
+            column = criterion.lower() 
             
             months = self.data.splitMonths()
-            if column in ["Distance (km)", "Calories"]:
+            if column in ["distance", "calories"]:
                 values = [(monthYear, sum(df[column])) for monthYear, df in months]
-            elif column == "Time":
-                values = [(monthYear, sum([hourMinSecToFloat(parseDuration(t)) for t in df[column]])) for monthYear, df in months]
-            elif column == "Speed (km/h)":
+            elif column == "time":
+                values = [(monthYear, sum(df[column])) for monthYear, df in months]
+            elif column == "speed":
                 values = [(monthYear, max(df[column])) for monthYear, df in months]
             else:
                 values = [(monthYear, np.around(np.mean(df[column]))) for monthYear, df in months]
@@ -254,27 +252,21 @@ class TestPreferences(TracksSetupTeardown):
             measure = comboBox.currentText()
             
             viewerName = aliases.get(name.capitalize(), name.capitalize())
-            viewerNameNoNewline = re.sub(r"\n", " ", viewerName)
             col = self.viewer._activity.header.index(viewerName)
             
             # known data is from April and May 2021
-            groups = self.data.df.groupby(self.data.df['Date'] <= pd.Timestamp(year=2021, month=4, day=30))
+            groups = self.data.df.groupby(self.data.df['date'] <= pd.Timestamp(year=2021, month=4, day=30))
             qtbot.wait(variables.shortWait)
             
             idx = 0
             for _, df in groups:
                 
-                data = df[viewerNameNoNewline]
+                data = df[name]
                 
-                if name == 'time':
-                    data = np.array([hourMinSecToFloat(t) for t in data])
-                    
                 expected = funcs[measure](data)
                 
-                if name == 'time':
-                    expected = floatToHourMinSec(expected)
                 
-                expected = self.pbTable._activity.get_measure(viewerNameNoNewline).formatted(expected)
+                expected = self.pbTable._activity.get_measure(name).formatted(expected)
                 
                 assert self.viewer.topLevelItems[idx].text(col) == expected
                 idx += 1
