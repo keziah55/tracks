@@ -3,6 +3,7 @@ from customQObjects.core import Settings
 from dataclasses import dataclass
 from pathlib import Path
 import pytest
+import shutil
 
 @dataclass
 class Variables:
@@ -20,10 +21,11 @@ def patch_dir():
     
 @pytest.fixture()
 def activity_json_path(patch_dir):
-    json_path = patch_dir.joinpath(".tracks", "cycling.json")
-    if not json_path.exists():
-        json_path.symlink_to(Path(__file__).parent.joinpath("test", "data", "cycling.json"))
-    return json_path
+    target_json_path = patch_dir.joinpath(".tracks", "cycling.json")
+    if not target_json_path.exists():
+        source_json_path = Path(__file__).parent.joinpath("test", "data", "cycling.json")
+        shutil.copy2(source_json_path, target_json_path)
+    return target_json_path
 
 @pytest.fixture(autouse=True)
 def patchSettings(monkeypatch, patch_dir, activity_json_path):

@@ -73,7 +73,7 @@ class TestData:
         tmpfile = tempfile.NamedTemporaryFile()
         make_dataframe(100, path=tmpfile.name)
         df = pd.read_csv(tmpfile.name, parse_dates=['date'])
-        data = Data(df)
+        data = Data(df, self.activity)
         
         dts, odo = data.getMonthlyOdometer()
         

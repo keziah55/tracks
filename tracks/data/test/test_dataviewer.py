@@ -80,7 +80,7 @@ class TestDataViewer:
         tmpfile = tempfile.NamedTemporaryFile()
         make_dataframe(100, path=tmpfile.name)
         df = pd.read_csv(tmpfile.name, parse_dates=['date'])
-        data = Data(df)
+        data = Data(df, self.parent.activity)
         self.parent.data = data    
         
         self.widget.newData()
