@@ -21,7 +21,10 @@ def patch_dir():
     
 @pytest.fixture()
 def activity_json_path(patch_dir):
-    target_json_path = patch_dir.joinpath(".tracks", "cycling.json")
+    target_json_dir = patch_dir.joinpath(".tracks")
+    if not target_json_dir.exists():
+        target_json_dir.mkdir()
+    target_json_path = target_json_dir.joinpath("cycling.json")
     if not target_json_path.exists():
         source_json_path = Path(__file__).parent.joinpath("test", "data", "cycling.json")
         shutil.copy2(source_json_path, target_json_path)
