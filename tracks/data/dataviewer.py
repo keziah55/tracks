@@ -200,8 +200,6 @@ class DataViewer(QTreeWidget):
             result = self.dialog.exec_()
             if result == EditItemDialog.Accepted:
                 values, remove = self.dialog.getValues()
-                print(f"{values=}")
-                print(f"{remove=}")
                 self.data.update(values)
                 if remove:
                     self.data.removeRows(index=remove)
