@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QToolBar, QApplication
 from qtpy.QtGui import QPalette
 from qtpy.QtCore import Qt, Signal
-from tracks import makeForegroundIcon
+from tracks import make_foreground_icon
 
 class PlotToolBar(QToolBar):
     """ Vertical tool bar with buttons to control the plot. """
@@ -24,12 +24,12 @@ class PlotToolBar(QToolBar):
                         "view_range":("View custom range", self.viewRangeClicked)}
         for name, params in rangeButtons.items():
             tooltip, signal = params
-            icon = makeForegroundIcon(name, colour, ext="png")
+            icon = make_foreground_icon(name, colour, ext="png")
             action = self.addAction(icon, "", signal.emit)
             action.setToolTip(tooltip)
         self.addSeparator()
         
-        icon = makeForegroundIcon("pb", colour, ext="png")
+        icon = make_foreground_icon("pb", colour, ext="png")
         action = self.addAction(icon, "")
         action.setToolTip("Highlight every point that was a PB")
         action.setCheckable(True)

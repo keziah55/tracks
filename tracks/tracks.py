@@ -6,18 +6,18 @@ Main window for Tracks.
 
 from pathlib import Path
 from datetime import datetime, date
-import warnings
 from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
                              QMessageBox, QLabel)
 from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
 from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
-from .activities import load_activity, Activity
+from .activities import load_activity, get_activity_csv, load_actvity_df, Activity
 from .plot import PlotWidget
 from .data import Data, DataViewer, AddData, PersonalBests
 from .preferences import PreferencesDialog
 from .util import intToStr
+from . import get_data_path
 from customQObjects.core import Settings
 
 
@@ -36,10 +36,10 @@ class Tracks(QMainWindow):
         activity = self.settings.value("activity/current", "cycling")
         
         self.activities = []
-        act = load_activity(self.get_data_path().joinpath(f"{activity}.json"))
+        act = load_activity(get_data_path().joinpath(f"{activity}.json"))
         self.activities.insert(0, act)
         
-        df = self.load_df(act)
+        df = load_actvity_df(act)
 
         self.data = Data(df, act)
         self.save()
@@ -137,26 +137,6 @@ class Tracks(QMainWindow):
             s = f"{date.today().month} months"
         months = None if s == 'all' else int(s.strip(' months'))
         return months
-        
-    @staticmethod
-    def get_data_path():
-        p = Path.home().joinpath('.tracks')
-        if not p.exists():
-            p.mkdir(parents=True)
-        return p
-    
-    @classmethod
-    def getFile(cls):
-        warnings.warn("Tracks.getFile is deprecated", DeprecationWarning)
-        p = cls.get_data_path()
-        file = p.joinpath('tracks.csv')
-        return file
-    
-    @classmethod
-    def get_activity_csv(cls, activity):
-        p = cls.get_data_path()
-        filepath = p.joinpath(activity.csv_file)
-        return filepath
     
     @property
     def current_activity(self):
@@ -165,32 +145,16 @@ class Tracks(QMainWindow):
         else:
             return self.activities[0]
     
-    @classmethod
-    def load_df(cls, activity) -> pd.DataFrame:
-        """ Load dataframe for `activity` """
-        
-        filepath = cls.get_activity_csv(activity)
-        
-        if not filepath.exists():
-            header = activity.header
-            s = cls._csv_sep.join(header) + "\n"
-            with open(filepath, 'w') as fileobj:
-                fileobj.write(s)
-                
-        df = pd.read_csv(filepath, sep=cls._csv_sep, parse_dates=['date'])
-        
-        return df
-    
     def load_current_df(self):
         """ Load dataframe for current activity """
         activity = self.current_activity
-        return self.load_df(activity)
+        return load_actvity_df(activity)
     
     @Slot()
     def save(self, activity=None):
         if activity is None:
             activity = self.current_activity
-        filepath = self.get_activity_csv(activity)
+        filepath = get_activity_csv(activity)
         
         self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
         self.backup()
@@ -201,7 +165,7 @@ class Tracks(QMainWindow):
     def backup(self, activity=None):
         if activity is None:
             activity = self.current_activity
-        p = self.get_data_path()
+        p = get_data_path()
         filepath = p.joinpath(activity.csv_file)
         
         bak = filepath.with_suffix('.bak')

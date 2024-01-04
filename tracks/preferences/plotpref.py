@@ -10,7 +10,7 @@ from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, 
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupBox, ComboBox
 from customQObjects.core import Settings
-from tracks import makeForegroundIcon 
+from tracks import make_foreground_icon 
 import warnings
 
 
@@ -51,10 +51,10 @@ class StyleDesigner(QWidget):
             self.setName(name)
             
         foregroundColour = self.palette().windowText().color()
-        icon = makeForegroundIcon("accept", foregroundColour, ext="png")
+        icon = make_foreground_icon("accept", foregroundColour, ext="png")
         self.saveButton = QPushButton(icon, "")
         self.saveButton.setToolTip("Save theme")
-        icon = makeForegroundIcon("cancel", foregroundColour, ext="png")
+        icon = make_foreground_icon("cancel", foregroundColour, ext="png")
         self.cancelButton = QPushButton(icon, "")
         self.cancelButton.setToolTip("Discard changes")
         self.saveButton.clicked.connect(self._saveStyle)
@@ -329,19 +329,19 @@ class PlotPreferences(QWidget):
         
         foregroundColour = self.palette().windowText().color()
         
-        icon = makeForegroundIcon("add", foregroundColour, ext="png")
+        icon = make_foreground_icon("add", foregroundColour, ext="png")
         self.addPlotStyleButton = QPushButton(icon, "")
         self.addPlotStyleButton.setCheckable(True)
         self.addPlotStyleButton.setToolTip("Add theme")
         self.addPlotStyleButton.toggled.connect(self._addStyle)
         
-        icon = makeForegroundIcon("edit", foregroundColour)
+        icon = make_foreground_icon("edit", foregroundColour)
         self.editPlotStyleButton = QPushButton(icon, "")
         self.editPlotStyleButton.setCheckable(True)
         self.editPlotStyleButton.setToolTip("Edit theme")
         self.editPlotStyleButton.toggled.connect(self._editStyle)
         
-        icon = makeForegroundIcon("trash", foregroundColour)
+        icon = make_foreground_icon("trash", foregroundColour)
         self.deletePlotStyleButton = QPushButton(icon, "")
         self.deletePlotStyleButton.setToolTip("Delete theme")
         self.deletePlotStyleButton.clicked.connect(self._deleteTheme)

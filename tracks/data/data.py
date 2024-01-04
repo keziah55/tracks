@@ -54,26 +54,11 @@ class Data(QObject):
             
         self._activity = activity
         
-        # self.propertyNames = {}
-        # self._quickNames = {}
-        
-        # for slug, measure in activity.measures.items():
-        #     self.propertyNames[measure.full_name] = slug
-        #     self._quickNames[slug] = measure.full_name
-        
-        # self.propertyNames['Time (hours)'] = 'timeHours'
-        
     def formatted(self, key):
         measure = self._activity[key]
         return [measure.formatted(v) for v in self.df[key]]
     
     def summaryString(self, key, func=sum, unit=False):
-        # if key.startswith("time"):
-        #     # TODO TG-122, TG-124
-        #     measure = self._activity["time"]
-        #     key = "Time (hours)"
-        # else:
-            
         measure = self._activity[key]
         try:
             s = measure.summarised(self[key], include_unit=unit)
@@ -165,10 +150,6 @@ class Data(QObject):
         
         return "\n".join(rows)
     
-    # @property
-    # def quickNames(self):
-    #     return self._quickNames
-    
     @Slot(dict)
     def append(self, dct):
         """ Append values in dict to DataFrame. """
@@ -176,10 +157,6 @@ class Data(QObject):
             msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
             
-        # print(dct)
-        # dct['time'] = np.array([hourMinSecToFloat(t) for t in dct['time']])
-        # dct['speed'] = dct['distance'] / times
-        
         tmp_df = pd.DataFrame.from_dict(dct)
         tmp_df = pd.concat([self.df, tmp_df], ignore_index=True)
         tmp_df.sort_values('date', inplace=True)
@@ -224,8 +201,6 @@ class Data(QObject):
             if name not in df.columns:
                 m0 = df[relation.m0.slug]
                 m1 = df[relation.m1.slug]
-                # if relation.m1.slug == "time":
-                #     m1 = np.array([hourMinSecToFloat(t) for t in m1])
                 df[name] = relation.op.call(m0, m1)
         return df
     
@@ -235,8 +210,6 @@ class Data(QObject):
         for col, relation in self._activity.get_relations().items():
             m0 = self.df[relation.m0.slug][idx]
             m1 = self.df[relation.m1.slug][idx]
-            # if relation.m1.slug == "time":
-            #     m1 = np.array([hourMinSecToFloat(t) for t in m1])
             self.df.loc[idx,col] = relation.op.call(m0, m1)
         
     def setDataFrame(self, df):
@@ -246,14 +219,6 @@ class Data(QObject):
         self.df = df
         self.dataChanged.emit(self.df.index)
             
-    # @property
-    # def timeHours(self):
-    #     """ 
-    #     Return numpy array of 'Time' column, where each value is converted to hours.
-    #     """
-    #     time = np.array([hourMinSecToFloat(t, strict=False) for t in self.df['time']])
-    #     return time
-    
     @property
     def dateTimestamps(self):
         """ 
@@ -374,15 +339,6 @@ class Data(QObject):
                 dts.append(dt)
                 odo.append(dist)
                 
-            # add dummy point on last day of month, if required
-            # but not at current month (as we assume that's not over yet)
-            # if i < len(dfs):
-            #     _, last_day = calendar.monthrange(year, month)
-            #     if last_day != dt.day:
-            #         tmp = datetime(year, month, last_day)
-            #         dts.append(tmp)
-            #         odo.append(dist)
-                
         return dts, odo
     
     @check_empty
@@ -402,11 +358,6 @@ class Data(QObject):
         idx : List[int]
             list of indicies of PBs
         """
-        # key = self.quickNames[column]
-        # if key == 'Time':
-        #     series = self.timeHours
-        # else:
-        #     series = self[key]
         series = self[column]
         if pbCount > len(series):
             pbCount = len(series)

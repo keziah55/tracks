@@ -2,7 +2,14 @@ from pathlib import Path
 from qtpy.QtGui import QIcon, QPixmap, QColor
 from qtpy.QtCore import Qt
 
-def getIconPath(name, ext="svg") -> Path:
+def get_data_path():
+    """ Return Path to dir where Tracks data is stored """
+    p = Path.home().joinpath('.tracks')
+    if not p.exists():
+        p.mkdir(parents=True)
+    return p
+
+def get_icon_path(name, ext="svg") -> Path:
     """ Return Path to icon [name].[ext] """
     file = Path(__file__).parents[1].joinpath("images", "icons", f"{name}.{ext}")
     if file.exists():
@@ -10,12 +17,12 @@ def getIconPath(name, ext="svg") -> Path:
     else:
         raise FileNotFoundError(f"Icon '{file}' not found.")
 
-def getIcon(name, ext="svg") -> QIcon:
+def get_icon(name, ext="svg") -> QIcon:
     """ Return QIcon of [name].[ext] """
-    file = getIconPath(name, ext=ext)
+    file = get_icon_path(name, ext=ext)
     return QIcon(str(file))
         
-def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon") -> QIcon | QPixmap:
+def make_foreground_icon(name, foregroundColour, ext="svg", returnType="icon") -> QIcon | QPixmap:
     """ Open {name}.{ext} icon and change the colour to `foregroundColour`.
     
         Parameters
@@ -33,7 +40,7 @@ def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon") -> 
         raise ValueError(f"Invalid icon return type {returnType}")
     if isinstance(foregroundColour, str):
         foregroundColour = QColor(foregroundColour)
-    file = getIconPath(name, ext=ext)
+    file = get_icon_path(name, ext=ext)
     px0 = QPixmap(str(file))
     px1 = QPixmap(px0.size())
     px1.fill(foregroundColour)
@@ -42,5 +49,5 @@ def makeForegroundIcon(name, foregroundColour, ext="svg", returnType="icon") -> 
         return QIcon(px1)
     else:
         return px1
-        
-__all__ = ["getIcon", "makeForegroundIcon"]
+    
+__all__ = ["get_icon", "make_foreground_icon", "get_data_path"]
