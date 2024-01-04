@@ -56,7 +56,7 @@ for qt_api in "${qt_bindings[@]}"; do
     mv prof "$resultsDir/$qt_api-prof"
 done
 
-testDataDir="tracks/test/test_data"
+testDataDir="tracks/test/failed_test_data"
 if [ -d $testDataDir ]; then
     echo "moving test_data to results:"
     echo $testDataDir

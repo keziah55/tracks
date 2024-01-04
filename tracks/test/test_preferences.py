@@ -181,7 +181,7 @@ class TestPreferences(TracksSetupTeardown):
                 expected = str(expected)
                 
                 if text != expected:
-                    p = Path(__file__).parent.joinpath("test_data")
+                    p = Path(__file__).parent.joinpath("failed_test_data")
                     p.mkdir(parents=True, exist_ok=True)
                     df.to_csv(p.joinpath("test_num_pb_sessions_fail_sorted.csv"))
                     self.data.df.to_csv(p.joinpath("test_num_pb_sessions_fail_unsorted.csv"))
@@ -196,7 +196,7 @@ class TestPreferences(TracksSetupTeardown):
                     with open(p.joinpath("test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
                         fileobj.write(tmpText)
                 
-                assert text == expected
+                assert text == expected, "see test_num_pb_sessions_fail_*.csv files"
         
     def test_pb_month_criterion(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
