@@ -139,7 +139,7 @@ class Measure:
             return self.__getattribute__(f"_{name}")
         
     def __repr__(self):
-        s = f"Measure '{self._name}'"
+        s = f"Measure '{self._name}' ({self.dtype})"
         return s
     
     def to_json(self):
@@ -215,6 +215,16 @@ class Activity:
         self._name = name
         self._measures = {}
     
+    def __getattr__(self, name):
+        if (m:=self._measures.get(name, None)) is not None:
+            return m
+        error_msg = f"'Activity' has no measure '{name}'\n"
+        error_msg += "Note that you must use slugs if trying to access a measure via getattr\n"
+        error_msg += "Available slugs are:"
+        for slug in self._measures.keys():
+            error_msg += f"  {slug}"
+        raise AttributeError(error_msg)
+    
     def __getitem__(self, name):
         if (m:=self._measures.get(name, None)) is not None:
             return m
@@ -224,7 +234,17 @@ class Activity:
         raise AttributeError(f"'Activity' has no measure '{name}'")
         
     def __repr__(self):
-        s = f"Activity '{self._name}'"
+        s = f"Activity '{self._name}'\n"
+        s += self._measure_to_string(indent=2)
+        return s
+    
+    def _measure_to_string(self, indent=0):
+        s = ""
+        indent = " " * indent
+        size = max([len(s) for s in self._measures.keys()])
+        for slug, measure in self._measures.items():
+            slug_str = f"{slug}:"
+            s += f"{indent}{slug_str:<{size+2}} {measure}\n"
         return s
     
     @property
@@ -253,7 +273,10 @@ class Activity:
         for m in self._measures.values():
             if name in [m.name, m.full_name]:
                 return m
-        raise ValueError(f"Unknown measure '{name}'")
+        error_msg = f"Unknown measure '{name}'\n"
+        error_msg += "Available measures are:"
+        error_msg += self._measure_to_string(indent=2)
+        raise ValueError(error_msg)
             
     def get_measure_from_full_name(self, name):
         for m in self._measures.values():

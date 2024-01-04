@@ -47,7 +47,7 @@ class PlotWidget(QWidget):
         current point.
     """
     
-    def __init__(self, parent, activity, style="dark", months=None, y_series="time"):
+    def __init__(self, parent, activity, style="dark", months=None, y_series=None):
         
         super().__init__()
         
@@ -163,7 +163,7 @@ class Plot(_PlotWidget):
         current point.
     """
     
-    def __init__(self, parent, activity, style="dark", months=None, y_series="time"):
+    def __init__(self, parent, activity, style="dark", months=None, y_series=None):
         
         self._ySeries = None
         self.plotItem = None
@@ -218,6 +218,8 @@ class Plot(_PlotWidget):
         
         self.viewMonths = None
         
+        if y_series not in plottable:
+            y_series = "time"
         self.setYSeries(y_series)
         self.plotTotalDistance()
         

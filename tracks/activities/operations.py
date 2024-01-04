@@ -25,8 +25,8 @@ class Divide_time_min(Divide):
     
     @staticmethod
     def call(a, b):
-        b *= 60
-        return a/b
+        c = b * 60
+        return a/c
     
 operator_dict = {
     "Divide": Divide,

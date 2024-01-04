@@ -75,7 +75,13 @@ class Data(QObject):
         # else:
             
         measure = self._activity[key]
-        return measure.summarised(self[key], include_unit=unit)
+        try:
+            s = measure.summarised(self[key], include_unit=unit)
+        except Exception as err:
+            msg = f"Could not summarise measure '{measure}'.\n"
+            msg += f"Original error was: {err}"
+            raise RuntimeError(msg)
+        return s
     
     def make_summary(self) -> dict:
         # TODO TG-122

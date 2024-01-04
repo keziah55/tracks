@@ -62,7 +62,7 @@ class DataPreferences(QWidget):
         for row, name in enumerate(names):
             summaryCriteriaGroup.addWidget(QLabel(name), row, 0)
             box = FuncComboBox()
-            self.summaryComboBoxes[name.lower()] = box
+            self.summaryComboBoxes[name] = box
             summaryCriteriaGroup.addWidget(box, row, 1)
         
         mainLayout = QVBoxLayout()
