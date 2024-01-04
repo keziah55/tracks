@@ -118,9 +118,7 @@ class AddDataTableMixin(object):
                 item = self.table.item(row, col)
                 value = item.text()
                 func = self.funcs[name].cast
-                print(name, func)
                 value = func(value)
                 values[name].append(value)
                 
-        print(values)
         return values

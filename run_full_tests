@@ -52,7 +52,7 @@ for qt_api in "${qt_bindings[@]}"; do
     export PYTEST_QT_API=$qt_api
     echo "QT_API: $QT_API"
     echo "PYTEST_QT_API: $PYTEST_QT_API"
-    ../.venv/bin/python -m pytest -v --cov=tracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
+    ../.venv/bin/python -m pytest  -v --cov=tracks --cov-report xml:"./$resultsDir/$qt_api-coverage.xml" --profile-svg --junitxml="./$resultsDir/$qt_api-results.xml" | tee "./$resultsDir/$qt_api-output.log"
     mv prof "$resultsDir/$qt_api-prof"
 done
 
