@@ -25,7 +25,12 @@ A simple user guide can be found [here](https://keziah55.github.io/tracks/).
 - 'Personal bests' widget shows the best month and top five sessions
 
 
-## Requirements
+## Installing
+
+Install the [requirements](#requirements), e.g. with `pip`: `python -m pip install -r requirements`.
+Then simply `python main.py` to run the Tracks GUI.
+
+### Requirements
 
 - [NumPy](https://numpy.org/)
 - [Pandas](https://pandas.pydata.org/)

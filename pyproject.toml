@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tracks"
+version = "2.0"
+dependencies = [
+    "numpy",
+    "pandas<2.0",
+    "qtpy",
+    "PyQt5",
+    "pyqtgraph",
+    "customQObjects@git+https://github.com/keziah55/CustomPyQtObjects.git>#egg=main",   
+]
+
+[tool.setuptools.packages.find]
+include = ["tracks*"]  # ["*"] by default
+exclude = ["tracks.test*"]  # empty by default
+#namespaces = false  # true by default
