@@ -1,4 +1,6 @@
-from tracks.tracks import Tracks
+# from tracks.tracks import Tracks
+import tracks.tracks
+import tracks.activities
 from tracks.util import parseDuration, hourMinSecToFloat
 from qtpy.QtCore import Qt, QPoint
 import random
@@ -20,7 +22,8 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
-        monkeypatch.setattr(Tracks, "get_activity_csv", mockGetFile)
+        monkeypatch.setattr(tracks.tracks, "get_activity_csv", mockGetFile)
+        monkeypatch.setattr(tracks.activities, "get_activity_csv", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
@@ -40,7 +43,8 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
-        monkeypatch.setattr(Tracks, "get_activity_csv", mockGetFile)
+        monkeypatch.setattr(tracks.tracks, "get_activity_csv", mockGetFile)
+        monkeypatch.setattr(tracks.activities, "get_activity_csv", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
@@ -54,7 +58,7 @@ class TracksSetupTeardown:
         self._removeTmpConfig()
     
     def _setup(self):
-        self.app = Tracks()
+        self.app = tracks.tracks.Tracks()
         self.addData = self.app.addData
         self.viewer = self.app.viewer
         self.plot = self.app.plot
@@ -110,13 +114,13 @@ class TestTracks(TracksSetupTeardown):
     def test_plot_clicked(self, setup, qtbot, variables):
         # test that clicking on the plot highlights the nearest plot in the viewer
         
-        self.plotWidget.setXAxisRange(None) # ensure all points visible in plotting area
+        self.plotWidget.set_x_axis_range(None) # ensure all points visible in plotting area
         
         pts = self.plotWidget.dataItem.scatter.points()
         idx = random.randint(0, len(pts)-1)
         
         pos = pts[idx].pos()
-        scenePos = self.plotWidget.viewBoxes[0].mapViewToScene(pos)
+        scenePos = self.plotWidget.view_boxes[0].mapViewToScene(pos)
         scenePos = QPoint(*[int(round(x)) for x in [scenePos.x(), scenePos.y()]])
         
         size = pts[idx].size() // 2
@@ -133,16 +137,16 @@ class TestTracks(TracksSetupTeardown):
                 return self.sp
             
         qtbot.wait(variables.wait)
-        with qtbot.waitSignal(self.plotWidget.currentPointChanged):
+        with qtbot.waitSignal(self.plotWidget.current_point_changed):
             qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
         qtbot.wait(variables.wait)
             
         event = MockMouseEvent(scenePos)
-        signals = [(self.plotWidget.pointSelected, 'pointSelected'),
+        signals = [(self.plotWidget.point_selected, 'point_selected'),
                    (self.viewer.currentItemChanged, 'currentItemChanged')]
         
         with qtbot.waitSignals(signals):
-            self.plotWidget.plotClicked(event)
+            self.plotWidget._plot_clicked(event)
 
     def test_viewer_clicked(self, setup, qtbot):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
@@ -150,7 +154,7 @@ class TestTracks(TracksSetupTeardown):
         with qtbot.waitSignal(self.viewer.itemExpanded):
             self.viewer.expandItem(item)
         signals = [(self.viewer.itemSelected, 'viewer.itemSelected'), 
-                   (self.plotWidget.currentPointChanged, 'plotWidget.currentPointChanged')]
+                   (self.plotWidget.current_point_changed, 'plotWidget.current_point_changed')]
         with qtbot.waitSignals(signals):
             self.viewer.setCurrentItem(item.child(0))
         expectedIdx = self.size - 1
@@ -161,7 +165,7 @@ class TestTracks(TracksSetupTeardown):
         # similar to above, but for pb table
         item = self.pbTable.item(1, 0)
         signals = [(self.app.pb.itemSelected, 'pbTable.itemSelected'), 
-                   (self.plotWidget.currentPointChanged, 'plotWidget.currentPointChanged')]
+                   (self.plotWidget.current_point_changed, 'plotWidget.current_point_changed')]
         with qtbot.waitSignals(signals):
             self.pbTable.setCurrentItem(item)
         
@@ -172,7 +176,7 @@ class TestTracks(TracksSetupTeardown):
     def test_plot_update(self, setup, qtbot):
         # test that, when new data added, the plot auto-rescales so the new points are visible
         
-        self.plot.setXAxisRange(months=6)
+        self.plot.set_x_axis_range(months=6)
         
         lastDate = self.data['date'][-1]
         year = lastDate.year

@@ -7,9 +7,9 @@ class PlotToolBar(QToolBar):
     """ Vertical tool bar with buttons to control the plot. """
     
     # signals emitted when buttons clicked
-    viewAllClicked = Signal()
-    viewRangeClicked = Signal()
-    highlightPBClicked = Signal(bool)
+    view_all_clicked = Signal()
+    view_range_clicked = Signal()
+    highlight_PB_clicked = Signal(bool)
     
     def __init__(self):
         super().__init__()
@@ -20,8 +20,12 @@ class PlotToolBar(QToolBar):
         palette = QApplication.style().standardPalette()
         colour = palette.color(QPalette.WindowText)
         
-        rangeButtons = {"view_all":("View all points", self.viewAllClicked), 
-                        "view_range":("View custom range", self.viewRangeClicked)}
+        rangeButtons = {
+            "view_all":
+                ("View all points", self.view_all_clicked), 
+            "view_range":
+                ("View custom range", self.view_range_clicked)
+        }
         for name, params in rangeButtons.items():
             tooltip, signal = params
             icon = make_foreground_icon(name, colour, ext="png")
@@ -33,4 +37,4 @@ class PlotToolBar(QToolBar):
         action = self.addAction(icon, "")
         action.setToolTip("Highlight every point that was a PB")
         action.setCheckable(True)
-        action.triggered.connect(self.highlightPBClicked.emit)
+        action.triggered.connect(self.highlight_PB_clicked.emit)

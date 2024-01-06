@@ -40,7 +40,7 @@ class TestPreferences(TracksSetupTeardown):
             rng.append(default)
             
         signals = [(vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged") 
-                   for n, vb in enumerate(self.plot.plotWidget.viewBoxes)]
+                   for n, vb in enumerate(self.plot.plotWidget.view_boxes)]
         
         lastDate = self.app.data.date[-1]
         

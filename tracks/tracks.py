@@ -75,10 +75,10 @@ class Tracks(QMainWindow):
         
         self.addData.newData.connect(self.data.append)
         self.data.dataChanged.connect(self._dataChanged)
-        self.plot.pointSelected.connect(self.viewer.highlightItem)
-        self.viewer.itemSelected.connect(self.plot.setCurrentPointFromDate)
+        self.plot.point_selected.connect(self.viewer.highlightItem)
+        self.viewer.itemSelected.connect(self.plot.set_current_point_from_date)
         self.viewer.selectedSummary.connect(self.statusBar().showMessage)
-        self.pb.itemSelected.connect(self.plot.setCurrentPointFromDate)
+        self.pb.itemSelected.connect(self.plot.set_current_point_from_date)
         self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
         self.pb.statusMessage.connect(self.statusBar().showMessage)
@@ -195,7 +195,7 @@ class Tracks(QMainWindow):
     @Slot(object)
     def _dataChanged(self, idx):
         self.viewer.newData(idx)
-        self.plot.newData(idx)
+        self.plot.new_data(idx)
         self.pb.newData(idx)
         self.save()
         

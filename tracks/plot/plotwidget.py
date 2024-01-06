@@ -33,15 +33,15 @@ class PlotWidget(QWidget):
             y series to show initially. Default is "time"
     """
     
-    currentPointChanged = Signal(dict)
-    """ **signal**  currentPointChanged(dict `values`)
+    current_point_changed = Signal(dict)
+    """ **signal**  current_point_changed(dict `values`)
         
         Emitted when a point in the plot is hovered over. The dict provides
         the date, speed, distance, calories and time data for the chosen point.
     """
     
-    pointSelected = Signal(object)
-    """ **signal** pointSelected(datetime `currentPoint`)
+    point_selected = Signal(object)
+    """ **signal** point_selected(datetime `currentPoint`)
         
         Emitted when the plot is double clicked, with the date from the
         current point.
@@ -57,7 +57,7 @@ class PlotWidget(QWidget):
         self._activity = activity
         
         self.plotToolBar = PlotToolBar()
-        self._makePlot(parent, activity, style=style, months=months, y_series=y_series)
+        self._make_plot(parent, activity, style=style, months=months, y_series=y_series)
         
         self.plotLayout = QHBoxLayout()
         self.plotLayout.addWidget(self.plotWidget)
@@ -68,72 +68,72 @@ class PlotWidget(QWidget):
         
         self.setLayout(self.layout)
         
-    def _makePlot(self, *args, **kwargs):
+    def _make_plot(self, *args, **kwargs):
         self.plotWidget = Plot(*args, **kwargs)
         if self.plotLabel is None:
             self.plotLabel = PlotLabel(self._activity, self.plotWidget.style)
         else:
             self.plotLabel.set_style(self.plotWidget.style)
-        self.plotLabel.labelClicked.connect(self.plotWidget.switchSeries)
-        self.plotWidget.currentPointChanged.connect(self.plotLabel.set_labels)
-        self.plotWidget.pointSelected.connect(self.pointSelected)
+        self.plotLabel.labelClicked.connect(self.plotWidget._switch_series)
+        self.plotWidget.current_point_changed.connect(self.plotLabel.set_labels)
+        self.plotWidget.point_selected.connect(self.point_selected)
         
-        self.plotToolBar.viewAllClicked.connect(self.plotWidget.viewAll)
-        self.plotToolBar.viewRangeClicked.connect(self.plotWidget.resetMonthRange)
-        self.plotToolBar.highlightPBClicked.connect(self.plotWidget._highlightPBs)
+        self.plotToolBar.view_all_clicked.connect(self.plotWidget.view_all)
+        self.plotToolBar.view_range_clicked.connect(self.plotWidget.reset_month_range)
+        self.plotToolBar.highlight_PB_clicked.connect(self.plotWidget._highlight_PBs)
         
     def state(self):
         state = {
-            "current_series": self.plotWidget.ySeries
+            "current_series": self.plotWidget.y_series
             }
         return state
         
     @Slot(object)
-    def newData(self, idx=None):
-        self.plotWidget.updatePlots()
+    def new_data(self, idx=None):
+        self.plotWidget.update_plots()
         
     @Slot(object)
-    def setCurrentPointFromDate(self, date):
-        self.plotWidget.setCurrentPointFromDate(date)
+    def set_current_point_from_date(self, date):
+        self.plotWidget.set_current_point_from_date(date)
         
     @Slot(object, bool)
-    def setXAxisRange(self, months, fromRecentSession=True):
-        self.plotWidget.setXAxisRange(months, fromRecentSession=fromRecentSession)
+    def set_x_axis_range(self, months, fromRecentSession=True):
+        self.plotWidget.set_x_axis_range(months, fromRecentSession=fromRecentSession)
         
     @Slot(str)
-    def setStyle(self, style, force=False):
+    def set_style(self, style, force=False):
         if force or self.plotWidget.style.name != style:
-            self.plotState = self.plotWidget.getState()
+            self.plotState = self.plotWidget.get_state()
             self.plotLayout.removeWidget(self.plotWidget)
             self.plotWidget.deleteLater()
-            self._makePlot(self.parent, self._activity, style=style)
-            self.plotWidget.setState(self.plotState)
+            self._make_plot(self.parent, self._activity, style=style)
+            self.plotWidget.set_state(self.plotState)
             self.plotLayout.insertWidget(0, self.plotWidget)
             
-    def addCustomStyle(self, name, style, setStyle=True):
-        self.plotWidget.style.addStyle(name, style)
-        if setStyle:
-            self.setStyle(name, force=True)
+    def add_custom_style(self, name, style, set_style=True):
+        self.plotWidget.style.add_style(name, style)
+        if set_style:
+            self.set_style(name, force=True)
         
-    def removeCustomStyle(self, name):
+    def remove_custom_style(self, name):
         # TODO remove style from file
         # and update current?
-        self.plotWidget.style.removeStyle(name)
+        self.plotWidget.style.remove_style(name)
             
-    def getStyle(self, name):
-        return self.plotWidget.style.getStyleDict(name)
+    def get_style(self, name):
+        return self.plotWidget.style.get_style_dict(name)
     
-    def getStyleKeys(self):
+    def get_style_keys(self):
         return self.plotWidget.style.keys
     
-    def getStyleSymbolKeys(self):
-        return self.plotWidget.style.symbolKeys
+    def get_style_symbol_keys(self):
+        return self.plotWidget.style.symbol_keys
     
-    def getValidStyles(self):
-        return self.plotWidget.style.validStyles
+    def get_valid_styles(self):
+        return self.plotWidget.style.valid_styles
     
-    def getDefaultStyles(self):
-        return self.plotWidget.style.defaultStyles
+    def get_default_styles(self):
+        return self.plotWidget.style.default_styles
 
 class Plot(_PlotWidget):
     """ Sublcass of PyQtGraph.PlotWidget to display cycling data.
@@ -149,15 +149,15 @@ class Plot(_PlotWidget):
             If `None`, show all (default behaviour)
     """
     
-    currentPointChanged = Signal(dict)
-    """ **signal**  currentPointChanged(dict `values`)
+    current_point_changed = Signal(dict)
+    """ **signal**  current_point_changed(dict `values`)
         
         Emitted when a point in the plot is hovered over. The dict provides
         the date, speed, distance, calories and time data for the chosen point.
     """
     
-    pointSelected = Signal(object)
-    """ **signal** pointSelected(datetime `currentPoint`)
+    point_selected = Signal(object)
+    """ **signal** point_selected(datetime `currentPoint`)
         
         Emitted when the plot is double clicked, with the date from the
         current point.
@@ -165,17 +165,17 @@ class Plot(_PlotWidget):
     
     def __init__(self, parent, activity, style="dark", months=None, y_series=None):
         
-        self._ySeries = None
+        self._y_series = None
         self.plotItem = None
         self.style = PlotStyle(activity, style)
-        self.setStyle(style)
+        self.set_style(style)
         
         self.dateAxis = CustomDateAxisItem()
         self.plotItem = CustomPlotItem(viewBox=CustomViewBox(), 
                          axisItems={'bottom':self.dateAxis, 'left':CustomAxisItem('left')})
         super().__init__(plotItem=self.plotItem)
         
-        self.dateAxis.axisDoubleClicked.connect(self.setPlotRange)
+        self.dateAxis.axisDoubleClicked.connect(self.set_plot_range)
         
         self.hgltPnt = None
         
@@ -200,12 +200,12 @@ class Plot(_PlotWidget):
         self.plotItem.addItem(self.vLine, ignoreBounds=True)
         self.plotItem.addItem(self.hLine, ignoreBounds=True)
         
-        self.plotItem.scene().sigMouseMoved.connect(self.mouseMoved)
-        self.plotItem.scene().sigMouseClicked.connect(self.plotClicked)
+        self.plotItem.scene().sigMouseMoved.connect(self._mouse_moved)
+        self.plotItem.scene().sigMouseClicked.connect(self._plot_clicked)
         
         # update second view box
-        self.updateViews()
-        self.plotItem.vb.sigResized.connect(self.updateViews)
+        self.update_views()
+        self.plotItem.vb.sigResized.connect(self.update_views)
         
         self._current_point = {}
         
@@ -220,11 +220,11 @@ class Plot(_PlotWidget):
         
         if y_series not in plottable:
             y_series = "time"
-        self.setYSeries(y_series)
-        self.plotTotalDistance()
+        self.set_y_series(y_series)
+        self._plot_total_distance()
         
         if months is not None:
-            self.setXAxisRange(months)
+            self.set_x_axis_range(months)
         
     @property
     def data(self):
@@ -238,7 +238,7 @@ class Plot(_PlotWidget):
         self.vb2.setXLink(self.plotItem)
         
     @property
-    def viewBoxes(self):
+    def view_boxes(self):
         """ Return list of all viexBoxes in the plot. """
         vbx = [self.plotItem.vb]
         if hasattr(self, 'vb2'):
@@ -246,7 +246,7 @@ class Plot(_PlotWidget):
         return vbx
         
     @Slot()
-    def updateViews(self):
+    def update_views(self):
         ## Copied from PyQtGraph MultiplePlotAxes.py example ##
         # view has resized; update auxiliary views to match
         self.vb2.setGeometry(self.plotItem.vb.sceneBoundingRect())
@@ -255,62 +255,62 @@ class Plot(_PlotWidget):
         # (probably this should be handled in ViewBox.resizeEvent)
         self.vb2.linkedViewChanged(self.plotItem.vb, self.vb2.XAxis)
         
-    def getState(self):
+    def get_state(self):
         state = {}
-        state['ySeries'] = self.ySeries
-        for n, vb in enumerate(self.viewBoxes):
+        state['y_series'] = self.y_series
+        for n, vb in enumerate(self.view_boxes):
             key = f"vb{n}State"
             state[key] = vb.getState()
         if self._current_point:
             state['currentPoint'] = self._current_point['index']
         return state
     
-    def setState(self, state):
-        self.ySeries = state['ySeries']
-        for n, vb in enumerate(self.viewBoxes):
+    def set_state(self, state):
+        self.y_series = state['y_series']
+        for n, vb in enumerate(self.view_boxes):
             key = f"vb{n}State"
             vb.setState(state[key])
-        if len(self.viewBoxes) > 1:
-            self.viewBoxes[1].setXLink(self.plotItem)
+        if len(self.view_boxes) > 1:
+            self.view_boxes[1].setXLink(self.plotItem)
         if 'currentPoint' in state:
-            self.setCurrentPoint(state['currentPoint'])
+            self.set_current_point(state['currentPoint'])
         
-    def setStyle(self, style):
+    def set_style(self, style):
         self.style.name = style
         dct = {'foreground':self.style.foreground,
                'background':self.style.background}
         setConfigOptions(**dct)
         if self.plotItem is not None:
             self.plotItem.setButtonPixmaps()
-        if self.ySeries is not None:
+        if self.y_series is not None:
             self.updatePlots()
             
     @Slot()
-    def viewAll(self):
-        # enableAutoRange on both viewBoxes
-        for vb in self.viewBoxes:
+    def view_all(self):
+        # enableAutoRange on both view_boxes
+        for vb in self.view_boxes:
             vb.enableAutoRange()
-        self.updateHighlightPBs()
+        self._update_highlight_PBs()
         
     @Slot()
-    def resetMonthRange(self):
+    def reset_month_range(self):
         if self.viewMonths is not None:
-            self.setXAxisRange(self.viewMonths)
-        self.updateHighlightPBs()
+            self.set_x_axis_range(self.viewMonths)
+        self._update_highlight_PBs()
     
     @Slot(float, float)
-    def setPlotRange(self, x0, x1):
+    def set_plot_range(self, x0, x1):
         """ Set range of both view boxes to cover the points between the two
             given timestamps.   
         """
         # apply to both the current scatter and background plot
         if not hasattr(self, 'dataItem') or not hasattr(self, 'backgroundItem'):
             return None
-        xRange0, xRange1 = self.viewBoxes[0].xRange
+        xRange0, xRange1 = self.view_boxes[0].xRange
         data = [(self.dataItem.scatter.data['x'], self.dataItem.scatter.data['y'], 
-                 self.viewBoxes[0]),
+                 self.view_boxes[0]),
                 (self.backgroundItem.xData, self.backgroundItem.yData, 
-                 self.viewBoxes[1])]
+                 self.view_boxes[1])]
         
         for xPoints, yData, viewBox in data:
             # find x-coords of points in the given month
@@ -326,7 +326,7 @@ class Plot(_PlotWidget):
                 viewBox.setRange(xRange=(x0, x1), yRange=(y0, y1))
                 
     @Slot(object, bool)
-    def setXAxisRange(self, months, fromRecentSession=True):
+    def set_x_axis_range(self, months, fromRecentSession=True):
         """ Scale the plot to show the most recent `months` months. 
         
             If `fromRecentSession` is True (default), the month range is calculated
@@ -351,58 +351,71 @@ class Plot(_PlotWidget):
             days = self.viewMonths * 365 / 12 # number of days to go back
             td = timedelta(days=days)
             ts0 = (datetime.fromtimestamp(ts1) - td).timestamp()
-        self.setPlotRange(ts0, ts1)
+        self.set_plot_range(ts0, ts1)
         
     @Slot()
-    def updatePlots(self):
-        self.plotSeries(self.ySeries, mode='set')
-        self.plotTotalDistance(mode='set')
-        self.resetMonthRange()
+    def update_plots(self):
+        self.plot_series(self.y_series, mode='set')
+        self._plot_total_distance(mode='set')
+        self.reset_month_range()
         self._regenerateCachedPBs = {key:True for key in self._regenerateCachedPBs}
         
     @property
-    def ySeries(self):
-        return self._ySeries
+    def y_series(self):
+        return self._y_series
     
-    @ySeries.setter 
-    def ySeries(self, key):
-        self._ySeries = key
-        self.plotSeries(self.ySeries)
+    @y_series.setter 
+    def y_series(self, key):
+        self._y_series = key
+        self.plot_series(self.y_series)
         
-    def setYSeries(self, key):
-        self.ySeries = key
+    def set_y_series(self, key):
+        self.y_series = key
     
-    def plotSeries(self, key, mode='new'):
-        """ Plot given series on y1 axis. """
+    def plot_series(self, key, mode='new'):
+        """ 
+        Plot given series on y1 axis. 
+        
+        Mode must be 'new' (to add a new series) or 'set' to upadte the data in 
+        an existing series.
+        """
         # get series and set axis tick formatter
-        if key == 'time':
-            series = self.data.time
-            self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
-        else:
-            series = self.data[key]
-            self.plotItem.getAxis('left').tickFormatter = None
+        # if key == 'time':
+        #     # series = self.data.time
+        #     self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
+        # else:
+            
+        #     self.plotItem.getAxis('left').tickFormatter = None
+            
+        series = self.data[key]
+        self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec if key == 'time' else None
+            
         # make style
         styleDict = self.style[key]
-        style = self._makeScatterStyle(**styleDict)
+        style = self._make_scatter_style(**styleDict)
         # make or update plot
-        if mode == 'new':
-            self.dataItem = self.plotItem.scatterPlot(self.data.dateTimestamps, 
-                                                      series, **style)
-            self.plotItem.vb.sigRangeChanged.connect(self.updateHighlightPBs)
-        elif mode == 'set':
-            self.dataItem.setData(self.data.dateTimestamps, series, **style)
+        match mode:
+            case 'new':
+                self.dataItem = self.plotItem.scatterPlot(
+                    self.data.dateTimestamps, series, **style)
+                self.plotItem.vb.sigRangeChanged.connect(self._update_highlight_PBs)
+            case 'set':
+                self.dataItem.setData(self.data.dateTimestamps, series, **style)
+            case _:
+                msg = f"plot_series `mode` must be 'new' or 'set', not '{mode}'"
+                raise ValueError(msg)
         # set axis label
         self.plotItem.setLabel('left', text=self._activity[key].full_name, color=styleDict['colour'])
         # retain plot range when switching series
-        if self.viewBoxes[0].xRange is not None:
-            self.setPlotRange(*self.viewBoxes[0].xRange)
+        if self.view_boxes[0].xRange is not None:
+            self.set_plot_range(*self.view_boxes[0].xRange)
         # if PBs were highlighted, highlight again
-        self.updateHighlightPBs()
+        self._update_highlight_PBs()
         
-    def plotTotalDistance(self, mode='new'):
+    def _plot_total_distance(self, mode='new'):
         """ Plot monthly total distance. """
         colour = self.style['odometer']['colour']
-        style = self._makeFillStyle(colour)
+        style = self._make_fill_style(colour)
         dts, odo = self.data.getMonthlyOdometer()
         dts = [dt.timestamp() for dt in dts]
         if mode == 'new':
@@ -413,14 +426,14 @@ class Plot(_PlotWidget):
         self.plotItem.getAxis('right').setLabel('Total monthly distance', color=colour)
         
     @Slot(str)
-    def switchSeries(self, key):
+    def _switch_series(self, key):
         if key in self._activity.measures and self._activity[key].plottable:
             self.plotItem.removeItem(self.dataItem)
-            self.ySeries = key
+            self.y_series = key
             
     @Slot(object)
-    def plotClicked(self, event):
-        """ If the plot is clicked, emit `pointSelected` signal with 
+    def _plot_clicked(self, event):
+        """ If the plot is clicked, emit `point_selected` signal with 
             `currentPoint` datetime.  
         """
         # get x and y bounds
@@ -434,54 +447,43 @@ class Plot(_PlotWidget):
         if xMin <= pos.x() <= xMax and yMin <= pos.y() <= yMax: # event.double() and 
             idx = self._current_point['index']
             date = self.data.datetimes[idx]
-            self.pointSelected.emit(date)
+            self.point_selected.emit(date)
         
-    @staticmethod
-    def _makeScatterStyle(colour, symbol):
-        """ Make style for series with no line but with symbols. """
-        pen = mkPen(colour)
-        brush = mkBrush(colour)
-        d = {'symbol':symbol, 'symbolPen':pen, 'symbolBrush':brush}
-        return d
-
-    @staticmethod
-    def _makeFillStyle(colour):
-        """ Make style for PlotCurveItem with fill underneath. """
-        pen = mkPen(colour)
-        brush = mkBrush(colour)
-        d = {'pen':pen, 'brush':brush, 'fillLevel':0}
-        return d
-    
-    def setCurrentPoint(self, idx):
+    def set_current_point(self, idx):
         """ Set the `current_point` dict from index `idx` in the `data` DataFrame
-            and emit `currentPointChanged` signal.
+            and emit `current_point_changed` signal.
         """
         self._current_point['index'] = idx
         for name in self._activity.measures.keys():
             self._current_point[name] = getattr(self.data, name)[idx]
-        self.currentPointChanged.emit(self._current_point)
+        self.current_point_changed.emit(self._current_point)
         
     @Slot(object)
-    def setCurrentPointFromDate(self, date):
+    def set_current_point_from_date(self, date):
         """ Find point at the given date and highlight it. """
         dt = datetime(date.year, date.month, date.day)
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
-        self.ensurePointVisible(pt)
-        self._highlightPoint(pt)
-        self.setCurrentPoint(idx)
+        self._ensure_point_visible(pt)
+        self._highlight_point(pt)
+        self.set_current_point(idx)
         
-    def ensurePointVisible(self, pt):
+    def set_current_point_from_timestamp(self, ts):
+        # given timestamp in seconds, find nearest date and speed
+        idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
+        self.set_current_point(idx)
+        
+    def _ensure_point_visible(self, pt):
         ts = pt.pos().x()
-        x0, x1 = self.viewBoxes[0].xRange
+        x0, x1 = self.view_boxes[0].xRange
         if ts < x0:
             x0 = ts - 1e6
         elif ts > x1:
             x1 = ts + 1e6
-        self.setPlotRange(x0, x1)
+        self.set_plot_range(x0, x1)
         
     @Slot(object)
-    def _highlightPoint(self, point=None):
+    def _highlight_point(self, point=None):
         """ Change pen and brush of given point (and reset any previously 
             highlighted points). 
         """
@@ -512,14 +514,14 @@ class Plot(_PlotWidget):
         self.hgltPnt.setBrush(brush)
         
     @Slot(bool)
-    def _highlightPBs(self, show):
+    def _highlight_PBs(self, show):
         """ Highlight points that are, or were, PBs. """
         if show:
             self._showPBs = True
-            if self._regenerateCachedPBs[self.ySeries] or len(self.hgltPBs[self.ySeries]) == 0:
-                self.hgltPBs[self.ySeries] = self._getPBs()
-                self._regenerateCachedPBs[self.ySeries] = False
-            for idx in self.hgltPBs[self.ySeries]:
+            if self._regenerateCachedPBs[self.y_series] or len(self.hgltPBs[self.y_series]) == 0:
+                self.hgltPBs[self.y_series] = self._get_PBs()
+                self._regenerateCachedPBs[self.y_series] = False
+            for idx in self.hgltPBs[self.y_series]:
                 pt = self.dataItem.scatter.points()[idx]
                 colour = self.style['highlightPoint']['colour']
                 pen = mkPen(colour)
@@ -528,44 +530,39 @@ class Plot(_PlotWidget):
                 pt.setBrush(brush)
         else:
             self._showPBs = False
-            for idx in self.hgltPBs[self.ySeries]:
+            for idx in self.hgltPBs[self.y_series]:
                 pt = self.dataItem.scatter.points()[idx]
                 pt.resetPen()
                 pt.resetBrush()
                 
-    def updateHighlightPBs(self):
+    def _update_highlight_PBs(self):
         if self._showPBs:
-            self._highlightPBs(self._showPBs)
+            self._highlight_PBs(self._showPBs)
         
-    def _getPBs(self):
+    def _get_PBs(self):
         """ Return array of points that represent(ed) a PB in the current series. """
         num = self.parent.settings.value("pb/numSessions", cast=int)
-        return self.data.getPBs(self.ySeries, num)
+        return self.data.getPBs(self.y_series, num)
         
     @Slot(object)
-    def mouseMoved(self, pos):
+    def _mouse_moved(self, pos):
         if not self.data.df.empty and self.plotItem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotItem.vb.mapSceneToView(pos)
             
             idx = int(mousePoint.x())
             if idx > min(self.data.dateTimestamps) and idx < max(self.data.dateTimestamps):
-                self._setCurrentPointFromTimestamp(idx)
-                pts = self.scatterPointsAtX(mousePoint, self.dataItem.scatter)
+                self.set_current_point_from_timestamp(idx)
+                pts = self._scatter_points_at_x(mousePoint, self.dataItem.scatter)
                 if len(pts) != 0:
                     # could be multiple points at same x, so get closest point to mouse by y value
                     yVals = np.array([pt.pos().y() for pt in pts])
                     idx = (np.abs(yVals - mousePoint.y())).argmin()
-                    self._highlightPoint(pts[idx])
+                    self._highlight_point(pts[idx])
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
             
-    def _setCurrentPointFromTimestamp(self, ts):
-        # given timestamp in seconds, find nearest date and speed
-        idx = (np.abs(self.data.dateTimestamps - ts)).argmin()
-        self.setCurrentPoint(idx)
-        
     @staticmethod
-    def scatterPointsAtX(pos, scatter):
+    def _scatter_points_at_x(pos, scatter):
         """ Return a list of points on `scatter` under the x-coordinate of the 
             given position `pos`, ignoring the y-coord.
         """
@@ -584,3 +581,19 @@ class Plot(_PlotWidget):
             if x > sx-s2x and x < sx+s2x:
                 pts.append(s)
         return pts[::-1]
+    
+    @staticmethod
+    def _make_scatter_style(colour, symbol):
+        """ Make style for series with no line but with symbols. """
+        pen = mkPen(colour)
+        brush = mkBrush(colour)
+        d = {'symbol':symbol, 'symbolPen':pen, 'symbolBrush':brush}
+        return d
+
+    @staticmethod
+    def _make_fill_style(colour):
+        """ Make style for PlotCurveItem with fill underneath. """
+        pen = mkPen(colour)
+        brush = mkBrush(colour)
+        d = {'pen':pen, 'brush':brush, 'fillLevel':0}
+        return d

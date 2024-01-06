@@ -33,18 +33,23 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, other):
         item0 = self.text(self.sortColumn)
         item1 = other.text(self.sortColumn)
-        if isFloat(item0) and isFloat(item1):
-            return float(item0) < float(item1)
-        elif checkMonthYearFloat(item0) and checkMonthYearFloat(item1):
-            value0 = monthYearToFloat(item0)
-            value1 = monthYearToFloat(item1)
-            return value0 < value1
-        elif checkHourMinSecFloat(item0) and checkHourMinSecFloat(item1):
-            value0 = hourMinSecToFloat(item0)
-            value1 = hourMinSecToFloat(item1)
-            return value0 < value1
+        
+        cast = self._get_item_cast(item0, item1)
+        if cast is not None:
+            return cast(item0) < cast(item1)
         else:
             return item0 < item1
+                
+    @staticmethod
+    def _get_item_cast(item0, item1):
+        if isFloat(item0) and isFloat(item1):
+            return float
+        elif checkMonthYearFloat(item0) and checkMonthYearFloat(item1):
+            return monthYearToFloat
+        elif checkHourMinSecFloat(item0) and checkHourMinSecFloat(item1):
+            return hourMinSecToFloat
+        else:
+            return None
         
     @property 
     def sortColumn(self):

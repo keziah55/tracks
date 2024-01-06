@@ -315,9 +315,9 @@ class PlotPreferences(QWidget):
         self.mainWindow = mainWindow
         
         plotStyleGroup = GroupBox("Plot style")
-        styles = self.mainWindow.plot.getValidStyles()
-        self.customStyle = StyleDesigner(styleKeys=self.mainWindow.plot.getStyleKeys(),
-                                         symbolKeys=self.mainWindow.plot.getStyleSymbolKeys(),
+        styles = self.mainWindow.plot.get_valid_styles()
+        self.customStyle = StyleDesigner(styleKeys=self.mainWindow.plot.get_style_keys(),
+                                         symbolKeys=self.mainWindow.plot.get_style_symbol_keys(),
                                          invalidNames=styles)
         self.customStyle.setEnabled(False)
         self.customStyle.saveStyle.connect(self._saveStyle)
@@ -402,7 +402,7 @@ class PlotPreferences(QWidget):
         self._enableDisableDeleteButton(plotStyle)
     
         # self.customStyle.setName(plotStyle)
-        self.customStyle.setStyle(self.mainWindow.plot.getStyle(plotStyle), 
+        self.customStyle.setStyle(self.mainWindow.plot.get_style(plotStyle), 
                                   name=plotStyle, setAsPrevious=True)
         
         self._setMonthRange()
@@ -435,7 +435,7 @@ class PlotPreferences(QWidget):
             self.plotRangeCombo.setCurrentIndex(idx)
         
     def _saveStyle(self, name, style, setStyle=True):
-        self.mainWindow.plot.addCustomStyle(name.lower(), style, setStyle=setStyle)
+        self.mainWindow.plot.add_custom_style(name.lower(), style, set_style=setStyle)
         if name.capitalize() not in self.plotStyleList.items:
             idx = self.plotStyleList.count()-1
             self.plotStyleList.insertItem(idx, name.capitalize())
@@ -460,7 +460,7 @@ class PlotPreferences(QWidget):
             self._saveStyle(styleName, styleDct, setStyle=True)
         else:
             styleName = self.plotStyleList.currentText().lower()
-            self.mainWindow.plot.setStyle(styleName)
+            self.mainWindow.plot.set_style(styleName)
         
         customRange = self.customRangeCheckBox.isChecked()
         if customRange:
@@ -468,7 +468,7 @@ class PlotPreferences(QWidget):
         else:
             text = self.plotRangeCombo.currentText()
             months = self.mainWindow.parse_month_range(text)
-        self.mainWindow.plot.setXAxisRange(months)
+        self.mainWindow.plot.set_x_axis_range(months)
         
         self.settings.beginGroup("plot")
         self.settings.setValue("style", styleName)
@@ -506,13 +506,13 @@ class PlotPreferences(QWidget):
             self.customStyle.setName(name)
         else:
             name = name.lower()
-            style = self.mainWindow.plot.getStyle(name)
+            style = self.mainWindow.plot.get_style(name)
             self.customStyle.setStyle(style, name=name)
             self.customStyle.setEnabled(False)
             self._enableDisableDeleteButton(name)
                 
     def _enableDisableDeleteButton(self, plotStyle):
-        if plotStyle in self.mainWindow.plot.getDefaultStyles():
+        if plotStyle in self.mainWindow.plot.get_default_styles():
             self.deletePlotStyleButton.setEnabled(False)
             self.deletePlotStyleButton.setToolTip("Cannot delete default theme")
         else:
@@ -524,4 +524,4 @@ class PlotPreferences(QWidget):
         items = [self.plotStyleList.itemText(idx) for idx in range(self.plotStyleList.count())]
         idx = items.index(styleName)
         self.plotStyleList.removeItem(idx)
-        self.mainWindow.plot.removeCustomStyle(styleName.lower())
+        self.mainWindow.plot.remove_custom_style(styleName.lower())
