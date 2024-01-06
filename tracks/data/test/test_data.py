@@ -66,7 +66,8 @@ class TestData:
         
         for name in names:
             measure = self.activity[name]
-            assert measure.formatted(tmp_df.iloc[0][name]) == measure.formatted(expected[name])
+            assert measure.formatted(tmp_df.iloc[0][name]) == measure.formatted(expected[name]), \
+                f"failed formatting '{name}' on measure '{measure}'\nActual value={tmp_df.iloc[0][name]}\nExpected value={expected[name]}"
              
     def test_monthly_odometer(self, setup):
         

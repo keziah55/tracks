@@ -1,9 +1,9 @@
 from .test_tracks import TracksSetupTeardown
-from tracks.util import hourMinSecToFloat, floatToHourMinSec, parseDuration
 import pytest
 import random
 from pathlib import Path
 import re
+from pprint import pformat
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
@@ -140,14 +140,14 @@ class TestPreferences(TracksSetupTeardown):
         
         assert plotPref.plotStyleList.currentText() == "Dark2"
         
-        assert "dark2" in plotPref.mainWindow.plot.getValidStyles()
+        assert "dark2" in plotPref.mainWindow.plot.get_valid_styles()
         
         with qtbot.waitSignal(plotPref.deletePlotStyleButton.clicked):
             qtbot.mouseClick(plotPref.deletePlotStyleButton, Qt.LeftButton)
             
         assert plotPref.plotStyleList.currentText() != "Dark2"
-        assert "dark2" not in plotPref.mainWindow.plot.getValidStyles()
-        assert ["dark", "light"] == plotPref.mainWindow.plot.getValidStyles()
+        assert "dark2" not in plotPref.mainWindow.plot.get_valid_styles()
+        assert ["dark", "light"] == plotPref.mainWindow.plot.get_valid_styles()
         
     def test_num_pb_sessions(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
@@ -231,7 +231,8 @@ class TestPreferences(TracksSetupTeardown):
             values.sort(key=lambda item: item[1], reverse=True)
             best = values[0]
             
-            assert self.app.pb.bestMonth.monthYear == best[0]
+            assert self.app.pb.bestMonth.monthYear == best[0], \
+                f"Failed on measure {column}; Best values:\n{pformat(values)}"
             
     def test_set_summary_criteria(self, setupKnownData, qtbot, variables):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
