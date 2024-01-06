@@ -55,14 +55,14 @@ class DataPreferences(QWidget):
         
         summaryCriteriaGroup = GroupBox("Summary criteria", layout="grid")
         
-        names = [m.name 
+        names = [(m.slug, m.name) 
                  for m in self.mainWindow.current_activity.measures.values() 
                  if m.summary is not None]
         self.summaryComboBoxes = {}
-        for row, name in enumerate(names):
+        for row, (slug, name) in enumerate(names):
             summaryCriteriaGroup.addWidget(QLabel(name), row, 0)
             box = FuncComboBox()
-            self.summaryComboBoxes[name] = box
+            self.summaryComboBoxes[slug] = box
             summaryCriteriaGroup.addWidget(box, row, 1)
         
         mainLayout = QVBoxLayout()
