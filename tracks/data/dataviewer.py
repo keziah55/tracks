@@ -415,24 +415,41 @@ class DataViewer(QTreeWidget):
         """
         s = ""
         if len(self.selectedItems()) == 1 and (item:=self.selectedItems()[0]) in self.topLevelItems:
-            s = self._summariseMonth(item)
+            s = self._summarise_month(item)
+        elif all([item in self.topLevelItems for item in self.selectedItems()]):
+            s = self._summarise_months(self.selectedItems())
         elif len((idx:=[item.index for item in self.selectedItems() if item not in self.topLevelItems])) > 1:
             df = self.data.df.loc[idx]
             data = Data(df, activity=self._activity)
-            s = self._summariseData(data)
-        self.selectedSummary.emit(s)
+            s = self._summarise_data(data)
+        if s:
+            self.selectedSummary.emit(s)
         
-    def _summariseMonth(self, item):
+    def _summarise_month(self, item):
         """ Summarise month given by `item` """
         if item not in self.topLevelItems:
-            return
+            raise ValueError("_summarise_month can only summarise top-level tree items")
         months = self.data.splitMonths(returnType='Data')
         month, *_ = [data for monthyear, data in months if monthyear==item.text(0)]
-        return self._summariseData(month)
+        return self._summarise_data(month)
             
-    def _summariseData(self, data):
+    def _summarise_data(self, data):
         """ Return string of summarised `data`, where `data` is a :class:`Data` object """
         summary = list(data.make_summary().values())
         s = f"{len(data)} sessions: "
         s += "; ".join(summary)
+        return s
+    
+    def _summarise_months(self, items):
+        """ Return summary string from list of top-level items """
+        if any([item not in self.topLevelItems for item in items]):
+            raise ValueError("_summarise_months can only summarise top-level tree items")
+        selected_months = [item.text(0) for item in items]
+        months = self.data.splitMonths(returnType='Data')
+        months = map(lambda tup: tup.data, filter(lambda tup: tup.month_year in selected_months, months))
+        
+        concat_data = Data.concat(months , self._activity)
+        
+        s = f"{len(selected_months)} months; "
+        s += self._summarise_data(concat_data)
         return s

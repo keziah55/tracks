@@ -5,6 +5,7 @@ Object providing convenient access to the contents of a DataFrame.
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
+from collections import namedtuple
 from datetime import datetime
 import calendar
 import numpy as np
@@ -19,6 +20,8 @@ def check_empty(func):
         else:
             return func(self, *args, **kwargs)
     return wrapped
+
+MonthData = namedtuple("MonthData", ["month_year", "data"])
 
 class Data(QObject):
     
@@ -54,6 +57,17 @@ class Data(QObject):
             
         self._activity = activity
         
+    @staticmethod
+    def concat(datas, activity):
+        try:
+            dfs = [data.df for data in datas]
+        except:
+            raise TypeError("All values supplied to `Data.concat` must be Data objects")
+        else:
+            tmp_df = pd.concat(dfs, ignore_index=True)
+            new_data = Data(tmp_df, activity)
+            return new_data
+    
     def formatted(self, key):
         measure = self._activity[key]
         return [measure.formatted(v) for v in self.df[key]]
@@ -69,10 +83,11 @@ class Data(QObject):
         return s
     
     def make_summary(self) -> dict:
-        # TODO TG-122
-        summaries = {self._activity.get_measure(name).slug: self.summaryString(self._activity.get_measure(name).slug) 
-                     for name in self._activity.header 
-                     if self._activity.get_measure(name).summary is not None}
+        summaries = {
+            slug: self.summaryString(slug) 
+            for slug, measure in self._activity.measures.items()
+            if measure.summary is not None
+        }
         return summaries
         
     def __len__(self):
@@ -304,7 +319,7 @@ class Data(QObject):
             monthYear = f"{calendar.month_name[month]} {year}"
             if returnType == "Data":
                 df = Data(df, activity=self._activity)
-            lst.append((monthYear, df))
+            lst.append(MonthData(monthYear, df))
         return lst
     
     def getMonthlyOdometer(self):
