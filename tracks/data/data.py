@@ -5,6 +5,7 @@ Object providing convenient access to the contents of a DataFrame.
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
+from collections import namedtuple
 from datetime import datetime
 import calendar
 import numpy as np
@@ -19,6 +20,8 @@ def check_empty(func):
         else:
             return func(self, *args, **kwargs)
     return wrapped
+
+MonthData = namedtuple("MonthData", ["month_year", "data"])
 
 class Data(QObject):
     
@@ -339,7 +342,7 @@ class Data(QObject):
             monthYear = f"{calendar.month_name[month]} {year}"
             if returnType == "Data":
                 df = Data(df, activity=self._activity)
-            lst.append((monthYear, df))
+            lst.append(MonthData(monthYear, df))
         return lst
     
     def getMonthlyOdometer(self):
