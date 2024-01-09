@@ -64,6 +64,8 @@ class Data(QObject):
         except:
             raise TypeError("All values supplied to `Data.concat` must be Data objects")
         else:
+            if len(dfs) == 0:
+                raise ValueError("Cannot concat empty sequence")
             tmp_df = pd.concat(dfs, ignore_index=True)
             new_data = Data(tmp_df, activity)
             return new_data

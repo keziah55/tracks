@@ -413,6 +413,8 @@ class DataViewer(QTreeWidget):
         If a top level item is selected, summarise it. Otherwise, summarise
         multiple selected items.
         """
+        if len(self.selectedItems()) == 0:
+            return
         s = ""
         if len(self.selectedItems()) == 1 and (item:=self.selectedItems()[0]) in self.topLevelItems:
             s = self._summarise_month(item)
@@ -446,9 +448,10 @@ class DataViewer(QTreeWidget):
             raise ValueError("_summarise_months can only summarise top-level tree items")
         selected_months = [item.text(0) for item in items]
         months = self.data.splitMonths(returnType='Data')
+        
         months = map(lambda tup: tup.data, filter(lambda tup: tup.month_year in selected_months, months))
         
-        concat_data = Data.concat(months , self._activity)
+        concat_data = Data.concat(months, self._activity)
         
         s = f"{len(selected_months)} months; "
         s += self._summarise_data(concat_data)
