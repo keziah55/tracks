@@ -66,6 +66,17 @@ class Data(QObject):
         
         # self.propertyNames['Time (hours)'] = 'timeHours'
         
+    @staticmethod
+    def concat(datas, activity):
+        try:
+            dfs = [data.df for data in datas]
+        except:
+            raise TypeError("All values supplied to `Data.concat` must be Data objects")
+        else:
+            tmp_df = pd.concat(dfs, ignore_index=True)
+            new_data = Data(tmp_df, activity)
+            return new_data
+    
     def formatted(self, key):
         measure = self._activity[key]
         return [measure.formatted(v) for v in self.df[key]]
@@ -87,10 +98,11 @@ class Data(QObject):
         return s
     
     def make_summary(self) -> dict:
-        # TODO TG-122
-        summaries = {self._activity.get_measure(name).slug: self.summaryString(self._activity.get_measure(name).slug) 
-                     for name in self._activity.header 
-                     if self._activity.get_measure(name).summary is not None}
+        summaries = {
+            slug: self.summaryString(slug) 
+            for slug, measure in self._activity.measures.items()
+            if measure.summary is not None
+        }
         return summaries
         
     def __len__(self):

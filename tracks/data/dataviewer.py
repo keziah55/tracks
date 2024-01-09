@@ -9,6 +9,8 @@ from qtpy.QtCore import Signal, Slot
 from qtpy.QtGui import QKeySequence
 import calendar
 from dataclasses import dataclass
+from functools import reduce
+import numpy as np
 from .edititemdialog import EditItemDialog
 from tracks.util import(checkHourMinSecFloat, checkMonthYearFloat, isFloat, 
                         hourMinSecToFloat, monthYearToFloat)
@@ -442,12 +444,47 @@ class DataViewer(QTreeWidget):
         selected_months = [item.text(0) for item in items]
         months = self.data.splitMonths(returnType='Data')
         months = map(lambda tup: tup.data, filter(lambda tup: tup.month_year in selected_months, months))
-        num_sessions = 0
-        for data in months:
-            num_sessions += len(data)
-            summary = list(data.make_summary().values())
-            print(summary)
-            
-        s = f"{len(selected_months)} months; {num_sessions} sessions"
+        
+        # num_sessions = sum([len(data) for data in months])
+        
+        concat_data = Data.concat(months , self._activity)
+        num_sessions = len(concat_data)
+        
+        s = f"{len(selected_months)} months; {num_sessions} sessions: "
+        summary = list(concat_data.make_summary().values())
+        s += "; ".join(summary)
         return s
+        
+        # num_sessions = 0
+        # totals = None
+        # for data in months:
+        #     num_sessions += len(data)
+            
+        #     summaries = [
+        #         measure.summary(data[slug])
+        #         for slug, measure in data._activity.measures.items()
+        #         if measure.summary is not None
+        #     ]
+        #     summaries = np.array(summaries)
+        #     if totals is None:
+        #         totals = summaries
+        #     else:
+        #         totals += summaries
+        #     # print(summaries)
+            
+        #     # summary = list(data.make_summary().values())
+        #     # print(summary)
+        #     # print()
+            
+        # s = f"{len(selected_months)} months; {num_sessions} sessions: "
+        # print(totals)
+        # measures = self._activity.filter_measures("summary", lambda s: s is not None)
+        # print(measures)
+        # funcs = [measure.summarised for measure in measures.values()]
+        
+        # summary = [reduce(lambda x, f: f([x]), funcs, total) for total in totals]
+        
+        # # summary = [measure.summarised(total) self._activity.]
+        # s += "; ".join(summary)
+        # return s
         
