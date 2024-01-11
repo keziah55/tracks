@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
+Object to manage loading activities and their related widgets etc.
 """
 
 from collections import namedtuple
@@ -9,24 +9,27 @@ import json
 from pathlib import Path
 import pandas as pd
 from .activities import Activity
-from .plot import PlotWidget
-from .data import Data, DataViewer, PersonalBests
+from tracks.plot import PlotWidget
+from tracks.data import Data, DataViewer, PersonalBests, AddData
 from tracks.util import parse_month_range
+from customQObjects.core import Settings
+
 
 ActivityObjects = namedtuple(
     "ActivityObjects", 
-    ["activity", "data", "data_viewer", "personal_bests", "plot"]
+    ["activity", "data", "data_viewer", "add_data", "personal_bests", "plot"]
 )
 
 class ActivityManager:
     
     csv_sep = ","
     
-    def __init__(self, p: Path):
+    def __init__(self, p: Path, settings: Settings):
         
         if not p.exists():
             raise FileNotFoundError(f"ActivityManager directory '{p}' does not exist")
         self._data_path = p
+        self._settings = settings
         self._activities = {}
         self._current_activity = None
         
@@ -34,7 +37,7 @@ class ActivityManager:
     def current_activity(self):
         return self._current_activity
     
-    def load_activity(self, name, settings):
+    def load_activity(self, name):
         """ Load activity `name` and set as `current_activity` """
         
         p = self._data_path.joinpath(f"{name}.json")
@@ -50,24 +53,25 @@ class ActivityManager:
         for measure in activity_json['measures'].values():
             activity.add_measure(**measure)
             
-        activity_objects = self._initialise_activity(activity, settings)
+        activity_objects = self._initialise_activity(activity)
         self._activities[name] = activity_objects
-        self._current_activity = name
+        self._current_activity = activity_objects.activity
         
-        self._save_activity(name)
+        self.save_activity(name)
             
         return activity_objects
     
-    def _initialise_activity(self, activity, settings) -> ActivityObjects:
+    def _initialise_activity(self, activity) -> ActivityObjects:
         """ Initialise objects for the given activity and return in named tuple """
         
         df = self._load_actvity_df(activity)
         data = Data(df, activity)
-        # TODO save
+
+        add_data = AddData(activity)
         
-        numTopSessions = settings.value("pb/numSessions", 5, int)
-        monthCriterion = settings.value("pb/bestMonthCriterion", "distance")
-        sessionsKey = settings.value("pb/sessionsKey", "speed")
+        numTopSessions = self._settings.value("pb/numSessions", 5, int)
+        monthCriterion = self._settings.value("pb/bestMonthCriterion", "distance")
+        sessionsKey = self._settings.value("pb/sessionsKey", "speed")
         pb = PersonalBests(
             data, 
             activity,
@@ -77,9 +81,9 @@ class ActivityManager:
         
         viewer = DataViewer(data, activity)
         
-        plot_style = settings.value("plot/style", "dark")
-        month_range = parse_month_range(settings.value("plot/range", "All"))
-        y_series = settings.value("plot/current_series", "time")
+        plot_style = self._settings.value("plot/style", "dark")
+        month_range = parse_month_range(self._settings.value("plot/range", "All"))
+        y_series = self._settings.value("plot/current_series", "time")
         plot = PlotWidget(
             data, 
             activity,
@@ -87,7 +91,7 @@ class ActivityManager:
             months=month_range,
             y_series=y_series)
         
-        objects = ActivityObjects(activity, data, viewer, pb, plot)
+        objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
         return objects
     
     def list_activities(self):
@@ -120,22 +124,22 @@ class ActivityManager:
     def save_activity(self, activity_name:str=None):
         """ Save activity data to csv and backup """
         if activity_name is None:
-            activity_name = self.current_activity
+            activity_name = self.current_activity.name
             
         activity = self._activities[activity_name]
-        filepath = self._activity_csv_file(activity)
+        filepath = self._activity_csv_file(activity.activity)
         
-        activity.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
-        self._backup_activity(activity_name)
+        activity.data.df.to_csv(filepath, sep=self.csv_sep, index=False)
+        self.backup_activity(activity_name)
         
     def backup_activity(self, activity_name:str=None):
         """ Backup activity csv file """
         if activity_name is None:
-            activity_name = self.current_activity
+            activity_name = self.current_activity.name
             
         activity = self._activities[activity_name]
-        filepath = self._activity_csv_file(activity)
+        filepath = self._activity_csv_file(activity.activity)
         
         bak = filepath.with_suffix('.bak')
         
-        activity.data.data.df.to_csv(bak, sep=self.csv_sep, index=False)
+        activity.data.df.to_csv(bak, sep=self.csv_sep, index=False)

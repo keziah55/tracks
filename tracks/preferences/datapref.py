@@ -5,6 +5,7 @@ Preferences for personal bests and data viewer.
 from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget, QCheckBox
 from customQObjects.widgets import GroupBox
 from customQObjects.core import Settings
+from tracks.util import parse_month_range
 
 class FuncComboBox(QComboBox):
     def __init__(self, *args, default=None, **kwargs):
@@ -120,7 +121,7 @@ class DataPreferences(QWidget):
             bestMonthPB = None
             
         months = self.pbRangeCombo.currentText()
-        months = self.mainWindow.parse_month_range(months)
+        months = parse_month_range(months)
             
         self.mainWindow.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
         

@@ -5,16 +5,11 @@ Main window for Tracks.
 """
 
 from pathlib import Path
-from datetime import datetime, date
-from qtpy.QtWidgets import (QMainWindow, QDockWidget, QAction, QSizePolicy, 
-                             QMessageBox, QLabel)
-from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
+from datetime import datetime
+from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QIcon
-import pandas as pd
-from pandas._testing import assert_frame_equal
-from .activities import ActivityManager, load_activity, get_activity_csv, load_actvity_df, Activity
-from .plot import PlotWidget
-from .data import Data, DataViewer, AddData, PersonalBests
+from .activities import ActivityManager
 from .preferences import PreferencesDialog
 from .util import intToStr
 from . import get_data_path
@@ -43,36 +38,12 @@ class Tracks(QMainWindow):
         self.viewer = activity_objects.data_viewer
         self.pb = activity_objects.personal_bests
         self.plot = activity_objects.plot
-        
-        # act = self._activity_manager.load_activity(activity)
-        # df = self._activity_manager.load_actvity_df(act)
-        
-        # self.data = Data(df, act)
-        # self.save()
-        
+        self.addData = activity_objects.add_data
+
+        # TODO handle this
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
-        # sessionsKey = self.settings.value("pb/sessionsKey", "speed")
-        # self.pb = PersonalBests(
-        #     self, 
-        #     act,
-        #     numSessions=numTopSessions, 
-        #     monthCriterion=monthCriterion,
-        #     sessionsKey=sessionsKey)
-        
-        # self.viewer = DataViewer(self, act)
-        
-        # self.addData = AddData(act)
-        
-        # plot_style = self.settings.value("plot/style", "dark")
-        # month_range = self.parse_month_range(self.settings.value("plot/range", "All"))
-        # y_series = self.settings.value("plot/current_series", "time")
-        # self.plot = PlotWidget(
-        #     self, 
-        #     act,
-        #     style=plot_style, 
-        #     months=month_range,
-        #     y_series=y_series)
+
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -89,12 +60,12 @@ class Tracks(QMainWindow):
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
         self.pb.statusMessage.connect(self.statusBar().showMessage)
         
-        self.fileChangedTimer = QTimer()
-        self.fileChangedTimer.setInterval(100)
-        self.fileChangedTimer.setSingleShot(True)
-        self.fileChangedTimer.timeout.connect(self.csvFileChanged)
-        self.fileWatcher = QFileSystemWatcher([str(self.current_activity.csv_file)])
-        self.fileWatcher.fileChanged.connect(self.startTimer)
+        # self.fileChangedTimer = QTimer()
+        # self.fileChangedTimer.setInterval(100)
+        # self.fileChangedTimer.setSingleShot(True)
+        # self.fileChangedTimer.timeout.connect(self.csvFileChanged)
+        # self.fileWatcher = QFileSystemWatcher([str(self.current_activity.csv_file)])
+        # self.fileWatcher.fileChanged.connect(self.startTimer)
         
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
                         f"Best month ({monthCriterion})", "PB month"),
@@ -126,7 +97,7 @@ class Tracks(QMainWindow):
         
     @property
     def current_activity(self):
-        self._activity_manager.current_activity
+        return self._activity_manager.current_activity
     
     @Slot()
     def save(self, activity=None):
@@ -156,21 +127,21 @@ class Tracks(QMainWindow):
         self._fileChanged = file
         self.fileChangedTimer.start()
         
-    @Slot()
-    def csvFileChanged(self):
-        df = pd.read_csv(self._fileChanged, sep=self._csv_sep, parse_dates=['Date'])
-        try: 
-            assert_frame_equal(self.data.df, df, check_exact=False)
-        except AssertionError:
-            msg = "Tracks csv file changed on disk. Do you want to reload?"
-            btn = QMessageBox.question(self, "File changed on disk", msg)
-            if btn == QMessageBox.Yes:
-                self.loadCsvFile()
+    # @Slot()
+    # def csvFileChanged(self):
+    #     df = pd.read_csv(self._fileChanged, sep=self._csv_sep, parse_dates=['Date'])
+    #     try: 
+    #         assert_frame_equal(self.data.df, df, check_exact=False)
+    #     except AssertionError:
+    #         msg = "Tracks csv file changed on disk. Do you want to reload?"
+    #         btn = QMessageBox.question(self, "File changed on disk", msg)
+    #         if btn == QMessageBox.Yes:
+    #             self.loadCsvFile()
             
-    def loadCsvFile(self):
-        df = pd.read_csv(self.file, sep=self._csv_sep, parse_dates=['Date'])
-        self.backup()
-        self.data.setDataFrame(df)
+    # def loadCsvFile(self):
+    #     df = pd.read_csv(self.file, sep=self._csv_sep, parse_dates=['Date'])
+    #     self.backup()
+    #     self.data.setDataFrame(df)
         
     @Slot(object)
     def _dataChanged(self, idx):
