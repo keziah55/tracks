@@ -18,8 +18,6 @@ from customQObjects.core import Settings
 
 class Tracks(QMainWindow):
     
-    _csv_sep = ","
-    
     def __init__(self):
         super().__init__()
         
@@ -60,13 +58,6 @@ class Tracks(QMainWindow):
         self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
         self.pb.statusMessage.connect(self.statusBar().showMessage)
         
-        # self.fileChangedTimer = QTimer()
-        # self.fileChangedTimer.setInterval(100)
-        # self.fileChangedTimer.setSingleShot(True)
-        # self.fileChangedTimer.timeout.connect(self.csvFileChanged)
-        # self.fileWatcher = QFileSystemWatcher([str(self.current_activity.csv_file)])
-        # self.fileWatcher.fileChanged.connect(self.startTimer)
-        
         dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
                         f"Best month ({monthCriterion})", "PB month"),
                        (self.pb.bestSessions, Qt.LeftDockWidgetArea, 
@@ -101,12 +92,6 @@ class Tracks(QMainWindow):
     
     @Slot()
     def save(self, activity=None):
-        # if activity is None:
-        #     activity = self.current_activity
-        # filepath = get_activity_csv(activity)
-        
-        # self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
-        # self.backup()
         self._activity_manager.save_activity(activity)
         save_time = datetime.now().strftime("%H:%M:%S")
         self.statusBar().showMessage(f"Last saved at {save_time}")
@@ -114,34 +99,11 @@ class Tracks(QMainWindow):
     @Slot()
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
-        # if activity is None:
-        #     activity = self.current_activity
-        # p = get_data_path()
-        # filepath = p.joinpath(activity.csv_file)
-        
-        # bak = filepath.with_suffix('.bak')
-        # self.data.df.to_csv(bak, sep=self._csv_sep, index=False)
         
     @Slot(str)
     def startTimer(self, file):
         self._fileChanged = file
         self.fileChangedTimer.start()
-        
-    # @Slot()
-    # def csvFileChanged(self):
-    #     df = pd.read_csv(self._fileChanged, sep=self._csv_sep, parse_dates=['Date'])
-    #     try: 
-    #         assert_frame_equal(self.data.df, df, check_exact=False)
-    #     except AssertionError:
-    #         msg = "Tracks csv file changed on disk. Do you want to reload?"
-    #         btn = QMessageBox.question(self, "File changed on disk", msg)
-    #         if btn == QMessageBox.Yes:
-    #             self.loadCsvFile()
-            
-    # def loadCsvFile(self):
-    #     df = pd.read_csv(self.file, sep=self._csv_sep, parse_dates=['Date'])
-    #     self.backup()
-    #     self.data.setDataFrame(df)
         
     @Slot(object)
     def _dataChanged(self, idx):
