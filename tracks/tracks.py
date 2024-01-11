@@ -49,24 +49,42 @@ class Tracks(QMainWindow):
         self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         self.addData.newData.connect(self.data.append)
-        self.data.dataChanged.connect(self._dataChanged)
+        self.data.dataChanged.connect(self._data_changed)
         self.plot.point_selected.connect(self.viewer.highlightItem)
         self.viewer.itemSelected.connect(self.plot.set_current_point_from_date)
         self.viewer.selectedSummary.connect(self.statusBar().showMessage)
         self.pb.itemSelected.connect(self.plot.set_current_point_from_date)
-        self.pb.numSessionsChanged.connect(self.setPbSessionsDockLabel)
-        self.pb.monthCriterionChanged.connect(self.setPbMonthDockLabel)
+        self.pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+        self.pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
         self.pb.statusMessage.connect(self.statusBar().showMessage)
         
-        dockWidgets = [(self.pb.bestMonth, Qt.LeftDockWidgetArea, 
-                        f"Best month ({monthCriterion})", "PB month"),
-                       (self.pb.bestSessions, Qt.LeftDockWidgetArea, 
-                        f"Top {intToStr(numTopSessions)} sessions", "PB sessions"),
-                       (self.viewer, Qt.LeftDockWidgetArea, "Monthly data"),
-                       (self.addData, Qt.LeftDockWidgetArea, "Add data")]
+        dockWidgets = [
+            (
+                self.pb.bestMonth, 
+                Qt.LeftDockWidgetArea, 
+                f"Best month ({monthCriterion})", 
+                "PB month"
+            ),
+            (
+                self.pb.bestSessions, 
+                Qt.LeftDockWidgetArea, 
+                f"Top {intToStr(numTopSessions)} sessions", 
+                "PB sessions"
+            ),
+            (
+                self.viewer, 
+                Qt.LeftDockWidgetArea, 
+                "Monthly data"
+            ),
+            (
+                self.addData, 
+                Qt.LeftDockWidgetArea, 
+                "Add data"
+            )
+        ]
         
         for args in dockWidgets:
-            self.createDockWidget(*args)
+            self._create_dock_widget(*args)
         self.setCentralWidget(self.plot)
         
         state = self.settings.value("window/state", None)
@@ -79,8 +97,8 @@ class Tracks(QMainWindow):
         
         self.prefDialog = PreferencesDialog(self)
         
-        self.createActions()
-        self.createMenus()
+        self._create_actions()
+        self._create_menus()
         
         p = Path(__file__).parents[1].joinpath("images/icon.png")
         icon = QIcon(str(p))
@@ -100,24 +118,19 @@ class Tracks(QMainWindow):
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
         
-    @Slot(str)
-    def startTimer(self, file):
-        self._fileChanged = file
-        self.fileChangedTimer.start()
-        
     @Slot(object)
-    def _dataChanged(self, idx):
+    def _data_changed(self, idx):
         self.viewer.newData(idx)
         self.plot.new_data(idx)
         self.pb.newData(idx)
         self.save()
         
     @Slot()
-    def _summaryValueChanged(self):
+    def _summary_value_changed(self):
         self.viewer.updateTopLevelItems()
         self.pb.newData()
         
-    def createDockWidget(self, widget, area, title, key=None):
+    def _create_dock_widget(self, widget, area, title, key=None):
         dock = QDockWidget()
         dock.setWidget(widget)
         dock.setWindowTitle(title)
@@ -129,11 +142,11 @@ class Tracks(QMainWindow):
             key = title
         self.dockWidgets[key] = dock
         
-    def setPbSessionsDockLabel(self, num):
+    def _set_pb_sessions_dock_label(self, num):
         label = f"Top {intToStr(num)} sessions"
         self.dockWidgets["PB sessions"].setWindowTitle(label)
     
-    def setPbMonthDockLabel(self, monthCriterion):
+    def _set_pb_month_dock_label(self, monthCriterion):
         label = f"Best month ({monthCriterion})"
         self.dockWidgets["PB month"].setWindowTitle(label)
         
@@ -150,7 +163,7 @@ class Tracks(QMainWindow):
         for key, value in self.plot.state().items():
             self.settings.setValue(f"plot/{key}", value)
         
-    def createActions(self):
+    def _create_actions(self):
         self.exitAct = QAction(
             "E&xit", self, shortcut="Ctrl+Q", statusTip="Exit the application", 
             triggered=self.close)
@@ -163,7 +176,7 @@ class Tracks(QMainWindow):
             "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
             triggered=self.prefDialog.show)
         
-    def createMenus(self):
+    def _create_menus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addSeparator()
