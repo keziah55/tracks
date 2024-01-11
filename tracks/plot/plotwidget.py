@@ -8,6 +8,7 @@ from pyqtgraph import (PlotWidget as _PlotWidget, PlotCurveItem, mkPen, mkBrush,
 import numpy as np
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
+from customQObjects.core import Settings
 
 from .plotlabel import PlotLabel
 from .plottoolbar import PlotToolBar
@@ -22,8 +23,8 @@ class PlotWidget(QWidget):
     
         Parameters
         ----------
-        parent : Tracks
-            Tracks main window object.
+        data : Data
+            Data object.
         style : str, optional
             Plot style to apply. Default is "dark"
         months : int, optional
@@ -47,17 +48,17 @@ class PlotWidget(QWidget):
         current point.
     """
     
-    def __init__(self, parent, activity, style="dark", months=None, y_series=None):
+    def __init__(self, data, activity, style="dark", months=None, y_series=None):
         
         super().__init__()
         
         self.plotState = None
         self.plotLabel = None
-        self.parent = parent
+        self.data = data
         self._activity = activity
         
         self.plotToolBar = PlotToolBar()
-        self._make_plot(parent, activity, style=style, months=months, y_series=y_series)
+        self._make_plot(data, activity, style=style, months=months, y_series=y_series)
         
         self.plotLayout = QHBoxLayout()
         self.plotLayout.addWidget(self.plotWidget)
@@ -106,7 +107,7 @@ class PlotWidget(QWidget):
             self.plotState = self.plotWidget.get_state()
             self.plotLayout.removeWidget(self.plotWidget)
             self.plotWidget.deleteLater()
-            self._make_plot(self.parent, self._activity, style=style)
+            self._make_plot(self.data, self._activity, style=style)
             self.plotWidget.set_state(self.plotState)
             self.plotLayout.insertWidget(0, self.plotWidget)
             
@@ -140,8 +141,8 @@ class Plot(_PlotWidget):
     
         Parameters
         ----------
-        parent : QMainWindow
-            Main window.
+        data : Data
+            Data object.
         style : str
             Style name to use
         months : int, optional
@@ -163,7 +164,7 @@ class Plot(_PlotWidget):
         current point.
     """
     
-    def __init__(self, parent, activity, style="dark", months=None, y_series=None):
+    def __init__(self, data, activity, style="dark", months=None, y_series=None):
         
         self._y_series = None
         self.plotItem = None
@@ -179,7 +180,7 @@ class Plot(_PlotWidget):
         
         self.hgltPnt = None
         
-        self.parent = parent
+        self.data = data
         
         self._activity = activity
         
@@ -225,10 +226,6 @@ class Plot(_PlotWidget):
         
         if months is not None:
             self.set_x_axis_range(months)
-        
-    @property
-    def data(self):
-        return self.parent.data
         
     def _init_right_axis(self):
         self.vb2 = CustomViewBox()
@@ -541,7 +538,8 @@ class Plot(_PlotWidget):
         
     def _get_PBs(self):
         """ Return array of points that represent(ed) a PB in the current series. """
-        num = self.parent.settings.value("pb/numSessions", cast=int)
+        settings = Settings()
+        num = settings.value("pb/numSessions", cast=int)
         return self.data.getPBs(self.y_series, num)
         
     @Slot(object)

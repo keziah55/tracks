@@ -13,6 +13,25 @@ import calendar
 import re
 import pandas as pd
 
+def parse_month_range(s) -> int:
+    """ 
+    Parse string into int number of months.
+    
+    |        s       |            Return           |
+    |:--------------:|:---------------------------:|
+    |  "[X] months"  |              X              |
+    |    "1 year"    |              12             |
+    | "current year" | datetime.date.today().month |
+    |      "all"     |             None            |
+    """
+    s = s.lower()
+    if s == "1 year":
+        s = "12 months"
+    elif s == "current year":
+        s = f"{date.today().month} months"
+    months = None if s == 'all' else int(s.strip(' months'))
+    return months
+
 def parseDuration(value):
     """ Convert string `value`, which should be a time in [hh]:mm:[ss] format,
         into hh:mm:ss format.

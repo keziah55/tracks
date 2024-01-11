@@ -41,16 +41,12 @@ class PersonalBests(QObject):
     
     statusMessage = Signal(str)
     
-    def __init__(self, parent, activity, numSessions=5, monthCriterion="distance", sessionsKey="speed"):
+    def __init__(self, data, activity, numSessions=5, monthCriterion="distance", sessionsKey="speed"):
         super().__init__()
-        self.parent = parent
+        self.data = data
         self.newPBdialog = NewPBDialog()
         self.bestMonth = PBMonthLabel(parent=self, activity=activity, column=monthCriterion)
         self.bestSessions = PBTable(parent=self, activity=activity, rows=numSessions, key=sessionsKey)
-        
-    @property
-    def data(self):
-        return self.parent.data
         
     @Slot(object)
     def newData(self, idx=None):

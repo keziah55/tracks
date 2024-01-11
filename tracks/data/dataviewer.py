@@ -106,8 +106,8 @@ class DataViewer(QTreeWidget):
 
     Parameters
     ----------
-    parent : QWidget
-        Main window/widget with :class:`Data` object
+    data : Data
+        :class:`Data` object
     activity : Activity
         Activity to view
     widthSpace : int
@@ -139,10 +139,10 @@ class DataViewer(QTreeWidget):
         Emitted when `newData` has finished.
     """
     
-    def __init__(self, parent, activity, widthSpace=10):
+    def __init__(self, data, activity, widthSpace=10):
         super().__init__()
         
-        self.parent = parent
+        self.data = data
         self._activity = activity
         
         self.widthSpace = widthSpace
@@ -213,10 +213,6 @@ class DataViewer(QTreeWidget):
         width = self.header().length() + self.widthSpace
         height = super().sizeHint().height()
         return QSize(width, height)
-    
-    @property
-    def data(self):
-        return self.parent.data
     
     @property 
     def topLevelItems(self):

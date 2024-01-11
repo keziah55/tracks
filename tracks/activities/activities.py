@@ -248,6 +248,10 @@ class Activity:
         return s
     
     @property
+    def name(self):
+        return self._name
+    
+    @property
     def csv_file(self):
         return f"{self._name.lower()}.csv"
     

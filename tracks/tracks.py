@@ -12,7 +12,7 @@ from qtpy.QtCore import Qt, QFileSystemWatcher, QTimer, Slot
 from qtpy.QtGui import QIcon
 import pandas as pd
 from pandas._testing import assert_frame_equal
-from .activities import load_activity, get_activity_csv, load_actvity_df, Activity
+from .activities import ActivityManager, load_activity, get_activity_csv, load_actvity_df, Activity
 from .plot import PlotWidget
 from .data import Data, DataViewer, AddData, PersonalBests
 from .preferences import PreferencesDialog
@@ -35,38 +35,44 @@ class Tracks(QMainWindow):
         
         activity = self.settings.value("activity/current", "cycling")
         
-        self.activities = []
-        act = load_activity(get_data_path().joinpath(f"{activity}.json"))
-        self.activities.insert(0, act)
+        self._activity_manager = ActivityManager(get_data_path(), self.settings)
         
-        df = load_actvity_df(act)
-
-        self.data = Data(df, act)
-        self.save()
+        activity_objects = self._activity_manager.load_activity(activity)
+        
+        self.data = activity_objects.data
+        self.viewer = activity_objects.data_viewer
+        self.pb = activity_objects.personal_bests
+        self.plot = activity_objects.plot
+        
+        # act = self._activity_manager.load_activity(activity)
+        # df = self._activity_manager.load_actvity_df(act)
+        
+        # self.data = Data(df, act)
+        # self.save()
         
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
-        sessionsKey = self.settings.value("pb/sessionsKey", "speed")
-        self.pb = PersonalBests(
-            self, 
-            act,
-            numSessions=numTopSessions, 
-            monthCriterion=monthCriterion,
-            sessionsKey=sessionsKey)
+        # sessionsKey = self.settings.value("pb/sessionsKey", "speed")
+        # self.pb = PersonalBests(
+        #     self, 
+        #     act,
+        #     numSessions=numTopSessions, 
+        #     monthCriterion=monthCriterion,
+        #     sessionsKey=sessionsKey)
         
-        self.viewer = DataViewer(self, act)
+        # self.viewer = DataViewer(self, act)
         
-        self.addData = AddData(act)
+        # self.addData = AddData(act)
         
-        plot_style = self.settings.value("plot/style", "dark")
-        month_range = self.parse_month_range(self.settings.value("plot/range", "All"))
-        y_series = self.settings.value("plot/current_series", "time")
-        self.plot = PlotWidget(
-            self, 
-            act,
-            style=plot_style, 
-            months=month_range,
-            y_series=y_series)
+        # plot_style = self.settings.value("plot/style", "dark")
+        # month_range = self.parse_month_range(self.settings.value("plot/range", "All"))
+        # y_series = self.settings.value("plot/current_series", "time")
+        # self.plot = PlotWidget(
+        #     self, 
+        #     act,
+        #     style=plot_style, 
+        #     months=month_range,
+        #     y_series=y_series)
         
         self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -118,58 +124,32 @@ class Tracks(QMainWindow):
         icon = QIcon(str(p))
         self.setWindowIcon(icon)
         
-    @staticmethod
-    def parse_month_range(s) -> int:
-        """ 
-        Parse string into int number of months.
-        
-        |        s       |            Return           |
-        |:--------------:|:---------------------------:|
-        |  "[X] months"  |              X              |
-        |    "1 year"    |              12             |
-        | "current year" | datetime.date.today().month |
-        |      "all"     |             None            |
-        """
-        s = s.lower()
-        if s == "1 year":
-            s = "12 months"
-        elif s == "current year":
-            s = f"{date.today().month} months"
-        months = None if s == 'all' else int(s.strip(' months'))
-        return months
-    
     @property
     def current_activity(self):
-        if len(self.activities) == 0:
-            return None
-        else:
-            return self.activities[0]
-    
-    def load_current_df(self):
-        """ Load dataframe for current activity """
-        activity = self.current_activity
-        return load_actvity_df(activity)
+        self._activity_manager.current_activity
     
     @Slot()
     def save(self, activity=None):
-        if activity is None:
-            activity = self.current_activity
-        filepath = get_activity_csv(activity)
+        # if activity is None:
+        #     activity = self.current_activity
+        # filepath = get_activity_csv(activity)
         
-        self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
-        self.backup()
+        # self.data.df.to_csv(filepath, sep=self._csv_sep, index=False)
+        # self.backup()
+        self._activity_manager.save_activity(activity)
         save_time = datetime.now().strftime("%H:%M:%S")
         self.statusBar().showMessage(f"Last saved at {save_time}")
         
     @Slot()
     def backup(self, activity=None):
-        if activity is None:
-            activity = self.current_activity
-        p = get_data_path()
-        filepath = p.joinpath(activity.csv_file)
+        self._activity_manager.backup_activity(activity)
+        # if activity is None:
+        #     activity = self.current_activity
+        # p = get_data_path()
+        # filepath = p.joinpath(activity.csv_file)
         
-        bak = filepath.with_suffix('.bak')
-        self.data.df.to_csv(bak, sep=self._csv_sep, index=False)
+        # bak = filepath.with_suffix('.bak')
+        # self.data.df.to_csv(bak, sep=self._csv_sep, index=False)
         
     @Slot(str)
     def startTimer(self, file):
