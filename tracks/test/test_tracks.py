@@ -80,7 +80,7 @@ class TracksSetupTeardown:
             confFile.unlink()
     
     def extraSetup(self):
-        pass
+        self.app.pb.newPBdialog.setTimeout(100)
     
     def extraTeardown(self):
         pass
