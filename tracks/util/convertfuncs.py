@@ -176,7 +176,18 @@ def floatToHourMinSec(value) -> str:
     """
     hours, minssecs = divmod((value*60), 60)
     mins, secs = divmod((minssecs*60), 60)
-    s = f"{hours:02.0f}:{mins:02.0f}:{secs:02.0f}"
+    
+    fmt_secs = f"{secs:02.0f}"
+    if fmt_secs == "60":
+        mins += 1
+        fmt_secs = "00"
+        
+    fmt_mins = f"{mins:02.0f}"
+    if fmt_mins == "60":
+        hours += 1
+        fmt_mins = "00"
+        
+    s = f"{hours:02.0f}:{fmt_mins}:{fmt_secs}"
     return s
 
 def hourMinSecToFloat(value, mode='hour', strict=True) -> float:

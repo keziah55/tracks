@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt, QTimer, Slot, Signal
 from qtpy.QtGui import QBrush, QColor
 from functools import partial
 from collections import namedtuple
-from tracks.activities import get_cast_func, get_validate_func
+from tracks.util import get_cast_func, get_validate_func
 
 ValidateFuncs = namedtuple("ValidateFuncs", ["validate", "cast"])
 

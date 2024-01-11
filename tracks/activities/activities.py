@@ -8,8 +8,7 @@ import warnings
 import re
 import json
 from .operations import operator_dict
-from .dtypes import get_cast_func, get_reduce_func
-from tracks.util import floatToHourMinSec
+from tracks.util import floatToHourMinSec, get_cast_func, get_reduce_func
     
 
 class Relation:

@@ -1,9 +1,21 @@
+from tracks.activities import Activity
 from tracks.data import Data
-from tracks.activities import load_activity
 from . import make_dataframe
 import tempfile
+import json
 from pathlib import Path
 import pandas as pd
+
+def load_activity(json_path):
+    # json_path = Path(__file__).parent.parent.joinpath(".mock_test_dir", ".tracks", f"{name}.json")
+    with open(json_path, "r") as fileobj:
+        activity_json = json.load(fileobj)
+    
+    activity = Activity(activity_json['name'])
+    for measure in activity_json['measures'].values():
+        activity.add_measure(**measure)
+        
+    return activity
 
 # TODO move to conftest.py?
 class MockParent:

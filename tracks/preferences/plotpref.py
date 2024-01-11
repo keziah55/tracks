@@ -11,6 +11,7 @@ from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, 
 from customQObjects.widgets import GroupBox, ComboBox
 from customQObjects.core import Settings
 from tracks import make_foreground_icon 
+from tracks.util import parse_month_range
 import warnings
 
 
@@ -420,7 +421,7 @@ class PlotPreferences(QWidget):
         
         self.setCustomRange(customRange)
         if customRange:
-            monthRange = self.mainWindow.parse_month_range(rng)
+            monthRange = parse_month_range(rng)
             if monthRange is None:
                 # custom month range cannot be parsed
                 # set customRange to False and call this method again
@@ -467,7 +468,7 @@ class PlotPreferences(QWidget):
             months = self.customRangeSpinBox.value()
         else:
             text = self.plotRangeCombo.currentText()
-            months = self.mainWindow.parse_month_range(text)
+            months = parse_month_range(text)
         self.mainWindow.plot.set_x_axis_range(months)
         
         self.settings.beginGroup("plot")

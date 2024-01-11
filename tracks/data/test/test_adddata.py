@@ -1,6 +1,6 @@
 from .. import AddData
-from tracks.activities import load_activity
 from tracks.util import hourMinSecToFloat
+from tracks.test.mockparent import load_activity
 from qtpy.QtCore import Qt
 from datetime import date
 import random

@@ -29,7 +29,7 @@ class TestDataViewer:
             self.widget.expandItem(item)
         
     def _setup(self, qtbot):
-        self.widget = DataViewer(self.parent, self.parent.activity)
+        self.widget = DataViewer(self.parent.data, self.parent.activity)
         self.parent.data.dataChanged.connect(self.widget.newData)
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)

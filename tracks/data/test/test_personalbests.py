@@ -52,7 +52,7 @@ class TestPersonalBests:
     def setup(self, qtbot):
         # make Data object with known data
         self.parent = MockParent(random=False)
-        self.pb = PersonalBests(self.parent, self.parent.activity)
+        self.pb = PersonalBests(self.parent.data, self.parent.activity)
         self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
         self.widget = QWidget()
         layout = QVBoxLayout()

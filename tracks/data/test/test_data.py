@@ -1,6 +1,6 @@
 from .. import Data
 from tracks.test import make_dataframe
-from tracks.activities import load_activity
+from tracks.test.mockparent import load_activity
 import pandas as pd
 import numpy as np
 import tempfile

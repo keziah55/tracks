@@ -4,8 +4,8 @@
 Get functions to validate/cast Activity types.
 """
 
-from tracks.util import (hourMinSecToFloat, isDate, isFloat, isInt, isDuration, 
-                         parseDate, parseDuration)
+from .validate import isInt, isFloat, isDate, isDuration
+from .convertfuncs import parseDuration, parseDate, hourMinSecToFloat
 import numpy as np
 
 reduce_funcs = {

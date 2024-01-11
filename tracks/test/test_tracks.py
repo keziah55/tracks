@@ -22,8 +22,7 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
-        monkeypatch.setattr(tracks.tracks, "get_activity_csv", mockGetFile)
-        monkeypatch.setattr(tracks.activities, "get_activity_csv", mockGetFile)
+        monkeypatch.setattr(tracks.activities.ActivityManager, "_activity_csv_file", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
@@ -43,8 +42,9 @@ class TracksSetupTeardown:
         
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
-        monkeypatch.setattr(tracks.tracks, "get_activity_csv", mockGetFile)
-        monkeypatch.setattr(tracks.activities, "get_activity_csv", mockGetFile)
+        monkeypatch.setattr(tracks.activities.ActivityManager, "_activity_csv_file", mockGetFile)
+        # monkeypatch.setattr(tracks.tracks, "get_activity_csv", mockGetFile)
+        # monkeypatch.setattr(tracks.activities, "get_activity_csv", mockGetFile)
         
         self._setup()
         qtbot.addWidget(self.app)
