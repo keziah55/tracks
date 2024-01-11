@@ -30,7 +30,7 @@ class TestDataViewer:
         
     def _setup(self, qtbot):
         self.widget = DataViewer(self.parent.data, self.parent.activity)
-        self.parent.data.dataChanged.connect(self.widget.newData)
+        self.parent.data.dataChanged.connect(self.widget.new_data)
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)
         self.widget.show()
@@ -83,7 +83,7 @@ class TestDataViewer:
         data = Data(df, self.parent.activity)
         self.parent.data = data    
         
-        self.widget.newData()
+        self.widget.new_data()
         
         for item in self.widget.topLevelItems:
             if item.isExpanded():

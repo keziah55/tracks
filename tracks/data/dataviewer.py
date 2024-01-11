@@ -136,7 +136,7 @@ class DataViewer(QTreeWidget):
     viewerUpdated = Signal()
     """ **signal** viewerUpdated() 
     
-        Emitted when `newData` has finished.
+        Emitted when `new_data` has finished.
     """
     
     def __init__(self, data, activity, widthSpace=10):
@@ -225,7 +225,7 @@ class DataViewer(QTreeWidget):
         return {item.monthYear: item for item in self.topLevelItems}
     
     @Slot(object)
-    def newData(self, indices=None):
+    def new_data(self, indices=None):
         """ 
         Add or update items. 
         

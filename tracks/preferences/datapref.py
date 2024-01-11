@@ -144,7 +144,7 @@ class DataPreferences(QWidget):
                 changed = True
                 m.set_summary(func_name)
         if changed:
-            self.mainWindow._summaryValueChanged()
+            self.mainWindow._summary_value_changed()
         # self.mainWindow.summary.setFunc(summaryFuncs)
         
         self.settings.endGroup()

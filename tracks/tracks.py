@@ -58,7 +58,7 @@ class Tracks(QMainWindow):
         self.pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
         self.pb.statusMessage.connect(self.statusBar().showMessage)
         
-        dockWidgets = [
+        _dock_widgets = [
             (
                 self.pb.bestMonth, 
                 Qt.LeftDockWidgetArea, 
@@ -83,7 +83,7 @@ class Tracks(QMainWindow):
             )
         ]
         
-        for args in dockWidgets:
+        for args in _dock_widgets:
             self._create_dock_widget(*args)
         self.setCentralWidget(self.plot)
         
@@ -120,15 +120,15 @@ class Tracks(QMainWindow):
         
     @Slot(object)
     def _data_changed(self, idx):
-        self.viewer.newData(idx)
+        self.viewer.new_data(idx)
         self.plot.new_data(idx)
-        self.pb.newData(idx)
+        self.pb.new_data(idx)
         self.save()
         
     @Slot()
     def _summary_value_changed(self):
         self.viewer.updateTopLevelItems()
-        self.pb.newData()
+        self.pb.new_data()
         
     def _create_dock_widget(self, widget, area, title, key=None):
         dock = QDockWidget()
@@ -136,19 +136,19 @@ class Tracks(QMainWindow):
         dock.setWindowTitle(title)
         dock.setObjectName(title)
         self.addDockWidget(area, dock)
-        if not hasattr(self, "dockWidgets"):
-            self.dockWidgets = {}
+        if not hasattr(self, "_dock_widgets"):
+            self._dock_widgets = {}
         if key is None:
             key = title
-        self.dockWidgets[key] = dock
+        self._dock_widgets[key] = dock
         
     def _set_pb_sessions_dock_label(self, num):
         label = f"Top {intToStr(num)} sessions"
-        self.dockWidgets["PB sessions"].setWindowTitle(label)
+        self._dock_widgets["PB sessions"].setWindowTitle(label)
     
     def _set_pb_month_dock_label(self, monthCriterion):
         label = f"Best month ({monthCriterion})"
-        self.dockWidgets["PB month"].setWindowTitle(label)
+        self._dock_widgets["PB month"].setWindowTitle(label)
         
     def closeEvent(self, *args, **kwargs):
         self.backup()
@@ -164,30 +164,41 @@ class Tracks(QMainWindow):
             self.settings.setValue(f"plot/{key}", value)
         
     def _create_actions(self):
-        self.exitAct = QAction(
-            "E&xit", self, shortcut="Ctrl+Q", statusTip="Exit the application", 
-            triggered=self.close)
+        self._exit_act = QAction(
+            "E&xit", 
+            self, 
+            shortcut="Ctrl+Q", 
+            statusTip="Exit the application", 
+            triggered=self.close
+        )
             
-        self.saveAct = QAction(
-            "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
-            triggered=self.save)
+        self._save_act = QAction(
+            "&Save", 
+            self, 
+            shortcut="Ctrl+S", 
+            statusTip="Save data", 
+            triggered=self.save
+        )
         
-        self.preferencesAct = QAction(
-            "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
-            triggered=self.prefDialog.show)
+        self._preferences_act = QAction(
+            "&Preferences", 
+            self, 
+            shortcut="F12", 
+            statusTip="Edit preferences",
+            triggered=self.prefDialog.show
+        )
         
     def _create_menus(self):
-        self.fileMenu = self.menuBar().addMenu("&File")
-        self.fileMenu.addAction(self.saveAct)
-        self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.exitAct)
+        self._file_menu = self.menuBar().addMenu("&File")
+        self._file_menu.addAction(self._save_act)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(self._exit_act)
         
-        self.editMenu = self.menuBar().addMenu("&Edit")
-        self.editMenu.addAction(self.preferencesAct)
+        self._edit_menu = self.menuBar().addMenu("&Edit")
+        self._edit_menu.addAction(self._preferences_act)
         
-        self.viewMenu = self.menuBar().addMenu("&View")
-        self.panelMenu = self.viewMenu.addMenu("&Panels")
-        for key in sorted(self.dockWidgets):
-            dock = self.dockWidgets[key]
-            self.panelMenu.addAction(dock.toggleViewAction())
-    
+        self._view_menu = self.menuBar().addMenu("&View")
+        self._panel_menu = self._view_menu.addMenu("&Panels")
+        for key in sorted(self._dock_widgets):
+            dock = self._dock_widgets[key]
+            self._panel_menu.addAction(dock.toggleViewAction())
