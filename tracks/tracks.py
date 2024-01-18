@@ -187,9 +187,9 @@ class Tracks(QMainWindow):
             "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
             triggered=self.save)
         
-        self._load_activity_act = QAction(#icon, text)
-            "Choose &Activity", self, shortcut="Ctrl+A", statusTip="Choose activity",
-            triggered=self._load_activity)
+        # self._load_activity_act = QAction(#icon, text)
+        #     "Choose &Activity", self, shortcut="Ctrl+A", statusTip="Choose activity",
+        #     triggered=self._load_activity)
         
         self.preferencesAct = QAction(
             "&Preferences", self, shortcut="F12", statusTip="Edit preferences",

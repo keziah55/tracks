@@ -37,13 +37,13 @@ class EditItemDialog(AddDataTableMixin, QDialog):
         super().__init__(activity, emptyDateValid=False)
         
         if itemHeader is None:
-            itemHeader = self.headerLabels
+            itemHeader = self.header_labels
         
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
         self.table.insertColumn(self.table.columnCount())
-        self.table.setHorizontalHeaderLabels([""] + self.headerLabels)
+        self.table.setHorizontalHeaderLabels([""] + self.header_labels)
         self.headerLabelColumnOffset = 1
         
         self.rows = []
@@ -67,7 +67,7 @@ class EditItemDialog(AddDataTableMixin, QDialog):
             
             tableItems = {}
             for idx in range(item.columnCount()):
-                if itemHeader[idx] in self.headerLabels:
+                if itemHeader[idx] in self.header_labels:
                     text = item.text(idx)
                     tableItem = QTableWidgetItem(text)
                     tableItem.setTextAlignment(Qt.AlignCenter)

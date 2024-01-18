@@ -110,10 +110,11 @@ class AddData(AddDataTableMixin, QWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.table.setItem(row, 0, item)
         
-        for i in range(len(self.headerLabels[1:])):
+        # for i in range(len(self.header_labels[1:])):
+        for i in range(1, self.table.columnCount()):
             item = QTableWidgetItem()
             item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, i+1, item)
+            self.table.setItem(row, i, item)
         self._clicked = [item for item in self._clicked if item[0] != row]
         self._cellClicked(row, 0)
         
