@@ -433,7 +433,7 @@ class ReportWriter:
                     if cov < 1:
                         href = f"{qt}-missed-{fname}"
                         td = f"<a href=#{href}>{td}</a>"
-                    html += [f"<td>{style} {td}</td>"]
+                    html += [f"<td {style}> {td}</td>"]
                 html += ["</tr>"]
                 
         html += ["</table>"]
@@ -445,7 +445,7 @@ class ReportWriter:
         if coverage >= 0.9:
             return "var(--excellent)"
         elif coverage >= 0.75:
-            return "(--good)"
+            return "var(--good)"
         elif coverage >= 0.5:
             return "var(--ok)"
         else:
