@@ -1,3 +1,10 @@
+:root {
+  --excellent: #26c954;
+  --good: #4fc94d;
+  --ok: #c97a26;
+  --bad: #c92626;
+}
+
 body { 
   font-family: "Lato", Sans-Serif;
 }
@@ -84,4 +91,6 @@ td {
   font-family: monospace;
   white-space: pre;
 }
+
+
 

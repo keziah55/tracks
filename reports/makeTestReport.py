@@ -428,16 +428,28 @@ class ReportWriter:
                 html += ["<tr>", f"<td class=fileName>{fname}</td>"]
                 for cov in results:
                     td = f"{cov*100:0.0f}%"
+                    background_colour = self._get_coverage_css_colour(cov)
+                    style = f'style="background-color:{background_colour};"'
                     if cov < 1:
                         href = f"{qt}-missed-{fname}"
                         td = f"<a href=#{href}>{td}</a>"
-                    html += [f"<td>{td}</td>"]
+                    html += [f"<td>{style} {td}</td>"]
                 html += ["</tr>"]
                 
         html += ["</table>"]
         
         return html
     
+    @staticmethod
+    def _get_coverage_css_colour(coverage: float):
+        if coverage >= 0.9:
+            return "var(--excellent)"
+        elif coverage >= 0.75:
+            return "(--good)"
+        elif coverage >= 0.5:
+            return "var(--ok)"
+        else:
+            return "var(--bad)"
     
     def _getMissedLines(self, classGroup):
         """ Return string of missed lines in this <class> """
