@@ -95,9 +95,8 @@ class ActivityManager:
         return objects
     
     def list_activities(self):
-        # TODO
-        with open(self._data_path.joinpath("all_activities.json")) as fileobj:
-            activity_json = json.load(fileobj)
+        json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
+        return  json_files
             
     def _load_actvity_df(self, activity) -> pd.DataFrame:
         """ Load dataframe for `activity` """

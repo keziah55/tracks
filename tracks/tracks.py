@@ -6,13 +6,15 @@ Main window for Tracks.
 
 from pathlib import Path
 from datetime import datetime
-from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel
+from functools import partial
+from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel, QToolBar
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QIcon
 from .activities import ActivityManager
 from .preferences import PreferencesDialog
 from .util import intToStr
 from . import get_data_path
+from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
 
 
@@ -31,6 +33,12 @@ class Tracks(QMainWindow):
         self._activity_manager = ActivityManager(get_data_path(), self.settings)
         
         activity_objects = self._activity_manager.load_activity(activity)
+        
+        self._viewer_stack = StackedWidget()
+        self._best_month_stack = StackedWidget()
+        self._best_sessions_stack = StackedWidget()
+        self._add_data_stack = StackedWidget()
+        self._plot_stack = StackedWidget()
         
         self.data = activity_objects.data
         self.viewer = activity_objects.data_viewer
@@ -99,6 +107,7 @@ class Tracks(QMainWindow):
         
         self._create_actions()
         self._create_menus()
+        self._create_toolbars()
         
         p = Path(__file__).parents[1].joinpath("images/icon.png")
         icon = QIcon(str(p))
@@ -107,6 +116,10 @@ class Tracks(QMainWindow):
     @property
     def current_activity(self):
         return self._activity_manager.current_activity
+    
+    @Slot(str)
+    def _load_activity(self, name):
+        self._activity_manager.load_activity(name)
     
     @Slot()
     def save(self, activity=None):
@@ -162,6 +175,8 @@ class Tracks(QMainWindow):
             
         for key, value in self.plot.state().items():
             self.settings.setValue(f"plot/{key}", value)
+            
+        self.settings.setValue("activity/current", self.current_activity.name)
         
     def _create_actions(self):
         self.exitAct = QAction(
@@ -172,22 +187,38 @@ class Tracks(QMainWindow):
             "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
             triggered=self.save)
         
+        self._load_activity_act = QAction(#icon, text)
+            "Choose &Activity", self, shortcut="Ctrl+A", statusTip="Choose activity",
+            triggered=self._load_activity)
+        
         self.preferencesAct = QAction(
             "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
             triggered=self.prefDialog.show)
         
     def _create_menus(self):
-        self.fileMenu = self.menuBar().addMenu("&File")
-        self.fileMenu.addAction(self.saveAct)
-        self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.exitAct)
+        self._file_menu = self.menuBar().addMenu("&File")
+        self._file_menu.addAction(self.saveAct)
+        self._activities_menu = self._file_menu.addMenu("&Activities")
+        for activity in self._activity_manager.list_activities():
+            callback = partial(self._load_activity, activity)
+            self._activities_menu.addAction(activity, callback)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(self.exitAct)
         
-        self.editMenu = self.menuBar().addMenu("&Edit")
-        self.editMenu.addAction(self.preferencesAct)
+        self._edit_menu = self.menuBar().addMenu("&Edit")
+        self._edit_menu.addAction(self.preferencesAct)
         
-        self.viewMenu = self.menuBar().addMenu("&View")
-        self.panelMenu = self.viewMenu.addMenu("&Panels")
+        self._view_menu = self.menuBar().addMenu("&View")
+        self._panel_menu = self._view_menu.addMenu("&Panels")
         for key in sorted(self.dockWidgets):
             dock = self.dockWidgets[key]
-            self.panelMenu.addAction(dock.toggleViewAction())
+            self._panel_menu.addAction(dock.toggleViewAction())
     
+    def _create_toolbars(self):
+        return
+        self._options_toolsbar = QToolBar("Options")
+        
+        actions = [self.saveAct, self._load_activity_act, self.preferencesAct, self.exitAct]
+        self._options_toolsbar.addActions(actions)
+        
+        self.addToolBar(Qt.LeftToolBarArea, self._options_toolsbar)
