@@ -64,19 +64,19 @@ td {
 }
 
 .failed { 
-  background-color:#c92626; 
+  background-color:var(--bad); 
 }
 
 .error {
-  background-color:#c92626; 
+  background-color:var(--bad); 
 }
 
 .skipped { 
-  background-color:#c97a26; 
+  background-color:var(--ok); 
 }
 
 .passed { 
-  background-color:#26c954;
+  background-color:var(--excellent);
 }
 
 .testName {
