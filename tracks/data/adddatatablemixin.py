@@ -28,10 +28,10 @@ class AddDataTableMixin(object):
         
         self._measures = self._activity.filter_measures("relation", lambda r: r is None)
         
-        self.headerLabels = [m.full_name for m in self._measures.values()]
+        self.header_labels = [m.full_name for m in self._measures.values()]
         self.headerLabelColumnOffset = 0
-        self.table = QTableWidget(0, len(self.headerLabels))
-        self.table.setHorizontalHeaderLabels(self.headerLabels)
+        self.table = QTableWidget(0, len(self.header_labels))
+        self.table.setHorizontalHeaderLabels(self.header_labels)
         self.table.verticalHeader().setVisible(False)
         
         self.funcs = {}

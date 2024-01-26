@@ -5,15 +5,18 @@ Main window for Tracks.
 """
 
 from pathlib import Path
-from datetime import datetime
-from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel
+from functools import partial
+from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel, QToolBar
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QIcon
 from .activities import ActivityManager
 from .preferences import PreferencesDialog
 from .util import intToStr
 from . import get_data_path
+from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
+
+import inspect
 
 
 class Tracks(QMainWindow):
@@ -30,54 +33,53 @@ class Tracks(QMainWindow):
         
         self._activity_manager = ActivityManager(get_data_path(), self.settings)
         
-        activity_objects = self._activity_manager.load_activity(activity)
+        self._activity_manager.status_message.connect(self.statusBar().showMessage)
         
-        self.data = activity_objects.data
-        self.viewer = activity_objects.data_viewer
-        self.pb = activity_objects.personal_bests
-        self.plot = activity_objects.plot
-        self.addData = activity_objects.add_data
-
-        # TODO handle this
+        self._viewer_stack = StackedWidget()
+        self._best_month_stack = StackedWidget()
+        self._best_sessions_stack = StackedWidget()
+        self._add_data_stack = StackedWidget()
+        self._plot_stack = StackedWidget()
+        
+        self._best_month_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self._best_sessions_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._viewer_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._add_data_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        
+        self._stack_attrs = {
+            self._viewer_stack: "data_viewer",
+            self._best_month_stack: ("personal_bests", "bestMonth"),
+            self._best_sessions_stack: ("personal_bests", "bestSessions"),
+            self._add_data_stack: "add_data",
+            self._plot_stack: "plot",
+        }
+        
+        self._load_activity(activity)
+        
+        # TODO handle this - TG-136
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
-
-        
-        self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.viewer.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        
-        self.addData.newData.connect(self.data.append)
-        self.data.dataChanged.connect(self._data_changed)
-        self.plot.point_selected.connect(self.viewer.highlightItem)
-        self.viewer.itemSelected.connect(self.plot.set_current_point_from_date)
-        self.viewer.selectedSummary.connect(self.statusBar().showMessage)
-        self.pb.itemSelected.connect(self.plot.set_current_point_from_date)
-        self.pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-        self.pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
-        self.pb.statusMessage.connect(self.statusBar().showMessage)
         
         _dock_widgets = [
             (
-                self.pb.bestMonth, 
+                self._best_month_stack,
                 Qt.LeftDockWidgetArea, 
                 f"Best month ({monthCriterion})", 
                 "PB month"
             ),
             (
-                self.pb.bestSessions, 
+                self._best_sessions_stack,
                 Qt.LeftDockWidgetArea, 
                 f"Top {intToStr(numTopSessions)} sessions", 
                 "PB sessions"
             ),
             (
-                self.viewer, 
+                self._viewer_stack,
                 Qt.LeftDockWidgetArea, 
                 "Monthly data"
             ),
             (
-                self.addData, 
+                self._add_data_stack,
                 Qt.LeftDockWidgetArea, 
                 "Add data"
             )
@@ -85,7 +87,8 @@ class Tracks(QMainWindow):
         
         for args in _dock_widgets:
             self._create_dock_widget(*args)
-        self.setCentralWidget(self.plot)
+        # self.setCentralWidget(self.plot)
+        self.setCentralWidget(self._plot_stack)
         
         state = self.settings.value("window/state", None)
         if state is not None:
@@ -99,34 +102,85 @@ class Tracks(QMainWindow):
         
         self._create_actions()
         self._create_menus()
+        self._create_toolbars()
         
         p = Path(__file__).parents[1].joinpath("images/icon.png")
         icon = QIcon(str(p))
         self.setWindowIcon(icon)
         
+    ###########################################################################
+    # TG-136 these properties are used by plot and data preferences
+    @property
+    def data(self):
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.data
+    
+    @property
+    def viewer(self):
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.data_viewer
+    
+    @property
+    def pb(self):
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.personal_bests
+        
+    @property
+    def plot(self):
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.plot
+    
+    @property
+    def addData(self):
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.add_data
+    ###########################################################################
+    
     @property
     def current_activity(self):
         return self._activity_manager.current_activity
     
+    @Slot(str)
+    def _load_activity(self, name):
+        
+        activity_objects = self._activity_manager.load_activity(name)
+        
+        new_widgets = False
+        for stack, attr in self._stack_attrs.items():
+            if name not in stack:
+                new_widgets = True
+                if isinstance(attr, str):
+                    widget = getattr(activity_objects, attr)
+                elif isinstance(attr, (list, tuple)):
+                    widget = activity_objects
+                    for at in attr:
+                        widget = getattr(widget, at)
+                stack.addWidget(widget, name)
+            stack.setCurrentKey(name)
+            
+        if new_widgets:
+            activity_objects.data_viewer.selectedSummary.connect(self.statusBar().showMessage)
+            activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+            activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
+            activity_objects.personal_bests.statusMessage.connect(self.statusBar().showMessage)
+    
     @Slot()
     def save(self, activity=None):
         self._activity_manager.save_activity(activity)
-        save_time = datetime.now().strftime("%H:%M:%S")
-        self.statusBar().showMessage(f"Last saved at {save_time}")
         
     @Slot()
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
         
-    @Slot(object)
-    def _data_changed(self, idx):
-        self.viewer.new_data(idx)
-        self.plot.new_data(idx)
-        self.pb.new_data(idx)
-        self.save()
-        
     @Slot()
     def _summary_value_changed(self):
+        # TG-136
+        # called from data pref
         self.viewer.updateTopLevelItems()
         self.pb.new_data()
         
@@ -157,11 +211,14 @@ class Tracks(QMainWindow):
         self.settings.setValue("window/state", state)
         self.settings.setValue("window/geometry", geometry)
         
+        # TG-136
         for key, value in self.pb.state().items():
             self.settings.setValue(f"pb/{key}", value)
             
         for key, value in self.plot.state().items():
             self.settings.setValue(f"plot/{key}", value)
+            
+        self.settings.setValue("activity/current", self.current_activity.name)
         
     def _create_actions(self):
         self._exit_act = QAction(
@@ -190,6 +247,7 @@ class Tracks(QMainWindow):
         
     def _create_menus(self):
         self._file_menu = self.menuBar().addMenu("&File")
+<<<<<<< HEAD
         self._file_menu.addAction(self._save_act)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._exit_act)
@@ -202,3 +260,30 @@ class Tracks(QMainWindow):
         for key in sorted(self._dock_widgets):
             dock = self._dock_widgets[key]
             self._panel_menu.addAction(dock.toggleViewAction())
+=======
+        self._file_menu.addAction(self.saveAct)
+        self._activities_menu = self._file_menu.addMenu("&Activities")
+        for activity in self._activity_manager.list_activities():
+            callback = partial(self._load_activity, activity)
+            self._activities_menu.addAction(activity, callback)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(self.exitAct)
+        
+        self._edit_menu = self.menuBar().addMenu("&Edit")
+        self._edit_menu.addAction(self.preferencesAct)
+        
+        self._view_menu = self.menuBar().addMenu("&View")
+        self._panel_menu = self._view_menu.addMenu("&Panels")
+        for key in sorted(self.dockWidgets):
+            dock = self.dockWidgets[key]
+            self._panel_menu.addAction(dock.toggleViewAction())
+    
+    def _create_toolbars(self):
+        return
+        self._options_toolsbar = QToolBar("Options")
+        
+        actions = [self.saveAct, self._load_activity_act, self.preferencesAct, self.exitAct]
+        self._options_toolsbar.addActions(actions)
+        
+        self.addToolBar(Qt.LeftToolBarArea, self._options_toolsbar)
+>>>>>>> activities

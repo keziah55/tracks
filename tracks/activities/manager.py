@@ -4,7 +4,7 @@
 Object to manage loading activities and their related widgets etc.
 """
 
-from collections import namedtuple
+from datetime import datetime
 import json
 from pathlib import Path
 import pandas as pd
@@ -12,19 +12,49 @@ from .activities import Activity
 from tracks.plot import PlotWidget
 from tracks.data import Data, DataViewer, PersonalBests, AddData
 from tracks.util import parse_month_range
+from qtpy.QtCore import QObject, Signal, Slot
 from customQObjects.core import Settings
 
 
-ActivityObjects = namedtuple(
-    "ActivityObjects", 
-    ["activity", "data", "data_viewer", "add_data", "personal_bests", "plot"]
-)
+class ActivityObjects(QObject):
+    
+    request_save_activity = Signal(str)
+    
+    def __init__(self, activity, data, data_viewer, add_data, personal_bests, plot):
+        super().__init__()
+        
+        self.activity = activity
+        self.data = data
+        self.data_viewer = data_viewer
+        self.add_data = add_data
+        self.personal_bests = personal_bests
+        self.plot = plot
+        
+        self._connect_signals()
+        
+    def _connect_signals(self):
+        self.add_data.newData.connect(self.data.append)
+        self.plot.point_selected.connect(self.data_viewer.highlightItem)
+        self.data_viewer.itemSelected.connect(self.plot.set_current_point_from_date)
+        self.personal_bests.itemSelected.connect(self.plot.set_current_point_from_date)
+        self.data.dataChanged.connect(self._data_changed)
+        
+    @Slot(object)
+    def _data_changed(self, idx):
+        self.data_viewer.newData(idx)
+        self.plot.new_data(idx)
+        self.personal_bests.newData(idx)
+        self.request_save_activity.emit(self.activity.name)
 
-class ActivityManager:
+
+class ActivityManager(QObject):
+    
+    status_message = Signal(str)
     
     csv_sep = ","
     
     def __init__(self, p: Path, settings: Settings):
+        super().__init__()
         
         if not p.exists():
             raise FileNotFoundError(f"ActivityManager directory '{p}' does not exist")
@@ -34,11 +64,27 @@ class ActivityManager:
         self._current_activity = None
         
     @property
-    def current_activity(self):
+    def current_activity(self) -> Activity:
+        """ Return current `Activity` """
         return self._current_activity
     
-    def load_activity(self, name):
-        """ Load activity `name` and set as `current_activity` """
+    def get_activity_objects(self, name: str) -> ActivityObjects:
+        """ Return namedtuple of objects associated with `name` """
+        try:
+            return self._activities[name]
+        except KeyError: 
+            msg = f"No activity '{name}'. \n"
+            msg += f"Available activities are: {','.join(self._activities.keys())}"
+            raise KeyError(msg)
+    
+    def load_activity(self, name: str) -> ActivityObjects:
+        """ 
+        Load activity `name` and set as `current_activity`. 
+        
+        Return objects associated with `name`
+        """
+        if name in self._activities:
+            return self._activities[name]
         
         p = self._data_path.joinpath(f"{name}.json")
         if not p.exists():
@@ -61,8 +107,8 @@ class ActivityManager:
             
         return activity_objects
     
-    def _initialise_activity(self, activity) -> ActivityObjects:
-        """ Initialise objects for the given activity and return in named tuple """
+    def _initialise_activity(self, activity: Activity) -> ActivityObjects:
+        """ Initialise objects for the given activity and return `ActivityObjects` """
         
         df = self._load_actvity_df(activity)
         data = Data(df, activity)
@@ -92,14 +138,16 @@ class ActivityManager:
             y_series=y_series)
         
         objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
+        
+        objects.request_save_activity.connect(self.save_activity)
+        
         return objects
     
     def list_activities(self):
-        # TODO
-        with open(self._data_path.joinpath("all_activities.json")) as fileobj:
-            activity_json = json.load(fileobj)
+        json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
+        return  json_files
             
-    def _load_actvity_df(self, activity) -> pd.DataFrame:
+    def _load_actvity_df(self, activity: Activity) -> pd.DataFrame:
         """ Load dataframe for `activity` """
         
         filepath = self._activity_csv_file(activity)
@@ -114,14 +162,14 @@ class ActivityManager:
         
         return df
     
-    def _activity_csv_file(self, activity, raise_not_exist=False):
+    def _activity_csv_file(self, activity: Activity, raise_not_exist=False):
         fname = f"{activity.name.lower()}.csv"
         filepath = self._data_path.joinpath(fname)
         if raise_not_exist and not filepath.exists():
             raise FileNotFoundError(f"csv file for activity '{activity.name}' not found")
         return filepath
     
-    def save_activity(self, activity_name:str=None):
+    def save_activity(self, activity_name: str=None):
         """ Save activity data to csv and backup """
         if activity_name is None:
             activity_name = self.current_activity.name
@@ -132,7 +180,11 @@ class ActivityManager:
         activity.data.df.to_csv(filepath, sep=self.csv_sep, index=False)
         self.backup_activity(activity_name)
         
-    def backup_activity(self, activity_name:str=None):
+        save_time = datetime.now().strftime("%H:%M:%S")
+        msg = f"Last saved at {save_time}"
+        self.status_message.emit(msg)
+        
+    def backup_activity(self, activity_name: str=None):
         """ Backup activity csv file """
         if activity_name is None:
             activity_name = self.current_activity.name
