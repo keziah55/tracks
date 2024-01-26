@@ -179,11 +179,16 @@ class ActivityManager(QObject):
         if activity_name is None:
             activity_name = self.current_activity.name
             
+        # save csv
         activity = self._activities[activity_name]
         filepath = self._activity_csv_file(activity.activity)
         
+        # backup csv
         activity.data.df.to_csv(filepath, sep=self.csv_sep, index=False)
         self.backup_activity(activity_name)
+        
+        # TODO write settings etc to json
+        # plot.state() dict etc
         
         save_time = datetime.now().strftime("%H:%M:%S")
         msg = f"Last saved at {save_time}"

@@ -401,9 +401,6 @@ class PlotPreferences(QWidget):
         # does setCurrentText not emit currentTextChanged signal?
         self._enableDisableDeleteButton(plotStyle)
         
-        current_plot_style = self.mainWindow.plot.get_style(plotStyle)
-        from pprint import pprint; pprint(current_plot_style)
-    
         # self.customStyle.setName(plotStyle)
         self.customStyle.setStyle(self.mainWindow.plot.get_style(plotStyle), 
                                   name=plotStyle, setAsPrevious=True)
