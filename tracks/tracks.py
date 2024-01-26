@@ -34,6 +34,8 @@ class Tracks(QMainWindow):
         
         self._activity_manager = ActivityManager(get_data_path(), self.settings)
         
+        self._activity_manager.status_message.connect(self.statusBar().showMessage)
+        
         self._viewer_stack = StackedWidget()
         self._best_month_stack = StackedWidget()
         self._best_sessions_stack = StackedWidget()
@@ -182,7 +184,6 @@ class Tracks(QMainWindow):
             stack.setCurrentKey(name)
             
         if new_widgets:
-            activity_objects.data.dataChanged.connect(self._data_changed)
             activity_objects.data_viewer.selectedSummary.connect(self.statusBar().showMessage)
             activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
             activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
@@ -191,19 +192,10 @@ class Tracks(QMainWindow):
     @Slot()
     def save(self, activity=None):
         self._activity_manager.save_activity(activity)
-        save_time = datetime.now().strftime("%H:%M:%S")
-        self.statusBar().showMessage(f"Last saved at {save_time}")
         
     @Slot()
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
-        
-    @Slot(object)
-    def _data_changed(self, idx):
-        self.viewer.newData(idx)
-        self.plot.new_data(idx)
-        self.pb.newData(idx)
-        self.save()
         
     @Slot()
     def _summary_value_changed(self):
