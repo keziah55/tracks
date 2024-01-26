@@ -165,23 +165,28 @@ class Tracks(QMainWindow):
     
     @Slot(str)
     def _load_activity(self, name):
+        
         activity_objects = self._activity_manager.load_activity(name)
         
+        new_widgets = False
         for stack, attr in self._stack_attrs.items():
-            if isinstance(attr, str):
-                widget = getattr(activity_objects, attr)
-            elif isinstance(attr, (list, tuple)):
-                widget = activity_objects
-                for at in attr:
-                    widget = getattr(widget, at)
-            stack.addWidget(widget, name)
-            stack.setCurrentWidget(widget)
+            if name not in stack:
+                new_widgets = True
+                if isinstance(attr, str):
+                    widget = getattr(activity_objects, attr)
+                elif isinstance(attr, (list, tuple)):
+                    widget = activity_objects
+                    for at in attr:
+                        widget = getattr(widget, at)
+                stack.addWidget(widget, name)
+            stack.setCurrentKey(name)
             
-        activity_objects.data.dataChanged.connect(self._data_changed)
-        activity_objects.data_viewer.selectedSummary.connect(self.statusBar().showMessage)
-        activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-        activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
-        activity_objects.personal_bests.statusMessage.connect(self.statusBar().showMessage)
+        if new_widgets:
+            activity_objects.data.dataChanged.connect(self._data_changed)
+            activity_objects.data_viewer.selectedSummary.connect(self.statusBar().showMessage)
+            activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+            activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
+            activity_objects.personal_bests.statusMessage.connect(self.statusBar().showMessage)
     
     @Slot()
     def save(self, activity=None):

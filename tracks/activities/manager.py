@@ -53,6 +53,9 @@ class ActivityManager:
         
         Return namedtuple of objects associated with `name`
         """
+        if name in self._activities:
+            return self._activities[name]
+        
         p = self._data_path.joinpath(f"{name}.json")
         if not p.exists():
             msg = f"No such activity '{name}'\n"
