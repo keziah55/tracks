@@ -107,7 +107,7 @@ class TestPreferences(TracksSetupTeardown):
         assert plotPref.customStyle.saveButton.isEnabled()
         
         newColours = {'speed':'#ff0000','distance':'#00ff00', 'time':'#0000ff', 
-                      'calories':'#ffff00', 'odometer':'#00ffff', 'highlightPoint': '#ff00ff', 
+                      'calories':'#ffff00', 'odometer':'#00ffff', 'highlight_point': '#ff00ff', 
                       'foreground':'#000000', 'background':'#ffffff'}
         newSymbols = {'speed': 'h', 'distance': 't3', 'time': '+', 'calories': 'star'}
         

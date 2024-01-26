@@ -73,7 +73,7 @@ class StyleDesigner(QWidget):
         self._symbolListWidgets = {}
         row = 0
         for key in styleKeys:
-            if key == "highlightPoint":
+            if key == "highlight_point":
                 label = "Highlight point"
             else:
                 label = key.capitalize()
@@ -175,15 +175,14 @@ class StyleDesigner(QWidget):
             key = self.gridLayout.itemAtPosition(row, 0).widget().text().lower()
             colour = self.gridLayout.itemAtPosition(row, 1).widget().colour
             
-            # turn 'highlight point' back into 'highlightPoint'
-            first, *rest = key.split(' ')
-            key = first + ''.join([s.capitalize() for s in rest])
-            style[key] = colour
+            # turn 'highlight point' back into 'highlight_point'
+            key = key.replace(" ", "_")
+            style[key] = {"colour": colour}
             
             symbol = self.gridLayout.itemAtPosition(row, 2)
             if symbol is not None:
                 symbol = symbol.widget().currentText().lower()
-                style[f"{key}Symbol"] = self.reverseSymbolDict[symbol]
+                style[key]["symbol"] = self.reverseSymbolDict[symbol]
         return self.name, style
     
     def _saveStyle(self):
@@ -401,6 +400,9 @@ class PlotPreferences(QWidget):
         self.plotStyleList.setCurrentText(plotStyle.capitalize())
         # does setCurrentText not emit currentTextChanged signal?
         self._enableDisableDeleteButton(plotStyle)
+        
+        current_plot_style = self.mainWindow.plot.get_style(plotStyle)
+        from pprint import pprint; pprint(current_plot_style)
     
         # self.customStyle.setName(plotStyle)
         self.customStyle.setStyle(self.mainWindow.plot.get_style(plotStyle), 

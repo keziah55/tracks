@@ -98,7 +98,7 @@ class Tracks(QMainWindow):
         if geometry is not None:
             self.restoreGeometry(geometry)
         
-        self.prefDialog = PreferencesDialog(self)
+        # self.prefDialog = PreferencesDialog(self)
         
         self._create_actions()
         self._create_menus()
@@ -227,9 +227,9 @@ class Tracks(QMainWindow):
             "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
             triggered=self.save)
         
-        self.preferencesAct = QAction(
-            "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
-            triggered=self.prefDialog.show)
+        # self.preferencesAct = QAction(
+        #     "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
+        #     triggered=self.prefDialog.show)
         
     def _create_menus(self):
         self._file_menu = self.menuBar().addMenu("&File")
@@ -242,7 +242,7 @@ class Tracks(QMainWindow):
         self._file_menu.addAction(self.exitAct)
         
         self._edit_menu = self.menuBar().addMenu("&Edit")
-        self._edit_menu.addAction(self.preferencesAct)
+        # self._edit_menu.addAction(self.preferencesAct)
         
         self._view_menu = self.menuBar().addMenu("&View")
         self._panel_menu = self._view_menu.addMenu("&Panels")

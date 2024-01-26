@@ -274,8 +274,8 @@ class Plot(_PlotWidget):
         
     def set_style(self, style):
         self.style.name = style
-        dct = {'foreground':self.style.foreground,
-               'background':self.style.background}
+        dct = {'foreground':self.style.foreground['colour'],
+               'background':self.style.background['colour']}
         setConfigOptions(**dct)
         if self.plotItem is not None:
             self.plotItem.setButtonPixmaps()
@@ -503,7 +503,7 @@ class Plot(_PlotWidget):
         self._prevHgltPointColour = point.pen().color().name()
         
         # set colour of new point
-        colour = self.style['highlightPoint']['colour']
+        colour = self.style['highlight_point']['colour']
         pen = mkPen(colour)
         brush = mkBrush(colour)
         self.hgltPnt = point
@@ -520,7 +520,7 @@ class Plot(_PlotWidget):
                 self._regenerateCachedPBs[self.y_series] = False
             for idx in self.hgltPBs[self.y_series]:
                 pt = self.dataItem.scatter.points()[idx]
-                colour = self.style['highlightPoint']['colour']
+                colour = self.style['highlight_point']['colour']
                 pen = mkPen(colour)
                 brush = mkBrush(colour)
                 pt.setPen(pen)
