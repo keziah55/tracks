@@ -34,12 +34,25 @@ class ActivityManager:
         self._current_activity = None
         
     @property
-    def current_activity(self):
+    def current_activity(self) -> Activity:
+        """ Return current `Activity` """
         return self._current_activity
     
-    def load_activity(self, name):
-        """ Load activity `name` and set as `current_activity` """
+    def get_activity_objects(self, name) -> ActivityObjects:
+        """ Return namedtuple of objects associated with `name` """
+        try:
+            return self._activities[name]
+        except KeyError: 
+            msg = f"No activity '{name}'. \n"
+            msg += f"Available activities are: {','.join(self._activities.keys())}"
+            raise KeyError(msg)
+    
+    def load_activity(self, name) -> ActivityObjects:
+        """ 
+        Load activity `name` and set as `current_activity`. 
         
+        Return namedtuple of objects associated with `name`
+        """
         p = self._data_path.joinpath(f"{name}.json")
         if not p.exists():
             msg = f"No such activity '{name}'\n"
@@ -90,6 +103,11 @@ class ActivityManager:
             style=plot_style, 
             months=month_range,
             y_series=y_series)
+        
+        add_data.newData.connect(data.append)
+        plot.point_selected.connect(viewer.highlightItem)
+        viewer.itemSelected.connect(plot.set_current_point_from_date)
+        pb.itemSelected.connect(plot.set_current_point_from_date)
         
         objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
         return objects

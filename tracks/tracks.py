@@ -17,6 +17,8 @@ from . import get_data_path
 from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
 
+import inspect
+
 
 class Tracks(QMainWindow):
     
@@ -32,60 +34,71 @@ class Tracks(QMainWindow):
         
         self._activity_manager = ActivityManager(get_data_path(), self.settings)
         
-        activity_objects = self._activity_manager.load_activity(activity)
-        
         self._viewer_stack = StackedWidget()
         self._best_month_stack = StackedWidget()
         self._best_sessions_stack = StackedWidget()
         self._add_data_stack = StackedWidget()
         self._plot_stack = StackedWidget()
         
-        self.data = activity_objects.data
-        self.viewer = activity_objects.data_viewer
-        self.pb = activity_objects.personal_bests
-        self.plot = activity_objects.plot
-        self.addData = activity_objects.add_data
-
-        # TODO handle this
+        self._best_month_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self._best_sessions_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._viewer_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._add_data_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        
+        self._stack_attrs = {
+            self._viewer_stack: "data_viewer",
+            self._best_month_stack: ("personal_bests", "bestMonth"),
+            self._best_sessions_stack: ("personal_bests", "bestSessions"),
+            self._add_data_stack: "add_data",
+            self._plot_stack: "plot",
+        }
+        
+        self._load_activity(activity)
+        
+        # self.data = activity_objects.data
+        # self.viewer = activity_objects.data_viewer
+        # self.pb = activity_objects.personal_bests
+        # self.plot = activity_objects.plot
+        # self.addData = activity_objects.add_data
+        
+        # TODO handle this - TG-136
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
-
         
-        self.pb.bestMonth.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.pb.bestSessions.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.viewer.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.addData.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        
-        self.addData.newData.connect(self.data.append)
-        self.data.dataChanged.connect(self._data_changed)
-        self.plot.point_selected.connect(self.viewer.highlightItem)
-        self.viewer.itemSelected.connect(self.plot.set_current_point_from_date)
-        self.viewer.selectedSummary.connect(self.statusBar().showMessage)
-        self.pb.itemSelected.connect(self.plot.set_current_point_from_date)
-        self.pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-        self.pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
-        self.pb.statusMessage.connect(self.statusBar().showMessage)
+        # self.addData.newData.connect(self.data.append)
+        # self.data.dataChanged.connect(self._data_changed)
+        # self.plot.point_selected.connect(self.viewer.highlightItem)
+        # self.viewer.itemSelected.connect(self.plot.set_current_point_from_date)
+        # self.viewer.selectedSummary.connect(self.statusBar().showMessage)
+        # self.pb.itemSelected.connect(self.plot.set_current_point_from_date)
+        # self.pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+        # self.pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
+        # self.pb.statusMessage.connect(self.statusBar().showMessage)
         
         dockWidgets = [
             (
-                self.pb.bestMonth, 
+                self._best_month_stack,
+                # self.pb.bestMonth, 
                 Qt.LeftDockWidgetArea, 
                 f"Best month ({monthCriterion})", 
                 "PB month"
             ),
             (
-                self.pb.bestSessions, 
+                self._best_sessions_stack,
+                # self.pb.bestSessions, 
                 Qt.LeftDockWidgetArea, 
                 f"Top {intToStr(numTopSessions)} sessions", 
                 "PB sessions"
             ),
             (
-                self.viewer, 
+                # self.viewer, 
+                self._viewer_stack,
                 Qt.LeftDockWidgetArea, 
                 "Monthly data"
             ),
             (
-                self.addData, 
+                # self.addData, 
+                self._add_data_stack,
                 Qt.LeftDockWidgetArea, 
                 "Add data"
             )
@@ -93,7 +106,8 @@ class Tracks(QMainWindow):
         
         for args in dockWidgets:
             self._create_dock_widget(*args)
-        self.setCentralWidget(self.plot)
+        # self.setCentralWidget(self.plot)
+        self.setCentralWidget(self._plot_stack)
         
         state = self.settings.value("window/state", None)
         if state is not None:
@@ -113,13 +127,61 @@ class Tracks(QMainWindow):
         icon = QIcon(str(p))
         self.setWindowIcon(icon)
         
+    ###########################################################################
+    @property
+    def data(self):
+        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.data
+    
+    @property
+    def viewer(self):
+        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.data_viewer
+    
+    @property
+    def pb(self):
+        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.personal_bests
+        
+    @property
+    def plot(self):
+        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.plot
+    
+    @property
+    def addData(self):
+        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
+        return ao.add_data
+    ###########################################################################
+    
     @property
     def current_activity(self):
         return self._activity_manager.current_activity
     
     @Slot(str)
     def _load_activity(self, name):
-        self._activity_manager.load_activity(name)
+        activity_objects = self._activity_manager.load_activity(name)
+        
+        for stack, attr in self._stack_attrs.items():
+            if isinstance(attr, str):
+                widget = getattr(activity_objects, attr)
+            elif isinstance(attr, (list, tuple)):
+                widget = activity_objects
+                for at in attr:
+                    widget = getattr(widget, at)
+            stack.addWidget(widget, name)
+            stack.setCurrentWidget(widget)
+            
+        activity_objects.data.dataChanged.connect(self._data_changed)
+        activity_objects.data_viewer.selectedSummary.connect(self.statusBar().showMessage)
+        activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+        activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
+        activity_objects.personal_bests.statusMessage.connect(self.statusBar().showMessage)
     
     @Slot()
     def save(self, activity=None):
