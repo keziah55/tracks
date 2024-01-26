@@ -164,10 +164,8 @@ class Tracks(QMainWindow):
             stack.setCurrentKey(name)
             
         if new_widgets:
-            activity_objects.data_viewer.selectedSummary.connect(self.statusBar().showMessage)
             activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
             activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
-            activity_objects.personal_bests.statusMessage.connect(self.statusBar().showMessage)
     
     @Slot()
     def save(self, activity=None):

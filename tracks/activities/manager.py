@@ -20,6 +20,8 @@ class ActivityObjects(QObject):
     
     request_save_activity = Signal(str)
     
+    status_message = Signal(str)
+    
     def __init__(self, activity, data, data_viewer, add_data, personal_bests, plot):
         super().__init__()
         
@@ -37,7 +39,10 @@ class ActivityObjects(QObject):
         self.plot.point_selected.connect(self.data_viewer.highlightItem)
         self.data_viewer.itemSelected.connect(self.plot.set_current_point_from_date)
         self.personal_bests.itemSelected.connect(self.plot.set_current_point_from_date)
+        
         self.data.dataChanged.connect(self._data_changed)
+        self.data_viewer.selectedSummary.connect(self.status_message)
+        self.personal_bests.statusMessage.connect(self.status_message)
         
     @Slot(object)
     def _data_changed(self, idx):
@@ -137,11 +142,11 @@ class ActivityManager(QObject):
             months=month_range,
             y_series=y_series)
         
-        objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
+        activity_objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
+        activity_objects.status_message.connect(self.status_message)
+        activity_objects.request_save_activity.connect(self.save_activity)
         
-        objects.request_save_activity.connect(self.save_activity)
-        
-        return objects
+        return activity_objects
     
     def list_activities(self):
         json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
