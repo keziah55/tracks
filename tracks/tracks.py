@@ -109,33 +109,34 @@ class Tracks(QMainWindow):
         self.setWindowIcon(icon)
         
     ###########################################################################
+    # TG-136 these properties are used by plot and data preferences
     @property
     def data(self):
-        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
         ao = self._activity_manager.get_activity_objects(self.current_activity.name)
         return ao.data
     
     @property
     def viewer(self):
-        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
         ao = self._activity_manager.get_activity_objects(self.current_activity.name)
         return ao.data_viewer
     
     @property
     def pb(self):
-        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
         ao = self._activity_manager.get_activity_objects(self.current_activity.name)
         return ao.personal_bests
         
     @property
     def plot(self):
-        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
         ao = self._activity_manager.get_activity_objects(self.current_activity.name)
         return ao.plot
     
     @property
     def addData(self):
-        print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function}")
+        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
         ao = self._activity_manager.get_activity_objects(self.current_activity.name)
         return ao.add_data
     ###########################################################################
@@ -178,6 +179,8 @@ class Tracks(QMainWindow):
         
     @Slot()
     def _summary_value_changed(self):
+        # TG-136
+        # called from data pref
         self.viewer.updateTopLevelItems()
         self.pb.newData()
         
@@ -208,6 +211,7 @@ class Tracks(QMainWindow):
         self.settings.setValue("window/state", state)
         self.settings.setValue("window/geometry", geometry)
         
+        # TG-136
         for key, value in self.pb.state().items():
             self.settings.setValue(f"pb/{key}", value)
             
