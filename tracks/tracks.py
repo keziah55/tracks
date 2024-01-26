@@ -5,7 +5,6 @@ Main window for Tracks.
 """
 
 from pathlib import Path
-from datetime import datetime
 from functools import partial
 from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel, QToolBar
 from qtpy.QtCore import Qt, Slot
@@ -57,49 +56,29 @@ class Tracks(QMainWindow):
         
         self._load_activity(activity)
         
-        # self.data = activity_objects.data
-        # self.viewer = activity_objects.data_viewer
-        # self.pb = activity_objects.personal_bests
-        # self.plot = activity_objects.plot
-        # self.addData = activity_objects.add_data
-        
         # TODO handle this - TG-136
         numTopSessions = self.settings.value("pb/numSessions", 5, int)
         monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
         
-        # self.addData.newData.connect(self.data.append)
-        # self.data.dataChanged.connect(self._data_changed)
-        # self.plot.point_selected.connect(self.viewer.highlightItem)
-        # self.viewer.itemSelected.connect(self.plot.set_current_point_from_date)
-        # self.viewer.selectedSummary.connect(self.statusBar().showMessage)
-        # self.pb.itemSelected.connect(self.plot.set_current_point_from_date)
-        # self.pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-        # self.pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
-        # self.pb.statusMessage.connect(self.statusBar().showMessage)
-        
         dockWidgets = [
             (
                 self._best_month_stack,
-                # self.pb.bestMonth, 
                 Qt.LeftDockWidgetArea, 
                 f"Best month ({monthCriterion})", 
                 "PB month"
             ),
             (
                 self._best_sessions_stack,
-                # self.pb.bestSessions, 
                 Qt.LeftDockWidgetArea, 
                 f"Top {intToStr(numTopSessions)} sessions", 
                 "PB sessions"
             ),
             (
-                # self.viewer, 
                 self._viewer_stack,
                 Qt.LeftDockWidgetArea, 
                 "Monthly data"
             ),
             (
-                # self.addData, 
                 self._add_data_stack,
                 Qt.LeftDockWidgetArea, 
                 "Add data"
@@ -245,10 +224,6 @@ class Tracks(QMainWindow):
         self.saveAct = QAction(
             "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
             triggered=self.save)
-        
-        # self._load_activity_act = QAction(#icon, text)
-        #     "Choose &Activity", self, shortcut="Ctrl+A", statusTip="Choose activity",
-        #     triggered=self._load_activity)
         
         self.preferencesAct = QAction(
             "&Preferences", self, shortcut="F12", statusTip="Edit preferences",

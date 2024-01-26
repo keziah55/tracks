@@ -68,7 +68,7 @@ class ActivityManager(QObject):
         """ Return current `Activity` """
         return self._current_activity
     
-    def get_activity_objects(self, name) -> ActivityObjects:
+    def get_activity_objects(self, name: str) -> ActivityObjects:
         """ Return namedtuple of objects associated with `name` """
         try:
             return self._activities[name]
@@ -77,7 +77,7 @@ class ActivityManager(QObject):
             msg += f"Available activities are: {','.join(self._activities.keys())}"
             raise KeyError(msg)
     
-    def load_activity(self, name) -> ActivityObjects:
+    def load_activity(self, name: str) -> ActivityObjects:
         """ 
         Load activity `name` and set as `current_activity`. 
         
@@ -107,7 +107,7 @@ class ActivityManager(QObject):
             
         return activity_objects
     
-    def _initialise_activity(self, activity) -> ActivityObjects:
+    def _initialise_activity(self, activity: Activity) -> ActivityObjects:
         """ Initialise objects for the given activity and return `ActivityObjects` """
         
         df = self._load_actvity_df(activity)
@@ -147,7 +147,7 @@ class ActivityManager(QObject):
         json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
         return  json_files
             
-    def _load_actvity_df(self, activity) -> pd.DataFrame:
+    def _load_actvity_df(self, activity: Activity) -> pd.DataFrame:
         """ Load dataframe for `activity` """
         
         filepath = self._activity_csv_file(activity)
@@ -162,14 +162,14 @@ class ActivityManager(QObject):
         
         return df
     
-    def _activity_csv_file(self, activity, raise_not_exist=False):
+    def _activity_csv_file(self, activity: Activity, raise_not_exist=False):
         fname = f"{activity.name.lower()}.csv"
         filepath = self._data_path.joinpath(fname)
         if raise_not_exist and not filepath.exists():
             raise FileNotFoundError(f"csv file for activity '{activity.name}' not found")
         return filepath
     
-    def save_activity(self, activity_name:str=None):
+    def save_activity(self, activity_name: str=None):
         """ Save activity data to csv and backup """
         if activity_name is None:
             activity_name = self.current_activity.name
@@ -181,10 +181,10 @@ class ActivityManager(QObject):
         self.backup_activity(activity_name)
         
         save_time = datetime.now().strftime("%H:%M:%S")
-        msg = "Last saved at {save_time}"
+        msg = f"Last saved at {save_time}"
         self.status_message.emit(msg)
         
-    def backup_activity(self, activity_name:str=None):
+    def backup_activity(self, activity_name: str=None):
         """ Backup activity csv file """
         if activity_name is None:
             activity_name = self.current_activity.name
