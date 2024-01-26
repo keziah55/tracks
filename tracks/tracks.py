@@ -245,8 +245,11 @@ class Tracks(QMainWindow):
         
     def _create_menus(self):
         self._file_menu = self.menuBar().addMenu("&File")
-<<<<<<< HEAD
         self._file_menu.addAction(self._save_act)
+        self._activities_menu = self._file_menu.addMenu("&Activities")
+        for activity in self._activity_manager.list_activities():
+            callback = partial(self._load_activity, activity)
+            self._activities_menu.addAction(activity, callback)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._exit_act)
         
@@ -258,23 +261,6 @@ class Tracks(QMainWindow):
         for key in sorted(self._dock_widgets):
             dock = self._dock_widgets[key]
             self._panel_menu.addAction(dock.toggleViewAction())
-=======
-        self._file_menu.addAction(self.saveAct)
-        self._activities_menu = self._file_menu.addMenu("&Activities")
-        for activity in self._activity_manager.list_activities():
-            callback = partial(self._load_activity, activity)
-            self._activities_menu.addAction(activity, callback)
-        self._file_menu.addSeparator()
-        self._file_menu.addAction(self.exitAct)
-        
-        self._edit_menu = self.menuBar().addMenu("&Edit")
-        self._edit_menu.addAction(self.preferencesAct)
-        
-        self._view_menu = self.menuBar().addMenu("&View")
-        self._panel_menu = self._view_menu.addMenu("&Panels")
-        for key in sorted(self.dockWidgets):
-            dock = self.dockWidgets[key]
-            self._panel_menu.addAction(dock.toggleViewAction())
     
     def _create_toolbars(self):
         return
@@ -284,4 +270,3 @@ class Tracks(QMainWindow):
         self._options_toolsbar.addActions(actions)
         
         self.addToolBar(Qt.LeftToolBarArea, self._options_toolsbar)
->>>>>>> activities
