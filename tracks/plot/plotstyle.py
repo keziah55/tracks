@@ -4,9 +4,8 @@
 Class to manage reading/writing plotStyle.ini
 """
 
-from pathlib import Path
 import json
-from customQObjects.core import Settings
+from tracks import get_data_path
 
 class PlotStyle:
     """ 
@@ -25,9 +24,6 @@ class PlotStyle:
         
         self._activity_name = activity.name
         
-        plot_style_file = Path(Settings().fileName()).parent.joinpath('plotStyles.ini')
-        self.settings = Settings(str(plot_style_file), Settings.NativeFormat)
-        
         # TODO better way of doing this?
         self.symbol_keys = list(activity.filter_measures("plottable", lambda b: b))
         self.other_keys = ['odometer', 'highlight_point', 'foreground', 'background']
@@ -45,6 +41,10 @@ class PlotStyle:
             self._write_style_file(all_styles)
         
         self.name = style
+        
+    @property
+    def _plot_style_file(self):
+        return get_data_path().joinpath("plot_styles.json")
         
     @property
     def name(self):
@@ -76,49 +76,24 @@ class PlotStyle:
     def _get_style(self, field):
         return self._style_dict[self.name][field]
     
-        if field in ['foreground', 'background']:
-            return self.settings.value(f"{self.name}/{field}")
-        
-        dct = {'colour':self.settings.value(f"{self.name}/{field}")}
-        symbol = self.settings.value(f"{self.name}/{field}Symbol")
-        if symbol is not None:
-            dct['symbol'] = symbol
-        return dct
-    
     def get_style_dict(self, name=None):
         if name is None:
             name = self.name
         return self._style_dict[name]
-        style = {}
-        for field in self.keys:
-            dct = {'colour':self.settings.value(f"{name}/{field}")}
-            symbol = self.settings.value(f"{name}/{field}Symbol")
-            if symbol is not None:
-                dct['symbol'] = symbol
-            style[field] = dct
-        return style
     
     def add_style(self, name, style):
         self._style_dict[name] = style
         self._write_style_file()
         
-        # self.settings.beginGroup(name)
-        # for key, value in style.items():
-            # self.settings.setValue(key, value)
-        # self.settings.endGroup()
-    
     def remove_style(self, name):
         self._style_dict.pop(name)
         self._write_style_file()
-        # self.settings.remove(name)
         
     def _get_all_styles(self):
-        # TODO path
-        plot_style_file = Path(Settings().fileName()).parent.joinpath('plot_styles.json')
-        if not plot_style_file.exists():
+        if not self._plot_style_file.exists():
             all_styles = {}
         else:
-            with open(plot_style_file, "r") as fileobj:
+            with open(self._plot_style_file, "r") as fileobj:
                 all_styles = json.load(fileobj)
         return all_styles
         
@@ -166,6 +141,5 @@ class PlotStyle:
             all_styles = self._get_all_styles()
             all_styles[self._activity_name] = self._style_dict
         
-        plot_style_file = Path(Settings().fileName()).parent.joinpath('plot_styles.json')
-        with open(plot_style_file, 'w') as f:
+        with open(self._plot_style_file, 'w') as f:
             json.dump(all_styles, f, indent=4)

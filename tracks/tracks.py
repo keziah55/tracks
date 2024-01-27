@@ -12,7 +12,6 @@ from qtpy.QtGui import QIcon
 from .activities import ActivityManager
 from .preferences import PreferencesDialog
 from .util import intToStr
-from . import get_data_path
 from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
 
@@ -31,7 +30,7 @@ class Tracks(QMainWindow):
         
         activity = self.settings.value("activity/current", "cycling")
         
-        self._activity_manager = ActivityManager(get_data_path(), self.settings)
+        self._activity_manager = ActivityManager(self.settings)
         
         self._activity_manager.status_message.connect(self.statusBar().showMessage)
         

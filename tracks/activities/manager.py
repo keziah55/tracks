@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import pandas as pd
 from .activities import Activity
+from tracks import get_data_path
 from tracks.plot import PlotWidget
 from tracks.data import Data, DataViewer, PersonalBests, AddData
 from tracks.util import parse_month_range
@@ -58,9 +59,10 @@ class ActivityManager(QObject):
     
     csv_sep = ","
     
-    def __init__(self, p: Path, settings: Settings):
+    def __init__(self, settings: Settings):
         super().__init__()
         
+        p = get_data_path()
         if not p.exists():
             raise FileNotFoundError(f"ActivityManager directory '{p}' does not exist")
         self._data_path = p
@@ -149,8 +151,9 @@ class ActivityManager(QObject):
         return activity_objects
     
     def list_activities(self):
-        json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
-        return  json_files
+        return ["cycling", "rowing"]
+        # json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
+        # return  json_files
             
     def _load_actvity_df(self, activity: Activity) -> pd.DataFrame:
         """ Load dataframe for `activity` """
