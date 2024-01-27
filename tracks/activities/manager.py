@@ -6,7 +6,6 @@ Object to manage loading activities and their related widgets etc.
 
 from datetime import datetime
 import json
-from pathlib import Path
 import pandas as pd
 from .activities import Activity
 from tracks import get_data_path
@@ -14,8 +13,13 @@ from tracks.plot import PlotWidget
 from tracks.data import Data, DataViewer, PersonalBests, AddData
 from tracks.util import parse_month_range
 from qtpy.QtCore import QObject, Signal, Slot
-from customQObjects.core import Settings
 
+def default_current_activity(func):
+    def wrapped(self, activity_name=None, **kwargs):
+        if activity_name is None:
+            activity_name = self.current_activity.name
+        return func(self, activity_name, **kwargs)
+    return wrapped
 
 class ActivityObjects(QObject):
     
@@ -59,7 +63,7 @@ class ActivityManager(QObject):
     
     csv_sep = ","
     
-    def __init__(self, settings: Settings):
+    def __init__(self):
         super().__init__()
         
         p = get_data_path()
@@ -67,7 +71,6 @@ class ActivityManager(QObject):
             raise FileNotFoundError(f"ActivityManager directory '{p}' does not exist")
         self._data_path = p
         self._json_path = self._data_path.joinpath("activities.json")
-        self._settings = settings
         self._activities = {}
         self._current_activity = None
         
@@ -133,25 +136,36 @@ class ActivityManager(QObject):
         """ Initialise objects for the given activity and return `ActivityObjects` """
         
         df = self._load_actvity_df(activity)
+        pref = self._get_activity_preferences(activity.name)
+        
         data = Data(df, activity)
 
         add_data = AddData(activity)
         
-        numTopSessions = self._settings.value("pb/numSessions", 5, int)
-        monthCriterion = self._settings.value("pb/bestMonthCriterion", "distance")
-        sessionsKey = self._settings.value("pb/sessionsKey", "speed")
+        pb_pref = pref.get("personal_bests", {})
+        num_best_sessions = pb_pref.get("num_best_sessions", 5) 
+        sessions_key = pb_pref.get("sessions_key", "speed")
+        month_criterion =  pb_pref.get("best_month_criterion", "distance")
+        pb_count =  pb_pref.get("pb_count", None)
+        pb_month_range =  pb_pref.get("pb_month_range", None)
         pb = PersonalBests(
             data, 
             activity,
-            numSessions=numTopSessions, 
-            monthCriterion=monthCriterion,
-            sessionsKey=sessionsKey)
+            num_sessions=num_best_sessions, 
+            sessions_key=sessions_key,
+            month_criterion=month_criterion,
+            pb_count=pb_count,
+            pb_month_range=pb_month_range,
+        )
         
         viewer = DataViewer(data, activity)
         
-        plot_style = self._settings.value("plot/style", "dark")
-        month_range = parse_month_range(self._settings.value("plot/range", "All"))
-        y_series = self._settings.value("plot/current_series", "time")
+        plot_pref = pref.get("plot", {})
+        plot_style = plot_pref.get("style", "dark")
+        month_range = plot_pref.get("default_months", "All")
+        if isinstance(month_range, str):
+            month_range = parse_month_range(month_range)
+        y_series = plot_pref.get("current_series", "time")
         plot = PlotWidget(
             data, 
             activity,
@@ -166,9 +180,8 @@ class ActivityManager(QObject):
         return activity_objects
     
     def list_activities(self):
-        return ["cycling", "rowing"]
-        # json_files = [f.stem for f in self._data_path.iterdir() if f.suffix == ".json"]
-        # return  json_files
+        all_activities = self._activities_json()
+        return list(all_activities.keys())
             
     def _load_actvity_df(self, activity: Activity) -> pd.DataFrame:
         """ Load dataframe for `activity` """
@@ -192,11 +205,9 @@ class ActivityManager(QObject):
             raise FileNotFoundError(f"csv file for activity '{activity.name}' not found")
         return filepath
     
+    @default_current_activity
     def save_activity(self, activity_name: str=None):
         """ Save activity data to csv and backup """
-        if activity_name is None:
-            activity_name = self.current_activity.name
-            
         # save csv
         activity = self._activities[activity_name]
         filepath = self._activity_csv_file(activity.activity)
@@ -205,19 +216,16 @@ class ActivityManager(QObject):
         activity.data.df.to_csv(filepath, sep=self.csv_sep, index=False)
         self.backup_activity(activity_name)
         
-        # TODO write settings etc to json
-        # plot.state() dict etc
+        # save settings for this activity
         self._activity_to_json()
         
         save_time = datetime.now().strftime("%H:%M:%S")
         msg = f"Last saved at {save_time}"
         self.status_message.emit(msg)
         
+    @default_current_activity
     def backup_activity(self, activity_name: str=None):
         """ Backup activity csv file """
-        if activity_name is None:
-            activity_name = self.current_activity.name
-            
         activity = self._activities[activity_name]
         filepath = self._activity_csv_file(activity.activity)
         
@@ -225,19 +233,16 @@ class ActivityManager(QObject):
         
         activity.data.df.to_csv(bak, sep=self.csv_sep, index=False)
         
-    
-        
+    @default_current_activity
     def _activity_to_json(self, activity_name: str=None):
         """ Update `activity_name` in json file. """
-        if activity_name is None:
-            activity_name = self.current_activity.name
-            
         activity_objects = self._activities[activity_name]
         
         activity_json = activity_objects.activity.to_json()
         
         preferences_json = {}
         preferences_json["plot"] = activity_objects.plot.state()
+        preferences_json["personal_bests"] = activity_objects.personal_bests.state()
         
         activity_json.update(
             {
@@ -248,4 +253,13 @@ class ActivityManager(QObject):
         all_activities = self._activities_json()
         all_activities[activity_name] = activity_json
         self._write_activities_json(all_activities)
+        
+    @default_current_activity
+    def _get_activity_preferences(self, activity_name: str=None) -> dict:
+        all_activities = self._activities_json()
+        try:
+            pref = all_activities[activity_name]["preferences"]
+        except KeyError:
+            pref = {}
+        return pref
         

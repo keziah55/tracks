@@ -30,7 +30,7 @@ class Tracks(QMainWindow):
         
         activity = self.settings.value("activity/current", "cycling")
         
-        self._activity_manager = ActivityManager(self.settings)
+        self._activity_manager = ActivityManager()
         
         self._activity_manager.status_message.connect(self.statusBar().showMessage)
         

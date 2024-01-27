@@ -24,6 +24,8 @@ def parse_month_range(s) -> int:
     | "current year" | datetime.date.today().month |
     |      "all"     |             None            |
     """
+    if not isinstance(s, str):
+        raise TypeError(f"parse_month_range requires type str, not '{type(s).__name__}'")
     s = s.lower()
     if s == "1 year":
         s = "12 months"

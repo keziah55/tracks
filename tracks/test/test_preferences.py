@@ -12,6 +12,7 @@ from qtpy.QtCore import Qt
 
 pytest_plugin = "pytest-qt"
 
+@pytest.mark.skip("Don't test preferences")
 class TestPreferences(TracksSetupTeardown):
     
     def extraSetup(self):

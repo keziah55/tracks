@@ -41,12 +41,13 @@ class PersonalBests(QObject):
     
     statusMessage = Signal(str)
     
-    def __init__(self, data, activity, numSessions=5, monthCriterion="distance", sessionsKey="speed"):
+    def __init__(self, data, activity, num_sessions=5, sessions_key="speed", 
+                 month_criterion="distance", pb_count=None, pb_month_range=None):
         super().__init__()
         self.data = data
         self.newPBdialog = NewPBDialog()
-        self.bestMonth = PBMonthLabel(parent=self, activity=activity, column=monthCriterion)
-        self.bestSessions = PBTable(parent=self, activity=activity, rows=numSessions, key=sessionsKey)
+        self.bestMonth = PBMonthLabel(parent=self, activity=activity, column=month_criterion)
+        self.bestSessions = PBTable(parent=self, activity=activity, rows=num_sessions, key=sessions_key)
         
     @Slot(object)
     def newData(self, idx=None):
@@ -80,20 +81,24 @@ class PersonalBests(QObject):
         self.statusMessage.emit("Checking for new PBs...")
         
     def state(self) -> dict:
-        """ Return dict of values to be saved in settings (that aren't set in preferences) """
+        """ Return dict of values to be saved in settings """
         state = {
-            "sessionsKey": self.bestSessions.selectKey,
+            "sessions_key": self.bestSessions.select_key,
+            "num_best_sessions": self.bestSessions.num_best_sessions,
+            "best_month_criterion": self.bestMonth.column,
+            "pb_count": self.bestMonth.pbCount[0],
+            "pb_month_range": self.bestMonth.pbCount[1],
             }
         return state
 
 class PBMonthLabel(QLabel):
     
-    def __init__(self, parent, activity, column='distance'):
+    def __init__(self, parent, activity, column='distance', pb_count=None, pb_month_range=None):
         super().__init__()
         self.parent = parent
         self._activity = activity
         self.column = column
-        self.pbCount = (None, None)
+        self.pbCount = (pb_count, pb_month_range)
         self.monthYear = self.time = self.distance = self.calories = ""
         self.newData()
         self.setText()
@@ -237,11 +242,12 @@ class PBTable(QTableWidget):
         
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         
-        self.selectKey = key
+        self.select_key = key
+        self.num_best_sessions = rows
         
         self.currentCellChanged.connect(self._cellChanged)
         self.header.sectionClicked.connect(self.selectColumn)
-        measure = self._activity[self.selectKey]
+        measure = self._activity[self.select_key]
         self.selectColumn(self._activity.header.index(measure.full_name))
         
         self.newIdx = None
@@ -259,8 +265,9 @@ class PBTable(QTableWidget):
     def setNumRows(self, rows):
         if rows == self.rowCount():
             return
+        self.num_best_sessions = rows
         self.setRowCount(rows)
-        self.setTable(key=self.selectKey, order=self.order)
+        self.setTable(key=self.select_key, order=self.order)
         self._setToolTip(rows)
         if self.parent is not None:
             self.parent.numSessionsChanged.emit(rows)
@@ -318,7 +325,7 @@ class PBTable(QTableWidget):
         n = self.rowCount()
         self.items = self._getBestSessions(num=n, key=key, order=order)
         
-        self.selectKey = key
+        self.select_key = key
         self.order = order
         self.dates = [row['date'] for row in self.items]
         
@@ -378,7 +385,7 @@ class PBTable(QTableWidget):
         """
         # TODO this calls _getBestSessions but not setTable?
         # is _getBestSessions being called multiple times?
-        pb = self._getBestSessions(num=self.rowCount(), key=self.selectKey)
+        pb = self._getBestSessions(num=self.rowCount(), key=self.select_key)
         newDates = [row['date'] for row in pb]
         dates = [row['date'] for row in self.items]
         if newDates != dates:
@@ -387,7 +394,7 @@ class PBTable(QTableWidget):
                 while newDates[i] == dates[i]:
                     i += 1
             self.newIdx = i
-            msg = self.makeMessage(self.selectKey, i, pb[i][self.selectKey])
+            msg = self.makeMessage(self.select_key, i, pb[i][self.select_key])
             return msg
         else:
             None
