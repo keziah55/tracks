@@ -66,9 +66,24 @@ class ActivityManager(QObject):
         if not p.exists():
             raise FileNotFoundError(f"ActivityManager directory '{p}' does not exist")
         self._data_path = p
+        self._json_path = self._data_path.joinpath("activities.json")
         self._settings = settings
         self._activities = {}
         self._current_activity = None
+        
+    def _activities_json(self) -> dict:
+        """ Return dict of all activity info """
+        if not self._json_path.exists():
+            all_activities = {}
+        else:
+            with open(self._json_path, 'r') as fileobj:
+                all_activities = json.load(fileobj)
+        return all_activities
+    
+    def _write_activities_json(self, all_activities):
+        """ Write dict of data for all activities to json """
+        with open(self._json_path, 'w') as fileobj:
+            json.dump(all_activities, fileobj, indent=4)
         
     @property
     def current_activity(self) -> Activity:
@@ -192,6 +207,7 @@ class ActivityManager(QObject):
         
         # TODO write settings etc to json
         # plot.state() dict etc
+        self._activity_to_json()
         
         save_time = datetime.now().strftime("%H:%M:%S")
         msg = f"Last saved at {save_time}"
@@ -208,3 +224,28 @@ class ActivityManager(QObject):
         bak = filepath.with_suffix('.bak')
         
         activity.data.df.to_csv(bak, sep=self.csv_sep, index=False)
+        
+    
+        
+    def _activity_to_json(self, activity_name: str=None):
+        """ Update `activity_name` in json file. """
+        if activity_name is None:
+            activity_name = self.current_activity.name
+            
+        activity_objects = self._activities[activity_name]
+        
+        activity_json = activity_objects.activity.to_json()
+        
+        preferences_json = {}
+        preferences_json["plot"] = activity_objects.plot.state()
+        
+        activity_json.update(
+            {
+                "preferences":preferences_json,
+            }
+        )
+        
+        all_activities = self._activities_json()
+        all_activities[activity_name] = activity_json
+        self._write_activities_json(all_activities)
+        
