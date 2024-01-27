@@ -14,13 +14,15 @@ class PreferencesDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self._main_window = parent
+
         self.contentsWidget = QListWidget()
         self.pagesWidget = QStackedWidget()
         
         pages = sorted(self.pages, key=lambda widget: widget.name)
         
         for page in pages:
-            widget = page(parent)
+            widget = page(self._main_window)
             self.pagesWidget.addWidget(widget)
             self.contentsWidget.addItem(widget.name)
 
@@ -58,6 +60,7 @@ class PreferencesDialog(QDialog):
     def show(self):
         for n in range(self.pagesWidget.count()):
             self.pagesWidget.widget(n).setCurrentValues()
+        self.setWindowTitle(f"Preferences - {self._main_window.current_activity.name}")
         super().show()
         
     def apply(self):

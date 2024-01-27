@@ -236,7 +236,7 @@ class Tracks(QMainWindow):
         self._activities_menu = self._file_menu.addMenu("&Activities")
         for activity in self._activity_manager.list_activities():
             callback = partial(self._load_activity, activity)
-            self._activities_menu.addAction(activity, callback)
+            self._activities_menu.addAction(activity.capitalize(), callback)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self.exitAct)
         

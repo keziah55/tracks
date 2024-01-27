@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Class to manage reading/writing plotStyle.ini
+Class to manage reading/writing plot_styles.json
 """
 
 import json

@@ -18,13 +18,13 @@ class DataPreferences(QWidget):
     
     name = "Data"
     
-    def __init__(self, mainWindow):
+    def __init__(self, _main_window):
         super().__init__()
-        self.mainWindow = mainWindow
+        self._main_window = _main_window
         
         bestMonthGroup = GroupBox("Best month", layout="grid")
         self.bestMonthCriteria = QComboBox()
-        items = self.mainWindow.current_activity.filter_measures("summary", lambda s: s is not None)
+        items = self._main_window.current_activity.filter_measures("summary", lambda s: s is not None)
         items = [item.name for item in items.values()]
         self.bestMonthCriteria.addItems(items)
         
@@ -57,7 +57,7 @@ class DataPreferences(QWidget):
         summaryCriteriaGroup = GroupBox("Summary criteria", layout="grid")
         
         names = [(m.slug, m.name) 
-                 for m in self.mainWindow.current_activity.measures.values() 
+                 for m in self._main_window.current_activity.measures.values() 
                  if m.summary is not None]
         self.summaryComboBoxes = {}
         for row, (slug, name) in enumerate(names):
@@ -100,7 +100,7 @@ class DataPreferences(QWidget):
         for name, widget in self.summaryComboBoxes.items():
             func_name = self.settings.value(f"summary/{name}", None)
             if func_name is None:
-                m = self.mainWindow.current_activity.get_measure(name)
+                m = self._main_window.current_activity.get_measure(name)
                 func_name = m.summary.__name__
                 
             widget.setCurrentText(func_name)
@@ -109,10 +109,10 @@ class DataPreferences(QWidget):
         
     def apply(self):
         
-        self.mainWindow.pb.emitStatusMessage()
+        self._main_window.pb.emitStatusMessage()
         
         numSessions = self.numSessionsBox.value()
-        self.mainWindow.pb.bestSessions.setNumRows(numSessions)
+        self._main_window.pb.bestSessions.setNumRows(numSessions)
         
         bestMonthCriterion = self.bestMonthCriteria.currentText().lower()
         if self.bestMonthPB.isChecked():
@@ -123,7 +123,7 @@ class DataPreferences(QWidget):
         months = self.pbRangeCombo.currentText()
         months = parse_month_range(months)
             
-        self.mainWindow.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
+        self._main_window.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
         
         self.settings.beginGroup("pb")
         self.settings.setValue("bestMonthCriterion", bestMonthCriterion)
@@ -139,15 +139,15 @@ class DataPreferences(QWidget):
             func_name = widget.currentText()
             self.settings.setValue(f"summary/{name}", func_name)
             # summaryFuncs[name] = funcName
-            m = self.mainWindow.current_activity.get_measure(name)
+            m = self._main_window.current_activity.get_measure(name)
             if m.summary.__name__ != func_name:
                 changed = True
                 m.set_summary(func_name)
         if changed:
-            self.mainWindow._summary_value_changed()
-        # self.mainWindow.summary.setFunc(summaryFuncs)
+            self._main_window._summary_value_changed()
+        # self._main_window.summary.setFunc(summaryFuncs)
         
         self.settings.endGroup()
         
-        self.mainWindow.statusBar().clearMessage()
+        self._main_window.statusBar().clearMessage()
     
