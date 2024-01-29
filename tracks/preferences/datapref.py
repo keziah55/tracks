@@ -5,12 +5,12 @@ Preferences for personal bests and data viewer.
 from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget, QCheckBox
 from customQObjects.widgets import GroupBox
 from customQObjects.core import Settings
-from tracks.util import parse_month_range
+from tracks.util import parse_month_range, list_reduce_funcs
 
 class FuncComboBox(QComboBox):
     def __init__(self, *args, default=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.addItems(["sum", "max", "min", "mean"])
+        self.addItems(list_reduce_funcs())
         if default is not None:
             self.setCurrentText(default)
 

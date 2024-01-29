@@ -135,6 +135,8 @@ class ActivityManager(QObject):
     def _initialise_activity(self, activity: Activity) -> ActivityObjects:
         """ Initialise objects for the given activity and return `ActivityObjects` """
         
+        # TODO TG-139 initialise preference dialog pages for this activity
+        
         df = self._load_actvity_df(activity)
         pref = self._get_activity_preferences(activity.name)
         

@@ -31,6 +31,9 @@ cast_funcs = {
     "hourMinSecToFloat": hourMinSecToFloat
 }
 
+def list_reduce_funcs():
+    return list(reduce_funcs.keys())
+
 def get_reduce_func(name):
     f = reduce_funcs.get(name, None)
     if f is None:

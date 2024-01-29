@@ -2,8 +2,8 @@
 Preferences dialog
 """
 from qtpy.QtWidgets import (QAbstractScrollArea, QDialog, QDialogButtonBox, 
-                             QListWidget, QStackedWidget, QVBoxLayout, QHBoxLayout)
-
+                            QListWidget, QVBoxLayout, QHBoxLayout)
+from customQObjects.widgets import StackedWidget
 from .plotpref import PlotPreferences
 from .datapref import DataPreferences
 
@@ -17,7 +17,7 @@ class PreferencesDialog(QDialog):
         self._main_window = parent
 
         self.contentsWidget = QListWidget()
-        self.pagesWidget = QStackedWidget()
+        self.pagesWidget = StackedWidget()
         
         pages = sorted(self.pages, key=lambda widget: widget.name)
         
