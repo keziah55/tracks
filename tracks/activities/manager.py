@@ -46,9 +46,9 @@ class ActivityObjects(QObject):
         
     @Slot(object)
     def _data_changed(self, idx):
-        self.data_viewer.newData(idx)
+        self.data_viewer.new_data(idx)
         self.plot.new_data(idx)
-        self.personal_bests.newData(idx)
+        self.personal_bests.new_data(idx)
         self.request_save_activity.emit(self.activity.name)
 
 
