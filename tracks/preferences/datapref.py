@@ -110,7 +110,6 @@ class DataPreferences(QWidget):
     def apply(self):
         
         num_sessions = self.numSessionsBox.value()
-        # self._main_window.pb.bestSessions.setNumRows(numSessions)
         
         bestMonthCriterion = self.bestMonthCriteria.currentText().lower()
         if self.bestMonthPB.isChecked():
@@ -124,35 +123,13 @@ class DataPreferences(QWidget):
         pb_month_args = (bestMonthCriterion, bestMonthPB, months)
         self._personal_bests_widget.update_values(num_sessions, pb_month_args)
             
-        # self._main_window.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
-        
-        # self.settings.beginGroup("pb")
-        # self.settings.setValue("bestMonthCriterion", bestMonthCriterion)
-        # self.settings.setValue("numSessions", numSessions)
-        
-        # self.settings.setValue("usePBcount", self.bestMonthPB.isChecked())
-        # self.settings.setValue("range", self.pbRangeCombo.currentText())
-        
-        # make dict to pass to `setFunc` so it doesn't remake the viewer five times
-        # summaryFuncs = {}
+        # make dict so it doesn't remake the viewer five times
         changed = False
         for name, widget in self.summaryComboBoxes.items():
             func_name = widget.currentText()
-            # self.settings.setValue(f"summary/{name}", func_name)
-            # summaryFuncs[name] = funcName
             m = self._activity.get_measure(name)
             if m.summary.__name__ != func_name:
                 changed = True
                 m.set_summary(func_name)
-        # if changed:
-        #     self._main_window._summary_value_changed()
-        # self._main_window.summary.setFunc(summaryFuncs)
-        
-        
         
         self.applied.emit(changed)
-        
-        # self.settings.endGroup()
-        
-        # self._main_window.statusBar().clearMessage()
-    

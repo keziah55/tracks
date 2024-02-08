@@ -9,10 +9,8 @@ from qtpy.QtCore import QTimer, Slot, Signal, QSize
 from qtpy.QtGui import QPalette, QColor#, QPen, QBrush, QIcon, QPixmap, QImage, QPainter
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupBox, ComboBox
-from customQObjects.core import Settings
 from tracks import make_foreground_icon 
 from tracks.util import parse_month_range
-import warnings
 
 
 class StyleDesigner(QWidget):
@@ -394,9 +392,6 @@ class PlotPreferences(QWidget):
         
     def setCurrentValues(self):
         """ Set widget values from `settings` """
-        # self.settings = Settings()
-        # self.settings.beginGroup("plot")
-        
         pref = self._plot_widget.state()
 
         plotStyle = pref.get("style", "dark")
@@ -410,8 +405,6 @@ class PlotPreferences(QWidget):
         
         self._setMonthRange()
         
-        # self.settings.endGroup()
-        
     def _setMonthRange(self):
         """
         Read month range from settings and set widget values
@@ -421,31 +414,16 @@ class PlotPreferences(QWidget):
         pref = self._plot_widget.state()
         
         month_range = pref.get("default_months", 6)
+        combobox_text = [self.plotRangeCombo.itemText(idx) 
+                         for idx in range(self.plotRangeCombo.count())]
+        combobox_months = [parse_month_range(value) for value in combobox_text]
         
-        items = [self.plotRangeCombo.itemText(idx) for idx in range(self.plotRangeCombo.count())]
-        combobox_months = [parse_month_range(value) for value in items]
+        custom_range = month_range not in combobox_months
         
-        if month_range in combobox_months:
-            customRange = False
-        else:
-            customRange = True
-        
-        # customRange = self.settings.value("customRange", False)
-        # rng = self.settings.value("range", "All")
-        
-        self.setCustomRange(customRange)
-        if customRange:
-            # # monthRange = parse_month_range(rng)
-            # if month_range is None:
-            #     # custom month range cannot be parsed
-            #     # set customRange to False and call this method again
-            #     warnings.warn(f"Could not get custom number of months from '{rng}'")
-            #     self.settings.setValue("customRange", False)
-            #     self._setMonthRange()
-            # else:
+        self.setCustomRange(custom_range)
+        if custom_range:
             self.customRangeSpinBox.setValue(month_range)
         else:
-            # items = [self.plotRangeCombo.itemText(idx) for idx in range(self.plotRangeCombo.count())]
             idx = combobox_months.index(month_range)
             self.plotRangeCombo.setCurrentIndex(idx)
         
@@ -484,17 +462,7 @@ class PlotPreferences(QWidget):
             text = self.plotRangeCombo.currentText()
             months = parse_month_range(text)
         self._plot_widget.set_x_axis_range(months)
-        
-        # self.settings.beginGroup("plot")
-        # self.settings.setValue("style", styleName)
-        
-        # self.settings.setValue("customRange", customRange)
-        # if customRange:
-        #     self.settings.setValue("range", self.customRangeSpinBox.value())
-        # else:
-        #     self.settings.setValue("range", self.plotRangeCombo.currentText())
-        # self.settings.endGroup()
-    
+            
     @Slot(bool)
     def setCustomRange(self, custom):
         self.customRangeCheckBox.setChecked(custom)
