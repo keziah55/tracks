@@ -15,7 +15,7 @@ from datetime import date
 class PersonalBests(QObject):
     """ Object to manage the two PB widgets.
     
-        The :meth:`newData` method updates the data in each widget and creates
+        The :meth:`new_data` method updates the data in each widget and creates
         the dialog box with the correct message, if required.
     """
     
@@ -50,11 +50,11 @@ class PersonalBests(QObject):
         self.bestSessions = PBTable(parent=self, activity=activity, rows=num_sessions, key=sessions_key)
         
     @Slot(object)
-    def newData(self, idx=None):
-        self.emitStatusMessage()
+    def new_data(self, idx=None):
+        self._emitStatusMessage()
         
-        bestSession = self.bestSessions.newData()
-        bestMonth = self.bestMonth.newData()
+        bestSession = self.bestSessions.new_data()
+        bestMonth = self.bestMonth.new_data()
         
         if bestSession is None and bestMonth is None:
             return None
@@ -77,7 +77,19 @@ class PersonalBests(QObject):
             
         self.statusMessage.emit("")
     
-    def emitStatusMessage(self):
+    def update_values(self, num_sessions=None, best_month_args=None):
+        self._emitStatusMessage()
+        
+        if num_sessions is not None:
+            self.bestSessions.setNumRows(num_sessions)
+            
+        if best_month_args is not None:
+            # bestMonthCriterion, bestMonthPB, months
+            self._main_window.pb.bestMonth.setColumn(*best_month_args)
+            
+        # TODO clear status message here?
+    
+    def _emitStatusMessage(self):
         self.statusMessage.emit("Checking for new PBs...")
         
     def state(self) -> dict:
@@ -100,7 +112,7 @@ class PBMonthLabel(QLabel):
         self.column = column
         self.pbCount = (pb_count, pb_month_range)
         self.monthYear = self.time = self.distance = self.calories = ""
-        self.newData()
+        self.new_data()
         self.setText()
         self.setAlignment(Qt.AlignHCenter)
         
@@ -116,7 +128,7 @@ class PBMonthLabel(QLabel):
     def setColumn(self, column, pbCount=None, pbMonthRange=None):
         self.column = column
         self.pbCount = (pbCount, pbMonthRange)
-        self.newData()
+        self.new_data()
         self.setText()
         col = re.sub(r" +\(.*\)", "", column).lower()
         if self.parent is not None:
@@ -129,7 +141,7 @@ class PBMonthLabel(QLabel):
             self.parent.monthCriterionChanged.emit(f"{c}{t}")
         
     @Slot()
-    def newData(self):
+    def new_data(self):
         if self.pbCount[0] is not None:
             month = self._pbCount()
             if month is None:
@@ -377,7 +389,7 @@ class PBTable(QTableWidget):
             self.horizontalHeaderItem(i).setFont(font)
                 
     @Slot()
-    def newData(self):
+    def new_data(self):
         """ 
         Check for new PBs. 
         

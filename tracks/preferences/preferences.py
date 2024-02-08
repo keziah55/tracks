@@ -4,12 +4,12 @@ Preferences dialog
 from qtpy.QtWidgets import (QAbstractScrollArea, QDialog, QDialogButtonBox, 
                             QListWidget, QVBoxLayout, QHBoxLayout)
 from customQObjects.widgets import StackedWidget
-from .plotpref import PlotPreferences
-from .datapref import DataPreferences
+# from .plotpref import PlotPreferences
+# from .datapref import DataPreferences
 
 class PreferencesDialog(QDialog):
     
-    pages = [PlotPreferences, DataPreferences]
+    # pages = [PlotPreferences, DataPreferences]
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -19,15 +19,15 @@ class PreferencesDialog(QDialog):
         self.contentsWidget = QListWidget()
         self.pagesWidget = StackedWidget()
         
-        pages = sorted(self.pages, key=lambda widget: widget.name)
+        # pages = sorted(self.pages, key=lambda widget: widget.name)
         
-        for page in pages:
-            widget = page(self._main_window)
-            self.pagesWidget.addWidget(widget)
-            self.contentsWidget.addItem(widget.name)
+        # for page in pages:
+        #     widget = page(self._main_window)
+        #     self.pagesWidget.addWidget(widget)
+        #     self.contentsWidget.addItem(widget.name)
 
         self.contentsWidget.currentItemChanged.connect(self.changePage)
-        self.contentsWidget.setCurrentRow(0)
+        # self.contentsWidget.setCurrentRow(0)
         
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Apply|QDialogButtonBox.Close)
         
@@ -52,14 +52,30 @@ class PreferencesDialog(QDialog):
 
         self.setWindowTitle("Preferences")
 
+    def add_page(self, activity_name, page):
+        contents_items = [self.contentsWidget.item(n).text() for n in range(self.contentsWidget.count())]
+        if page.name not in contents_items:
+            self.contentsWidget.addItem(page.name)
+        
+        key = f"{activity_name}-{page.name.lower()}"
+        self.pagesWidget.addWidget(page, key)
+
     def changePage(self, current, previous):
         if not current:
             current = previous
-        self.pagesWidget.setCurrentIndex(self.contentsWidget.row(current))
+        
+        pref_name = current.text().lower()
+        activity_name = self._main_window.current_activity.name
+        key = f"{activity_name}-{pref_name}"
+        
+        self.pagesWidget.setCurrentKey(key)
+        self.pagesWidget.currentWidget().setCurrentValues()
+            
+        # self.pagesWidget.setCurrentIndex(self.contentsWidget.row(current))
         
     def show(self):
-        for n in range(self.pagesWidget.count()):
-            self.pagesWidget.widget(n).setCurrentValues()
+        # for n in range(self.pagesWidget.count()):
+        #     self.pagesWidget.widget(n).setCurrentValues()
         self.setWindowTitle(f"Preferences - {self._main_window.current_activity.name}")
         super().show()
         
@@ -67,6 +83,9 @@ class PreferencesDialog(QDialog):
         self.pagesWidget.currentWidget().apply()
         
     def ok(self):
-        for idx in range(self.pagesWidget.count()):
-            self.pagesWidget.widget(idx).apply()
+        # for idx in range(self.pagesWidget.count()):
+            # self.pagesWidget.widget(idx).apply()
+        for key, widget in self.pagesWidget.widgetDict.items():
+            if key.startswith(self._main_window.current_activity.name):
+                widget.apply()
         self.accept()

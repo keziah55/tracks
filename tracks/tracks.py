@@ -53,6 +53,8 @@ class Tracks(QMainWindow):
             self._plot_stack: "plot",
         }
         
+        self.prefDialog = PreferencesDialog(self)
+        
         self._load_activity(activity)
         
         # TODO handle this - TG-136
@@ -163,6 +165,9 @@ class Tracks(QMainWindow):
             stack.setCurrentKey(name)
             
         if new_widgets:
+            for page in activity_objects.preferences.values():
+                self.prefDialog.add_page(name, page)
+            
             activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
             activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
     
@@ -174,12 +179,12 @@ class Tracks(QMainWindow):
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
         
-    @Slot()
-    def _summary_value_changed(self):
-        # TG-136
-        # called from data pref
-        self.viewer.updateTopLevelItems()
-        self.pb.newData()
+    # @Slot()
+    # def _summary_value_changed(self):
+    #     # TG-136
+    #     # called from data pref
+    #     self.viewer.updateTopLevelItems()
+    #     self.pb.newData()
         
     def _create_dock_widget(self, widget, area, title, key=None):
         dock = QDockWidget()
@@ -226,9 +231,9 @@ class Tracks(QMainWindow):
             "&Save", self, shortcut="Ctrl+S", statusTip="Save data", 
             triggered=self.save)
         
-        # self.preferencesAct = QAction(
-        #     "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
-        #     triggered=self.prefDialog.show)
+        self.preferencesAct = QAction(
+            "&Preferences", self, shortcut="F12", statusTip="Edit preferences",
+            triggered=self.prefDialog.show)
         
     def _create_menus(self):
         self._file_menu = self.menuBar().addMenu("&File")
@@ -241,7 +246,7 @@ class Tracks(QMainWindow):
         self._file_menu.addAction(self.exitAct)
         
         self._edit_menu = self.menuBar().addMenu("&Edit")
-        # self._edit_menu.addAction(self.preferencesAct)
+        self._edit_menu.addAction(self.preferencesAct)
         
         self._view_menu = self.menuBar().addMenu("&View")
         self._panel_menu = self._view_menu.addMenu("&Panels")

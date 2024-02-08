@@ -3,8 +3,8 @@ Preferences for personal bests and data viewer.
 """
 
 from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget, QCheckBox
+from qtpy.QtCore import Signal
 from customQObjects.widgets import GroupBox
-from customQObjects.core import Settings
 from tracks.util import parse_month_range, list_reduce_funcs
 
 class FuncComboBox(QComboBox):
@@ -18,13 +18,16 @@ class DataPreferences(QWidget):
     
     name = "Data"
     
-    def __init__(self, _main_window):
+    applied = Signal(object, object, object)
+    
+    def __init__(self, activity, personal_bests_widget):
         super().__init__()
-        self._main_window = _main_window
+        self._activity = activity
+        self._personal_bests_widget = personal_bests_widget
         
         bestMonthGroup = GroupBox("Best month", layout="grid")
         self.bestMonthCriteria = QComboBox()
-        items = self._main_window.current_activity.filter_measures("summary", lambda s: s is not None)
+        items = self._activity.filter_measures("summary", lambda s: s is not None)
         items = [item.name for item in items.values()]
         self.bestMonthCriteria.addItems(items)
         
@@ -57,7 +60,7 @@ class DataPreferences(QWidget):
         summaryCriteriaGroup = GroupBox("Summary criteria", layout="grid")
         
         names = [(m.slug, m.name) 
-                 for m in self._main_window.current_activity.measures.values() 
+                 for m in self._activity.measures.values() 
                  if m.summary is not None]
         self.summaryComboBoxes = {}
         for row, (slug, name) in enumerate(names):
@@ -79,40 +82,35 @@ class DataPreferences(QWidget):
         self.apply()
         
     def setCurrentValues(self):
-        self.settings = Settings()
-        self.settings.beginGroup("pb")
         
-        bestMonthCriterion = self.settings.value("bestMonthCriterion", "distance").capitalize()
+        pref = self._personal_bests_widget.state()
+        
+        bestMonthCriterion = pref.get("best_month_criterion", "distance").capitalize()
         self.bestMonthCriteria.setCurrentText(bestMonthCriterion)
         
-        usePBcount = self.settings.value("usePBcount", False)
-        self.bestMonthPB.setChecked(usePBcount)
-        self.pbRangeCombo.setEnabled(usePBcount)
+        usePBcount = pref.get("pb_count", False)
+        self.bestMonthPB.setChecked(False)#usePBcount)
+        self.pbRangeCombo.setEnabled(False)#usePBcount)
         
-        numSessions = self.settings.value("numSessions", 5, int)
+        numSessions = pref.get("num_best_sessions", 5)
         self.numSessionsBox.setValue(numSessions)
         
-        rng = self.settings.value("range", "All")
+        rng = pref.get("pb_month_range", None)
+        if rng is None:
+            rng = "All"
         items = [self.pbRangeCombo.itemText(idx) for idx in range(self.pbRangeCombo.count())]
         idx = items.index(rng)
         self.pbRangeCombo.setCurrentIndex(idx)
     
         for name, widget in self.summaryComboBoxes.items():
-            func_name = self.settings.value(f"summary/{name}", None)
-            if func_name is None:
-                m = self._main_window.current_activity.get_measure(name)
-                func_name = m.summary.__name__
-                
+            m = self._activity.get_measure(name)
+            func_name = m.summary.__name__
             widget.setCurrentText(func_name)
-        
-        self.settings.endGroup()
         
     def apply(self):
         
-        self._main_window.pb.emitStatusMessage()
-        
         numSessions = self.numSessionsBox.value()
-        self._main_window.pb.bestSessions.setNumRows(numSessions)
+        # self._main_window.pb.bestSessions.setNumRows(numSessions)
         
         bestMonthCriterion = self.bestMonthCriteria.currentText().lower()
         if self.bestMonthPB.isChecked():
@@ -123,31 +121,33 @@ class DataPreferences(QWidget):
         months = self.pbRangeCombo.currentText()
         months = parse_month_range(months)
             
-        self._main_window.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
+        # self._main_window.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
         
-        self.settings.beginGroup("pb")
-        self.settings.setValue("bestMonthCriterion", bestMonthCriterion)
-        self.settings.setValue("numSessions", numSessions)
+        # self.settings.beginGroup("pb")
+        # self.settings.setValue("bestMonthCriterion", bestMonthCriterion)
+        # self.settings.setValue("numSessions", numSessions)
         
-        self.settings.setValue("usePBcount", self.bestMonthPB.isChecked())
-        self.settings.setValue("range", self.pbRangeCombo.currentText())
+        # self.settings.setValue("usePBcount", self.bestMonthPB.isChecked())
+        # self.settings.setValue("range", self.pbRangeCombo.currentText())
         
         # make dict to pass to `setFunc` so it doesn't remake the viewer five times
         # summaryFuncs = {}
         changed = False
         for name, widget in self.summaryComboBoxes.items():
             func_name = widget.currentText()
-            self.settings.setValue(f"summary/{name}", func_name)
+            # self.settings.setValue(f"summary/{name}", func_name)
             # summaryFuncs[name] = funcName
-            m = self._main_window.current_activity.get_measure(name)
+            m = self._activity.get_measure(name)
             if m.summary.__name__ != func_name:
                 changed = True
                 m.set_summary(func_name)
-        if changed:
-            self._main_window._summary_value_changed()
+        # if changed:
+        #     self._main_window._summary_value_changed()
         # self._main_window.summary.setFunc(summaryFuncs)
         
-        self.settings.endGroup()
+        self.applied.emit(changed, numSessions, (bestMonthCriterion, bestMonthPB, months))
         
-        self._main_window.statusBar().clearMessage()
+        # self.settings.endGroup()
+        
+        # self._main_window.statusBar().clearMessage()
     

@@ -11,6 +11,7 @@ from .activities import Activity
 from tracks import get_data_path
 from tracks.plot import PlotWidget
 from tracks.data import Data, DataViewer, PersonalBests, AddData
+from tracks.preferences import DataPreferences, PlotPreferences
 from tracks.util import parse_month_range
 from qtpy.QtCore import QObject, Signal, Slot
 
@@ -36,6 +37,10 @@ class ActivityObjects(QObject):
         self.add_data = add_data
         self.personal_bests = personal_bests
         self.plot = plot
+        self.preferences = {
+            "data": DataPreferences(activity, personal_bests),
+            # "Plot": PlotPreferences(activity, preferences)
+        }
         
         self._connect_signals()
         
@@ -49,12 +54,20 @@ class ActivityObjects(QObject):
         self.data_viewer.selectedSummary.connect(self.status_message)
         self.personal_bests.statusMessage.connect(self.status_message)
         
+        self.preferences["data"].applied.connect(self._apply_data_pref)
+        
     @Slot(object)
     def _data_changed(self, idx):
-        self.data_viewer.newData(idx)
+        self.data_viewer.new_data(idx)
         self.plot.new_data(idx)
-        self.personal_bests.newData(idx)
+        self.personal_bests.new_data(idx)
         self.request_save_activity.emit(self.activity.name)
+        
+    def _apply_data_pref(self, summary_changed, pb_sum_sessions, pb_month_args):
+        self.personal_bests.update_values(pb_sum_sessions, pb_month_args)
+        if summary_changed:
+            self.data_viewer.updateTopLevelItems()
+            # self.personal_bests.new_data() ## is this necessary?
 
 
 class ActivityManager(QObject):
@@ -258,6 +271,7 @@ class ActivityManager(QObject):
         
     @default_current_activity
     def _get_activity_preferences(self, activity_name: str=None) -> dict:
+        """ Read preferences for `activity_name` from json """
         all_activities = self._activities_json()
         try:
             pref = all_activities[activity_name]["preferences"]
