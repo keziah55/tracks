@@ -15,6 +15,7 @@ from .util import intToStr
 from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
 
+
 class Tracks(QMainWindow):
     
     def __init__(self):
@@ -83,6 +84,11 @@ class Tracks(QMainWindow):
             self._create_dock_widget(*args)
         self.setCentralWidget(self._plot_stack)
         
+        pb = self._activity_manager.get_activity_objects(self.current_activity.name).personal_bests
+        state = pb.state()
+        self._set_pb_sessions_dock_label(state["num_best_sessions"])
+        self._set_pb_month_dock_label(state["best_month_criterion"])
+        
         state = self.settings.value("window/state", None)
         if state is not None:
             self.restoreState(state)
@@ -126,11 +132,8 @@ class Tracks(QMainWindow):
                 self.prefDialog.add_page(name, page)
             
             pb = activity_objects.personal_bests
-            state = pb.state()
-            self._set_pb_sessions_dock_label(state["num_best_sessions"])
-            self._set_pb_month_dock_label(state["best_month_criterion"])
             pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-            pb.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
+            pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
     
     @Slot()
     def save(self, activity=None):
