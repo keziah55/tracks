@@ -4,12 +4,9 @@ Single `PersonalBests` object to manage the two widgets that display personal be
 
 from qtpy.QtWidgets import (QTableWidget, QTableWidgetItem, QHeaderView, QLabel, 
                             QDialogButtonBox, QVBoxLayout, QAbstractItemView)
-from qtpy.QtCore import Qt, QObject, QSize, Slot, Signal
-from tracks.util import dayMonthYearToFloat, hourMinSecToFloat, intToStr
-from tracks.data import Data
+from qtpy.QtCore import Qt, QObject, Slot, Signal
+from tracks.util import dayMonthYearToFloat, intToStr
 from customQObjects.widgets import TimerDialog
-import re
-from datetime import date
 
 
 class PersonalBests(QObject):
