@@ -43,7 +43,7 @@ class TestPreferences(TracksSetupTeardown):
         signals = [(vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged") 
                    for n, vb in enumerate(self.plot.plotWidget.view_boxes)]
         
-        lastDate = self.app.data.date[-1]
+        lastDate = self.data.date[-1]
         
         numMonths = {"1 month":self._subtractMonths(lastDate, 1),
                      "3 months":self._subtractMonths(lastDate, 3),
@@ -65,7 +65,7 @@ class TestPreferences(TracksSetupTeardown):
             assert axis.tickTimestamps[-1] >= lastDate.timestamp()
             text = plotPref.plotRangeCombo.currentText()
             if text == "All":
-                dt = self.app.data.date[0]
+                dt = self.data.date[0]
             else:
                 dt = numMonths[text]
                 
@@ -232,7 +232,7 @@ class TestPreferences(TracksSetupTeardown):
             values.sort(key=lambda item: item[1], reverse=True)
             best = values[0]
             
-            assert self.app.pb.bestMonth.monthYear == best[0], \
+            assert self.pb.bestMonth.monthYear == best[0], \
                 f"Failed on measure {column}; Best values:\n{pformat(values)}"
             
     def test_set_summary_criteria(self, setupKnownData, qtbot, variables):

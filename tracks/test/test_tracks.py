@@ -15,7 +15,7 @@ pytest_plugin = "pytest-qt"
 class TracksSetupTeardown:
     
     @pytest.fixture
-    def setup(self, qtbot, monkeypatch, patchSettings):
+    def setup(self, qtbot, monkeypatch, patch_settings):
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.size = 100
         make_dataframe(random=True, size=self.size, path=self.tmpfile.name)
@@ -36,7 +36,7 @@ class TracksSetupTeardown:
         self._removeTmpConfig()
         
     @pytest.fixture
-    def setupKnownData(self, qtbot, monkeypatch, patchSettings):
+    def setupKnownData(self, qtbot, monkeypatch, patch_settings):
         self.tmpfile = tempfile.NamedTemporaryFile()
         make_dataframe(random=False, path=self.tmpfile.name)
         
@@ -59,13 +59,17 @@ class TracksSetupTeardown:
     
     def _setup(self):
         self.app = tracks.tracks.Tracks()
-        self.addData = self.app.addData
-        self.viewer = self.app.viewer
-        self.plot = self.app.plot
+        activity_name = "cycling"
+        ao = self.app._activity_manager.get_activity_objects(activity_name)
+        
+        self.addData = ao.add_data
+        self.viewer = ao.data_viewer
+        self.plot = ao.plot
         self.plotWidget = self.plot.plotWidget
-        self.pbTable = self.app.pb.bestSessions
+        self.pb = ao.personal_bests
+        self.pbTable = self.pb.bestSessions
         self.prefDialog = self.app.prefDialog
-        self.data = self.app.data
+        self.data = ao.data
         
         self.app.showMaximized()
         # self.app.prefDialog.ok() # see https://github.com/keziah55/cycleTracks/commit/9e0c05f7d19b33a61a52a959adcdc7667cd7b924
@@ -80,7 +84,7 @@ class TracksSetupTeardown:
             confFile.unlink()
     
     def extraSetup(self):
-        self.app.pb.newPBdialog.setTimeout(100)
+        self.pb.newPBdialog.setTimeout(100)
     
     def extraTeardown(self):
         pass
@@ -164,12 +168,12 @@ class TestTracks(TracksSetupTeardown):
     def test_pb_table_clicked(self, setup, qtbot):
         # similar to above, but for pb table
         item = self.pbTable.item(1, 0)
-        signals = [(self.app.pb.itemSelected, 'pbTable.itemSelected'), 
+        signals = [(self.pb.itemSelected, 'pbTable.itemSelected'), 
                    (self.plotWidget.current_point_changed, 'plotWidget.current_point_changed')]
         with qtbot.waitSignals(signals):
             self.pbTable.setCurrentItem(item)
         
-        expectedIdx = self.app.data.formatted("date").index(item.text())
+        expectedIdx = self.data.formatted("date").index(item.text())
         assert self.plotWidget._current_point['index'] == expectedIdx
         assert self.plotWidget.hgltPnt == self.plotWidget.dataItem.scatter.points()[expectedIdx]
         

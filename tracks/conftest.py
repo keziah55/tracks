@@ -31,7 +31,7 @@ def activity_json_path(patch_dir):
     return target_json_path
 
 @pytest.fixture(autouse=True)
-def patchSettings(monkeypatch, patch_dir, activity_json_path):
+def patch_settings(monkeypatch, patch_dir, activity_json_path):
     app_name = "Tracks"
     org_name = "Tracks"
     
@@ -45,8 +45,7 @@ def patchSettings(monkeypatch, patch_dir, activity_json_path):
     QCoreApplication.setOrganizationName(org_name)
     
     plot_style_file = conf_file.parent.joinpath('plot_styles.json')
-    if plot_style_file.exists():
-        plot_style_file.unlink()
+    plot_style_file.unlink(missing_ok=True)
     monkeypatch.setattr(Settings, "fileName", lambda *args, **kwargs: conf_file)
 
 @pytest.fixture()
