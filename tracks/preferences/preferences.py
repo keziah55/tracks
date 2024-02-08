@@ -56,6 +56,8 @@ class PreferencesDialog(QDialog):
         contents_items = [self.contentsWidget.item(n).text() for n in range(self.contentsWidget.count())]
         if page.name not in contents_items:
             self.contentsWidget.addItem(page.name)
+        if len(contents_items) == 0:
+            self.contentsWidget.setCurrentRow(0)
         
         key = f"{activity_name}-{page.name.lower()}"
         self.pagesWidget.addWidget(page, key)
@@ -65,18 +67,27 @@ class PreferencesDialog(QDialog):
             current = previous
         
         pref_name = current.text().lower()
+        self.show_page(pref_name)
+            
+        # self.pagesWidget.setCurrentIndex(self.contentsWidget.row(current))
+        
+    def show_page(self, pref_name):
         activity_name = self._main_window.current_activity.name
         key = f"{activity_name}-{pref_name}"
         
-        self.pagesWidget.setCurrentKey(key)
-        self.pagesWidget.currentWidget().setCurrentValues()
-            
-        # self.pagesWidget.setCurrentIndex(self.contentsWidget.row(current))
+        try:
+            self.pagesWidget.setCurrentKey(key)
+        except KeyError:
+            pass
+        else:
+            self.pagesWidget.currentWidget().setCurrentValues()
         
     def show(self):
         # for n in range(self.pagesWidget.count()):
         #     self.pagesWidget.widget(n).setCurrentValues()
         self.setWindowTitle(f"Preferences - {self._main_window.current_activity.name}")
+        self.show_page(self.contentsWidget.currentItem().text().lower())
+        
         super().show()
         
     def apply(self):
