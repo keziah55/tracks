@@ -64,7 +64,7 @@ class TracksSetupTeardown:
         self.plot = self.app.plot
         self.plotWidget = self.plot.plotWidget
         self.pbTable = self.app.pb.bestSessions
-        # self.prefDialog = self.app.prefDialog
+        self.prefDialog = self.app.prefDialog
         self.data = self.app.data
         
         self.app.showMaximized()

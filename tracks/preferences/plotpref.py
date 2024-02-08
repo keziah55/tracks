@@ -315,9 +315,11 @@ class PlotPreferences(QWidget):
         
         plotStyleGroup = GroupBox("Plot style")
         styles = self._plot_widget.get_valid_styles()
-        self.customStyle = StyleDesigner(styleKeys=self._plot_widget.get_style_keys(),
-                                         symbolKeys=self._plot_widget.get_style_symbol_keys(),
-                                         invalidNames=styles)
+        self.customStyle = StyleDesigner(
+            styleKeys=self._plot_widget.get_style_keys(),
+            symbolKeys=self._plot_widget.get_style_symbol_keys(),
+            invalidNames=styles
+        )
         self.customStyle.setEnabled(False)
         self.customStyle.saveStyle.connect(self._saveStyle)
         
