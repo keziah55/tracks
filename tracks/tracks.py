@@ -33,19 +33,16 @@ class Tracks(QMainWindow):
         self._activity_manager.status_message.connect(self.statusBar().showMessage)
         
         self._viewer_stack = StackedWidget()
-        self._best_month_stack = StackedWidget()
         self._best_sessions_stack = StackedWidget()
         self._add_data_stack = StackedWidget()
         self._plot_stack = StackedWidget()
         
-        self._best_month_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self._best_sessions_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self._viewer_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self._add_data_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         self._stack_attrs = {
             self._viewer_stack: "data_viewer",
-            self._best_month_stack: ("personal_bests", "bestMonth"),
             self._best_sessions_stack: ("personal_bests", "bestSessions"),
             self._add_data_stack: "add_data",
             self._plot_stack: "plot",
@@ -56,12 +53,6 @@ class Tracks(QMainWindow):
         self._load_activity(activity)
         
         _dock_widgets = [
-            (
-                self._best_month_stack,
-                Qt.LeftDockWidgetArea, 
-                "Best month", 
-                "PB month"
-            ),
             (
                 self._best_sessions_stack,
                 Qt.LeftDockWidgetArea, 
@@ -87,7 +78,6 @@ class Tracks(QMainWindow):
         pb = self._activity_manager.get_activity_objects(self.current_activity.name).personal_bests
         state = pb.state()
         self._set_pb_sessions_dock_label(state["num_best_sessions"])
-        self._set_pb_month_dock_label(state["best_month_criterion"])
         
         state = self.settings.value("window/state", None)
         if state is not None:
@@ -133,7 +123,6 @@ class Tracks(QMainWindow):
             
             pb = activity_objects.personal_bests
             pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-            pb.monthCriterionChanged.connect(self._set_pb_month_dock_label)
     
     @Slot()
     def save(self, activity=None):
@@ -159,10 +148,6 @@ class Tracks(QMainWindow):
         label = f"Top {intToStr(num)} sessions"
         self._dock_widgets["PB sessions"].setWindowTitle(label)
     
-    def _set_pb_month_dock_label(self, monthCriterion):
-        label = f"Best month ({monthCriterion})"
-        self._dock_widgets["PB month"].setWindowTitle(label)
-        
     def closeEvent(self, *args, **kwargs):
         self.backup()
         state = self.saveState()

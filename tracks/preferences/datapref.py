@@ -25,30 +25,6 @@ class DataPreferences(QWidget):
         self._activity = activity
         self._personal_bests_widget = personal_bests_widget
         
-        bestMonthGroup = GroupBox("Best month", layout="grid")
-        self.bestMonthCriteria = QComboBox()
-        items = self._activity.filter_measures("summary", lambda s: s is not None)
-        items = [item.name for item in items.values()]
-        self.bestMonthCriteria.addItems(items)
-        
-        self.bestMonthPB = QCheckBox()
-        self.bestMonthPB.setToolTip("Find best month by number of PBs in the chosen category")
-        
-        self.pbRangeCombo = QComboBox()
-        ranges = ["1 month", "3 months", "6 months", "1 year", "Current year", "All"]
-        self.pbRangeCombo.addItems(ranges)
-        self.bestMonthPB.clicked.connect(self.pbRangeCombo.setEnabled)
-        
-        bestMonthLabel = QLabel("Criterion")
-        bestMonthGroup.addWidget(bestMonthLabel, 0, 0)
-        bestMonthGroup.addWidget(self.bestMonthCriteria, 0, 1)
-        usePBLabel = QLabel("Use PB count")
-        bestMonthGroup.addWidget(usePBLabel, 1, 0)
-        bestMonthGroup.addWidget(self.bestMonthPB, 1, 1)
-        pbRangeLabel = QLabel("PB range")
-        bestMonthGroup.addWidget(pbRangeLabel, 2, 0)
-        bestMonthGroup.addWidget(self.pbRangeCombo, 2, 1)
-        
         topSessionsGroup = GroupBox("Top sessions", layout="grid")
         self.numSessionsBox = QSpinBox()
         self.numSessionsBox.setMinimum(1)
@@ -71,7 +47,6 @@ class DataPreferences(QWidget):
         
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(summaryCriteriaGroup)
-        mainLayout.addWidget(bestMonthGroup)
         mainLayout.addWidget(topSessionsGroup)
         mainLayout.addStretch(1)
 
@@ -85,23 +60,9 @@ class DataPreferences(QWidget):
         
         pref = self._personal_bests_widget.state()
         
-        bestMonthCriterion = pref.get("best_month_criterion", "distance").capitalize()
-        self.bestMonthCriteria.setCurrentText(bestMonthCriterion)
-        
-        usePBcount = pref.get("pb_count", False)
-        self.bestMonthPB.setChecked(False)#usePBcount)
-        self.pbRangeCombo.setEnabled(False)#usePBcount)
-        
         numSessions = pref.get("num_best_sessions", 5)
         self.numSessionsBox.setValue(numSessions)
         
-        rng = pref.get("pb_month_range", None)
-        if rng is None:
-            rng = "All"
-        items = [self.pbRangeCombo.itemText(idx) for idx in range(self.pbRangeCombo.count())]
-        idx = items.index(rng)
-        self.pbRangeCombo.setCurrentIndex(idx)
-    
         for name, widget in self.summaryComboBoxes.items():
             m = self._activity.get_measure(name)
             func_name = m.summary.__name__
@@ -111,17 +72,7 @@ class DataPreferences(QWidget):
         
         num_sessions = self.numSessionsBox.value()
         
-        bestMonthCriterion = self.bestMonthCriteria.currentText().lower()
-        if self.bestMonthPB.isChecked():
-            bestMonthPB = num_sessions
-        else:
-            bestMonthPB = None
-            
-        months = self.pbRangeCombo.currentText()
-        months = parse_month_range(months)
-        
-        pb_month_args = (bestMonthCriterion, bestMonthPB, months)
-        self._personal_bests_widget.update_values(num_sessions, pb_month_args)
+        self._personal_bests_widget.update_values(num_sessions)
             
         # make dict so it doesn't remake the viewer five times
         changed = False

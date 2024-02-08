@@ -151,8 +151,6 @@ class ActivityManager(QObject):
     def _initialise_activity(self, activity: Activity) -> ActivityObjects:
         """ Initialise objects for the given activity and return `ActivityObjects` """
         
-        # TODO TG-139 initialise preference dialog pages for this activity
-        
         df = self._load_actvity_df(activity)
         pref = self._get_activity_preferences(activity.name)
         
@@ -163,17 +161,11 @@ class ActivityManager(QObject):
         pb_pref = pref.get("personal_bests", {})
         num_best_sessions = pb_pref.get("num_best_sessions", 5) 
         sessions_key = pb_pref.get("sessions_key", "speed")
-        month_criterion =  pb_pref.get("best_month_criterion", "distance")
-        pb_count =  pb_pref.get("pb_count", None)
-        pb_month_range =  pb_pref.get("pb_month_range", None)
         pb = PersonalBests(
             data, 
             activity,
             num_sessions=num_best_sessions, 
             sessions_key=sessions_key,
-            month_criterion=month_criterion,
-            pb_count=pb_count,
-            pb_month_range=pb_month_range,
         )
         
         viewer = DataViewer(data, activity)

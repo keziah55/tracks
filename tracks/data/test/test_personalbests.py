@@ -10,28 +10,6 @@ pytest_plugin = "pytest-qt"
 # parameters for test_new_data
 def get_new_data(key):
     new_data_params = {
-        'best month and best session': (
-            {
-                'date':[parseDate("6 May 2021", pd_timestamp=True)], 
-                'time':[hourMinSecToFloat(parseDuration("00:42:15"))], 
-                'distance':[25.1], 
-                'calories':[375.4], 
-                'gear':[6]
-            },
-            "<center><span>New #2 speed - </span><span style='color: #f7f13b'>35.64 km/h</span>!<br>and<br><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
-            "<b>May 2021</b>: <b>150.72</b> km, <b>04:16:35</b> hours, <b>2254.2</b> calories"
-        ),
-        'best month':(
-            {
-                'date':[parseDate("6 May 2021", pd_timestamp=True)], 
-                'time':[hourMinSecToFloat(parseDuration("00:45:15"))], 
-                'distance':[25.1], 
-                'calories':[375.4], 
-                'gear':[6]
-            },
-            "<center><span>New best month - </span><span style='color: #f7f13b'>May 2021</span>!<br><span>Congratulations!</span></center>",
-            "<b>May 2021</b>: <b>150.72</b> km, <b>04:19:35</b> hours, <b>2254.2</b> calories"
-        ),
         'best session': (
             {
                 'date':[parseDate("6 April 2021", pd_timestamp=True)], 
@@ -56,7 +34,6 @@ class TestPersonalBests:
         self.pb.newPBdialog.timer.setInterval(100) # don't need 3 seconds for tests
         self.widget = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(self.pb.bestMonth)
         layout.addWidget(self.pb.bestSessions)
         self.widget.setLayout(layout)
         
@@ -66,7 +43,7 @@ class TestPersonalBests:
         self.parent.data.dataChanged.connect(self.pb.new_data)
         self.widget.show()
         
-    @pytest.mark.parametrize("key", ['best month and best session', 'best month', 'best session'])
+    @pytest.mark.parametrize("key", ['best session'])
     def test_new_data(self, setup, qtbot, key):
         
         new, expected_dialog, expected_label = get_new_data(key)
@@ -77,8 +54,6 @@ class TestPersonalBests:
             self.parent.data.append(new)
             
         assert self.pb.newPBdialog.label.text() == expected_dialog
-        
-        assert self.pb.bestMonth.text() == expected_label
         
     def test_new_data_different_column(self, setup, qtbot, monkeypatch, variables):
         # test dialog message when table is sorted by Time

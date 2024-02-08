@@ -41,51 +41,37 @@ class PersonalBests(QObject):
     
     statusMessage = Signal(str)
     
-    def __init__(self, data, activity, num_sessions=5, sessions_key="speed", 
-                 month_criterion="distance", pb_count=None, pb_month_range=None):
+    def __init__(self, data, activity, num_sessions=5, sessions_key="speed"):
         super().__init__()
         self.data = data
         self.newPBdialog = NewPBDialog()
-        self.bestMonth = PBMonthLabel(parent=self, activity=activity, column=month_criterion)
         self.bestSessions = PBTable(parent=self, activity=activity, rows=num_sessions, key=sessions_key)
         
     @Slot(object)
     def new_data(self, idx=None):
         self._emitStatusMessage()
         
-        bestSession = self.bestSessions.new_data()
-        bestMonth = self.bestMonth.new_data()
+        msg = self.bestSessions.new_data()
         
-        if bestSession is None and bestMonth is None:
+        if msg is None:
             return None
         
-        if bestSession is not None and bestMonth is not None:
-            msg = bestSession + "<br>and<br>" + bestMonth
-        else:
-            msg = [msg for msg in (bestSession, bestMonth) if msg is not None][0]
         msg += "<br><span>Congratulations!</span>"
-        
         msg = f"<center>{msg}</center>"
         
         self.newPBdialog.setMessage(msg)
         self.newPBdialog.exec_()
         
-        if bestSession is not None:
+        if msg is not None:
             self.bestSessions.setTable(highlightNew=True)
-        if bestMonth is not None:
-            self.bestMonth.setText()
             
         self.statusMessage.emit("")
     
-    def update_values(self, num_sessions=None, best_month_args=None):
+    def update_values(self, num_sessions=None):
         self._emitStatusMessage()
         
         if num_sessions is not None:
             self.bestSessions.setNumRows(num_sessions)
-            
-        if best_month_args is not None:
-            # bestMonthCriterion, bestMonthPB, months
-            self.bestMonth.setColumn(*best_month_args)
             
         # TODO clear status message here?
     
@@ -97,136 +83,9 @@ class PersonalBests(QObject):
         state = {
             "sessions_key": self.bestSessions.select_key,
             "num_best_sessions": self.bestSessions.num_best_sessions,
-            "best_month_criterion": self.bestMonth.column,
-            "pb_count": self.bestMonth.pbCount[0],
-            "pb_month_range": self.bestMonth.pbCount[1],
-            }
+        }
         return state
 
-class PBMonthLabel(QLabel):
-    
-    def __init__(self, parent, activity, column='distance', pb_count=None, pb_month_range=None):
-        super().__init__()
-        self.parent = parent
-        self._activity = activity
-        self.column = column
-        self.pbCount = (pb_count, pb_month_range)
-        self.monthYear = self.time = self.distance = self.calories = ""
-        self.new_data()
-        self.setText()
-        self.setAlignment(Qt.AlignHCenter)
-        
-    def sizeHint(self):
-        size = super().sizeHint()
-        height = int(1.5*size.height())
-        return QSize(size.width(), height)
-    
-    @property
-    def data(self):
-        return self.parent.data
-        
-    def setColumn(self, column, pbCount=None, pbMonthRange=None):
-        self.column = column
-        self.pbCount = (pbCount, pbMonthRange)
-        self.new_data()
-        self.setText()
-        col = re.sub(r" +\(.*\)", "", column).lower()
-        if self.parent is not None:
-            if pbCount is not None:
-                t = " - Most PBs - "
-                t += f"{pbMonthRange} months" if pbMonthRange is not None else "All time"
-            else:
-                t = ""
-            c = self._activity[col].full_name
-            self.parent.monthCriterionChanged.emit(f"{c}{t}")
-        
-    @Slot()
-    def new_data(self):
-        if self.pbCount[0] is not None:
-            month = self._pbCount()
-            if month is None:
-                dfs = []
-                self.numPBs = 0
-            else:
-                dfs = [month]
-                self.numPBs = len(month[1])
-        else:
-            dfs = self.data.splitMonths(returnType="Data")
-            self.numPBs = None
-            
-        if len(dfs) == 0:
-            return None
-        
-        totals = [(monthYear, monthData.make_summary()) for monthYear, monthData in dfs]
-        
-        try:
-            totals.sort(key=lambda tup: float(tup[1][self.column]), reverse=True)
-        except ValueError:
-            totals.sort(key=lambda tup: hourMinSecToFloat(tup[1][self.column]), reverse=True)
-        monthYear, summaries = totals[0]
-        self.time, self.distance, _, self.calories, *vals = summaries.values()
-        
-        self.setText()
-        
-        if monthYear != self.monthYear:
-            self.monthYear = monthYear
-            msg = self.makeMessage(monthYear)
-            return msg
-        else:
-            return None
-        
-    def _pbCount(self):
-        pbCount, pbMonthRange = self.pbCount
-        idx = self.data.getPBs(self.column, pbCount)
-        
-        if len(idx) == 0:
-            return None
-        
-        pb_df = self.data.df.loc[idx].copy()
-        
-        if pbMonthRange is not None:
-            month = date.today().month
-            year = date.today().year
-            month = month - pbMonthRange
-            if month <= 0:
-                month += 12
-                year -= 1
-            today = f"{date.today().year}{date.today().month:02d}{date.today().day:02d}"
-            prev = f"{year}{month:02d}01"
-            pb_df = pb_df.query(f'{prev} <= date <= {today}')
-            
-        data = Data(pb_df)
-        pb_dfs = data.splitMonths(returnType="Data")
-        pb_dfs.sort(key=lambda item: len(item[1]), reverse=True)
-        return pb_dfs[0]
-        
-    @classmethod
-    def _matchColumn(cls, column, lst):
-        if column in lst:
-            return lst.index(column)
-        else:
-            # strip units and make all lower case
-            lst = [re.sub(r" +\(.*\)", "", item) for item in lst]
-            lst = [item.lower() for item in lst]
-            column = column.lower()
-            return cls._matchColumn(column, lst)
-        
-    def makeMessage(self, monthYear):
-        colour = "#f7f13b"
-        msg = "<span>New best month - </span>"
-        msg += f"<span style='color: {colour}'>{monthYear}</span>!"
-        return msg
-        
-    def _makeText(self):
-        s = f"<b>{self.monthYear}</b>: <b>{self.distance}</b> km, <b>{self.time}</b> hours, <b>{self.calories}</b> calories"
-        if self.numPBs is not None:
-            s += f"; {self.numPBs} PBs"
-        return s
-
-    def setText(self):
-        text = self._makeText()
-        super().setText(text)
-        
 class PBTable(QTableWidget):
     """ QTableWidget showing the top sessions.
 

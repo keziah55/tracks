@@ -199,42 +199,6 @@ class TestPreferences(TracksSetupTeardown):
                 
                 assert text == expected, "see test_num_pb_sessions_fail_*.csv files"
         
-    def test_pb_month_criterion(self, setup, qtbot):
-        self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
-        pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
-        
-        indices = list(range(pbPref.bestMonthCriteria.count()))
-        random.shuffle(indices)
-        if indices[0] == pbPref.bestMonthCriteria.currentIndex():
-            val = indices.pop(0)
-            indices.append(val)
-            
-        for idx in indices:
-            pbPref.bestMonthCriteria.setCurrentIndex(idx)
-            
-            button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
-            with qtbot.waitSignal(button.clicked, timeout=10000):
-                qtbot.mouseClick(button, Qt.LeftButton)
-                
-            criterion = pbPref.bestMonthCriteria.currentText()
-            column = criterion.lower() 
-            
-            months = self.data.splitMonths()
-            if column in ["distance", "calories"]:
-                values = [(monthYear, sum(df[column])) for monthYear, df in months]
-            elif column == "time":
-                values = [(monthYear, sum(df[column])) for monthYear, df in months]
-            elif column == "speed":
-                values = [(monthYear, max(df[column])) for monthYear, df in months]
-            else:
-                values = [(monthYear, np.around(np.mean(df[column]))) for monthYear, df in months]
-                
-            values.sort(key=lambda item: item[1], reverse=True)
-            best = values[0]
-            
-            assert self.pb.bestMonth.monthYear == best[0], \
-                f"Failed on measure {column}; Best values:\n{pformat(values)}"
-            
     def test_set_summary_criteria(self, setupKnownData, qtbot, variables):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
         pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
