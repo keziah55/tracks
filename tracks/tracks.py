@@ -15,9 +15,6 @@ from .util import intToStr
 from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
 
-import inspect
-
-
 class Tracks(QMainWindow):
     
     def __init__(self):
@@ -57,21 +54,17 @@ class Tracks(QMainWindow):
         
         self._load_activity(activity)
         
-        # TODO handle this - TG-136
-        numTopSessions = self.settings.value("pb/numSessions", 5, int)
-        monthCriterion = self.settings.value("pb/bestMonthCriterion", "distance")
-        
         _dock_widgets = [
             (
                 self._best_month_stack,
                 Qt.LeftDockWidgetArea, 
-                f"Best month ({monthCriterion})", 
+                "Best month", 
                 "PB month"
             ),
             (
                 self._best_sessions_stack,
                 Qt.LeftDockWidgetArea, 
-                f"Top {intToStr(numTopSessions)} sessions", 
+                "Top sessions", 
                 "PB sessions"
             ),
             (
@@ -88,7 +81,6 @@ class Tracks(QMainWindow):
         
         for args in _dock_widgets:
             self._create_dock_widget(*args)
-        # self.setCentralWidget(self.plot)
         self.setCentralWidget(self._plot_stack)
         
         state = self.settings.value("window/state", None)
@@ -98,8 +90,6 @@ class Tracks(QMainWindow):
         geometry = self.settings.value("window/geometry", None)    
         if geometry is not None:
             self.restoreGeometry(geometry)
-        
-        # self.prefDialog = PreferencesDialog(self)
         
         self._create_actions()
         self._create_menus()
@@ -135,8 +125,12 @@ class Tracks(QMainWindow):
             for page in activity_objects.preferences.values():
                 self.prefDialog.add_page(name, page)
             
-            activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
-            activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
+            pb = activity_objects.personal_bests
+            state = pb.state()
+            self._set_pb_sessions_dock_label(state["num_best_sessions"])
+            self._set_pb_month_dock_label(state["best_month_criterion"])
+            pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+            pb.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
     
     @Slot()
     def save(self, activity=None):
