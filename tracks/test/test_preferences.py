@@ -12,6 +12,7 @@ from qtpy.QtCore import Qt
 
 pytest_plugin = "pytest-qt"
 
+# @pytest.mark.skip("Don't test preferences")
 class TestPreferences(TracksSetupTeardown):
     
     def extraSetup(self):
@@ -103,11 +104,11 @@ class TestPreferences(TracksSetupTeardown):
                    plotPref.customStyle.validateTimer.timeout]
         with qtbot.waitSignals(signals):
              qtbot.keyClick(plotPref.customStyle.nameEdit, "2")
-            
+             
         assert plotPref.customStyle.saveButton.isEnabled()
         
         newColours = {'speed':'#ff0000','distance':'#00ff00', 'time':'#0000ff', 
-                      'calories':'#ffff00', 'odometer':'#00ffff', 'highlightPoint': '#ff00ff', 
+                      'calories':'#ffff00', 'odometer':'#00ffff', 'highlight_point': '#ff00ff', 
                       'foreground':'#000000', 'background':'#ffffff'}
         newSymbols = {'speed': 'h', 'distance': 't3', 'time': '+', 'calories': 'star'}
         
@@ -140,14 +141,14 @@ class TestPreferences(TracksSetupTeardown):
         
         assert plotPref.plotStyleList.currentText() == "Dark2"
         
-        assert "dark2" in plotPref.mainWindow.plot.get_valid_styles()
+        assert "dark2" in plotPref._plot_widget.get_valid_styles()
         
         with qtbot.waitSignal(plotPref.deletePlotStyleButton.clicked):
             qtbot.mouseClick(plotPref.deletePlotStyleButton, Qt.LeftButton)
             
         assert plotPref.plotStyleList.currentText() != "Dark2"
-        assert "dark2" not in plotPref.mainWindow.plot.get_valid_styles()
-        assert ["dark", "light"] == plotPref.mainWindow.plot.get_valid_styles()
+        assert "dark2" not in plotPref._plot_widget.get_valid_styles()
+        assert ["dark", "light"] == plotPref._plot_widget.get_valid_styles()
         
     def test_num_pb_sessions(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)

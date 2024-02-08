@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Class to manage reading/writing plotStyle.ini
+Class to manage reading/writing plot_styles.json
 """
 
-from pathlib import Path
-from customQObjects.core import Settings
+import json
+from tracks import get_data_path
 
 class PlotStyle:
     """ 
@@ -22,60 +22,44 @@ class PlotStyle:
     
     def __init__(self, activity, style="dark"):
         
-        plot_style_file = Path(Settings().fileName()).parent.joinpath('plotStyles.ini')
-        self.settings = Settings(str(plot_style_file), Settings.NativeFormat)
+        self._activity_name = activity.name
         
+        # TODO better way of doing this?
         self.symbol_keys = list(activity.filter_measures("plottable", lambda b: b))
-        self.keys = self.symbol_keys + ['odometer', 'highlightPoint', 'foreground', 'background']
+        self.other_keys = ['odometer', 'highlight_point', 'foreground', 'background']
+        self.keys = self.symbol_keys + self.other_keys
         
-        # default colours for series
-        default_colours = {
-            "dark":# green,  red,       blue,      orange,    pink,      cyan,      brown,     purple
-                ["#19b536", "#cf0202", "#024aeb", "#ff9100", "#ff2be3", "#2aa0a6", "#6f420a", "#8b3bcc"],
-            "light":# green, red,       blue,      orange,    pink,      cyan,      brown,     purple
-                ["#2bb512", "#d80d0d", "#0981cb", "#ff9100", "#c621b3", "#007069", "#442806", "#4a1f6c"]
-        }
-        if len(self.symbol_keys) > len(default_colours["dark"]):
-            # repeat colour list, if necessary
-            repeat, mod = divmod(len(default_colours["dark"]), len(self.symbol_keys))
-            dark_default = default_colours["dark"] * repeat + default_colours["dark"][:mod]
-            light_default = default_colours["light"] * repeat + default_colours["light"][:mod]
-        else:
-            dark_default = default_colours["dark"][:len(self.symbol_keys)]
-            light_default = default_colours["light"][:len(self.symbol_keys)]
+        # read styles from json
+        # if there's no style for this activity, make defaults
+        all_styles = self._get_all_styles()
+        self._style_dict = all_styles.get(activity.name, None)
         
-        # append default colours for odometer etc
-        dark_default += ["#4d4d4d", "#faed00", "#969696", "#000000"]
-        light_default = [ "#9f9f9f", "#deb009", "#4d4d4d", "#ffffff"]
-        defaults = {'dark':dict(zip(self.keys, dark_default)),
-                    'light':dict(zip(self.keys, light_default))}
-        default_symbols = {key:'x' for key in self.symbol_keys}
-        
-        for styleName, styleDct in defaults.items():
-            if styleName not in self.settings.childGroups():
-                self.settings.beginGroup(styleName)
-                for key, colour in styleDct.items():
-                    self.settings.setValue(key, colour)
-                for key, symbol in default_symbols.items():
-                    self.settings.setValue(f"{key}Symbol", symbol)
-                self.settings.endGroup()
+        if self._style_dict is None:
+            self._style_dict = self._make_defaults(activity.name)   
+            all_styles[self._activity_name] = self._style_dict
+            # update json file
+            self._write_style_file(all_styles)
         
         self.name = style
         
     @property
+    def _plot_style_file(self):
+        return get_data_path().joinpath("plot_styles.json")
+        
+    @property
     def name(self):
-        return self._styleName
+        return self._style_name
 
     @name.setter 
     def name(self, name):
         if name.lower() not in self.valid_styles:
             msg = f"Plot style must be one of {', '.join(self.valid_styles)}, not '{name}'."
             raise ValueError(msg)
-        self._styleName = name.lower()
+        self._style_name = name.lower()
         
     @property 
     def valid_styles(self):
-        return self.settings.childGroups()
+        return list(self._style_dict.keys())
         
     def __getattr__(self, name):
         if name in self.keys:
@@ -90,32 +74,72 @@ class PlotStyle:
             raise KeyError(f"PlotStyle has no field '{name}'")
             
     def _get_style(self, field):
-        if field in ['foreground', 'background']:
-            return self.settings.value(f"{self.name}/{field}")
-        
-        dct = {'colour':self.settings.value(f"{self.name}/{field}")}
-        symbol = self.settings.value(f"{self.name}/{field}Symbol")
-        if symbol is not None:
-            dct['symbol'] = symbol
-        return dct
+        return self._style_dict[self.name][field]
     
     def get_style_dict(self, name=None):
         if name is None:
             name = self.name
-        style = {}
-        for field in self.keys:
-            dct = {'colour':self.settings.value(f"{name}/{field}")}
-            symbol = self.settings.value(f"{name}/{field}Symbol")
-            if symbol is not None:
-                dct['symbol'] = symbol
-            style[field] = dct
-        return style
+        return self._style_dict[name]
     
     def add_style(self, name, style):
-        self.settings.beginGroup(name)
-        for key, value in style.items():
-            self.settings.setValue(key, value)
-        self.settings.endGroup()
-    
+        self._style_dict[name] = style
+        self._write_style_file()
+        
     def remove_style(self, name):
-        self.settings.remove(name)
+        self._style_dict.pop(name)
+        self._write_style_file()
+        
+    def _get_all_styles(self):
+        if not self._plot_style_file.exists():
+            all_styles = {}
+        else:
+            with open(self._plot_style_file, "r") as fileobj:
+                all_styles = json.load(fileobj)
+        return all_styles
+        
+    def _make_defaults(self, activity_name):
+        # default colours for series
+        default_colours = {
+            "dark":# green,  red,       blue,      orange,    pink,      cyan,      brown,     purple
+                ["#19b536", "#cf0202", "#024aeb", "#ff9100", "#ff2be3", "#2aa0a6", "#6f420a", "#8b3bcc"],
+            "light":# green, red,       blue,      orange,    pink,      cyan,      brown,     purple
+                ["#2bb512", "#d80d0d", "#0981cb", "#ff9100", "#c621b3", "#007069", "#442806", "#4a1f6c"]
+        }
+        if len(self.symbol_keys) > len(default_colours["dark"]):
+            # repeat colour list, if necessary
+            repeat, mod = divmod(len(default_colours["dark"]), len(self.symbol_keys))
+            series_dark_default = default_colours["dark"] * repeat + default_colours["dark"][:mod]
+            series_light_default = default_colours["light"] * repeat + default_colours["light"][:mod]
+        else:
+            series_dark_default = default_colours["dark"][:len(self.symbol_keys)]
+            series_light_default = default_colours["light"][:len(self.symbol_keys)]
+            
+        other_dark_default = ["#4d4d4d", "#faed00", "#969696", "#000000"]
+        other_light_default = [ "#9f9f9f", "#deb009", "#4d4d4d", "#ffffff"]
+        
+        all_defaults = {
+            "dark": (series_dark_default, other_dark_default), 
+            "light": (series_light_default, other_light_default)
+        }
+        
+        default_symbol = "x"
+        defaults = {}
+        for name, (series_colour_list, other_colour_list) in all_defaults.items():
+            d = {}
+            c_list = iter(series_colour_list)
+            for key in self.symbol_keys:
+                d[key] = {"colour":next(c_list), "symbol":default_symbol}
+            c_list = iter(other_colour_list)
+            for key in self.other_keys:
+                d[key] = {"colour":next(c_list)}
+            defaults[name] = d
+            
+        return defaults
+        
+    def _write_style_file(self, all_styles=None):
+        if all_styles is None:
+            all_styles = self._get_all_styles()
+            all_styles[self._activity_name] = self._style_dict
+        
+        with open(self._plot_style_file, 'w') as f:
+            json.dump(all_styles, f, indent=4)

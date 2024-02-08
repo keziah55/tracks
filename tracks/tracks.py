@@ -12,7 +12,6 @@ from qtpy.QtGui import QIcon
 from .activities import ActivityManager
 from .preferences import PreferencesDialog
 from .util import intToStr
-from . import get_data_path
 from customQObjects.widgets import StackedWidget
 from customQObjects.core import Settings
 
@@ -31,7 +30,7 @@ class Tracks(QMainWindow):
         
         activity = self.settings.value("activity/current", "cycling")
         
-        self._activity_manager = ActivityManager(get_data_path(), self.settings)
+        self._activity_manager = ActivityManager()
         
         self._activity_manager.status_message.connect(self.statusBar().showMessage)
         
@@ -53,6 +52,8 @@ class Tracks(QMainWindow):
             self._add_data_stack: "add_data",
             self._plot_stack: "plot",
         }
+        
+        self.prefDialog = PreferencesDialog(self)
         
         self._load_activity(activity)
         
@@ -98,7 +99,7 @@ class Tracks(QMainWindow):
         if geometry is not None:
             self.restoreGeometry(geometry)
         
-        self.prefDialog = PreferencesDialog(self)
+        # self.prefDialog = PreferencesDialog(self)
         
         self._create_actions()
         self._create_menus()
@@ -164,6 +165,9 @@ class Tracks(QMainWindow):
             stack.setCurrentKey(name)
             
         if new_widgets:
+            for page in activity_objects.preferences.values():
+                self.prefDialog.add_page(name, page)
+            
             activity_objects.personal_bests.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
             activity_objects.personal_bests.monthCriterionChanged.connect(self._set_pb_month_dock_label)
     
@@ -174,13 +178,6 @@ class Tracks(QMainWindow):
     @Slot()
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
-        
-    @Slot()
-    def _summary_value_changed(self):
-        # TG-136
-        # called from data pref
-        self.viewer.updateTopLevelItems()
-        self.pb.new_data()
         
     def _create_dock_widget(self, widget, area, title, key=None):
         dock = QDockWidget()
@@ -249,7 +246,7 @@ class Tracks(QMainWindow):
         self._activities_menu = self._file_menu.addMenu("&Activities")
         for activity in self._activity_manager.list_activities():
             callback = partial(self._load_activity, activity)
-            self._activities_menu.addAction(activity, callback)
+            self._activities_menu.addAction(activity.capitalize(), callback)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._exit_act)
         

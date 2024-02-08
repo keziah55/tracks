@@ -57,6 +57,8 @@ class PlotWidget(QWidget):
         self.data = data
         self._activity = activity
         
+        self._view_months = months # number of months to show, by default
+        
         self.plotToolBar = PlotToolBar()
         self._make_plot(data, activity, style=style, months=months, y_series=y_series)
         
@@ -85,7 +87,9 @@ class PlotWidget(QWidget):
         
     def state(self):
         state = {
-            "current_series": self.plotWidget.y_series
+            "current_series": self.plotWidget.y_series,
+            "style": self.plotWidget.style.name,
+            "default_months": self._view_months,
             }
         return state
         
@@ -99,6 +103,7 @@ class PlotWidget(QWidget):
         
     @Slot(object, bool)
     def set_x_axis_range(self, months, fromRecentSession=True):
+        self._view_months = months
         self.plotWidget.set_x_axis_range(months, fromRecentSession=fromRecentSession)
         
     @Slot(str)
@@ -274,8 +279,8 @@ class Plot(_PlotWidget):
         
     def set_style(self, style):
         self.style.name = style
-        dct = {'foreground':self.style.foreground,
-               'background':self.style.background}
+        dct = {'foreground':self.style.foreground['colour'],
+               'background':self.style.background['colour']}
         setConfigOptions(**dct)
         if self.plotItem is not None:
             self.plotItem.setButtonPixmaps()
@@ -504,7 +509,7 @@ class Plot(_PlotWidget):
         self._prevHgltPointColour = point.pen().color().name()
         
         # set colour of new point
-        colour = self.style['highlightPoint']['colour']
+        colour = self.style['highlight_point']['colour']
         pen = mkPen(colour)
         brush = mkBrush(colour)
         self.hgltPnt = point
@@ -521,7 +526,7 @@ class Plot(_PlotWidget):
                 self._regenerateCachedPBs[self.y_series] = False
             for idx in self.hgltPBs[self.y_series]:
                 pt = self.dataItem.scatter.points()[idx]
-                colour = self.style['highlightPoint']['colour']
+                colour = self.style['highlight_point']['colour']
                 pen = mkPen(colour)
                 brush = mkBrush(colour)
                 pt.setPen(pen)
