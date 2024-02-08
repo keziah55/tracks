@@ -18,7 +18,7 @@ class DataPreferences(QWidget):
     
     name = "Data"
     
-    applied = Signal(object, object, object)
+    applied = Signal(bool)
     
     def __init__(self, activity, personal_bests_widget):
         super().__init__()
@@ -109,17 +109,20 @@ class DataPreferences(QWidget):
         
     def apply(self):
         
-        numSessions = self.numSessionsBox.value()
+        num_sessions = self.numSessionsBox.value()
         # self._main_window.pb.bestSessions.setNumRows(numSessions)
         
         bestMonthCriterion = self.bestMonthCriteria.currentText().lower()
         if self.bestMonthPB.isChecked():
-            bestMonthPB = numSessions
+            bestMonthPB = num_sessions
         else:
             bestMonthPB = None
             
         months = self.pbRangeCombo.currentText()
         months = parse_month_range(months)
+        
+        pb_month_args = (bestMonthCriterion, bestMonthPB, months)
+        self._personal_bests_widget.update_values(num_sessions, pb_month_args)
             
         # self._main_window.pb.bestMonth.setColumn(bestMonthCriterion, bestMonthPB, months)
         
@@ -145,7 +148,9 @@ class DataPreferences(QWidget):
         #     self._main_window._summary_value_changed()
         # self._main_window.summary.setFunc(summaryFuncs)
         
-        self.applied.emit(changed, numSessions, (bestMonthCriterion, bestMonthPB, months))
+        
+        
+        self.applied.emit(changed)
         
         # self.settings.endGroup()
         

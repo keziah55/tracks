@@ -85,7 +85,7 @@ class PersonalBests(QObject):
             
         if best_month_args is not None:
             # bestMonthCriterion, bestMonthPB, months
-            self._main_window.pb.bestMonth.setColumn(*best_month_args)
+            self.bestMonth.setColumn(*best_month_args)
             
         # TODO clear status message here?
     

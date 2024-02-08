@@ -39,7 +39,7 @@ class ActivityObjects(QObject):
         self.plot = plot
         self.preferences = {
             "data": DataPreferences(activity, personal_bests),
-            # "Plot": PlotPreferences(activity, preferences)
+            "Plot": PlotPreferences(activity, plot),
         }
         
         self._connect_signals()
@@ -55,6 +55,7 @@ class ActivityObjects(QObject):
         self.personal_bests.statusMessage.connect(self.status_message)
         
         self.preferences["data"].applied.connect(self._apply_data_pref)
+        # self.preferences["plot"].applied.connect(self._apply_plot_pref)
         
     @Slot(object)
     def _data_changed(self, idx):
@@ -63,11 +64,13 @@ class ActivityObjects(QObject):
         self.personal_bests.new_data(idx)
         self.request_save_activity.emit(self.activity.name)
         
-    def _apply_data_pref(self, summary_changed, pb_sum_sessions, pb_month_args):
-        self.personal_bests.update_values(pb_sum_sessions, pb_month_args)
+    def _apply_data_pref(self, summary_changed):
         if summary_changed:
             self.data_viewer.updateTopLevelItems()
             # self.personal_bests.new_data() ## is this necessary?
+            
+    # def _apply_plot_pref(self, style_name, month_range):
+        
 
 
 class ActivityManager(QObject):
