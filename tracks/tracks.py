@@ -108,40 +108,7 @@ class Tracks(QMainWindow):
         p = Path(__file__).parents[1].joinpath("images/icon.png")
         icon = QIcon(str(p))
         self.setWindowIcon(icon)
-        
-    ###########################################################################
-    # TG-136 these properties are used by plot and data preferences
-    @property
-    def data(self):
-        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
-        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
-        return ao.data
-    
-    @property
-    def viewer(self):
-        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
-        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
-        return ao.data_viewer
-    
-    @property
-    def pb(self):
-        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
-        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
-        return ao.personal_bests
-        
-    @property
-    def plot(self):
-        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
-        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
-        return ao.plot
-    
-    @property
-    def addData(self):
-        # print(f"{inspect.stack()[0].function} called by {inspect.stack()[1].function} in {inspect.stack()[1].filename}, line {inspect.stack()[1].lineno}")
-        ao = self._activity_manager.get_activity_objects(self.current_activity.name)
-        return ao.add_data
-    ###########################################################################
-    
+            
     @property
     def current_activity(self):
         return self._activity_manager.current_activity
@@ -179,13 +146,6 @@ class Tracks(QMainWindow):
     def backup(self, activity=None):
         self._activity_manager.backup_activity(activity)
         
-    # @Slot()
-    # def _summary_value_changed(self):
-    #     # TG-136
-    #     # called from data pref
-    #     self.viewer.updateTopLevelItems()
-    #     self.pb.newData()
-        
     def _create_dock_widget(self, widget, area, title, key=None):
         dock = QDockWidget()
         dock.setWidget(widget)
@@ -212,14 +172,6 @@ class Tracks(QMainWindow):
         geometry = self.saveGeometry()
         self.settings.setValue("window/state", state)
         self.settings.setValue("window/geometry", geometry)
-        
-        # TG-136
-        for key, value in self.pb.state().items():
-            self.settings.setValue(f"pb/{key}", value)
-            
-        for key, value in self.plot.state().items():
-            self.settings.setValue(f"plot/{key}", value)
-            
         self.settings.setValue("activity/current", self.current_activity.name)
         
     def _create_actions(self):
