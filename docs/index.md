@@ -53,11 +53,7 @@ The star button in the toolbar highlights all points that were personal bests.
 |:--:|
 | *Personal best widgets* |
 
-The two widgets in the top left show personal best info. By default, the top
+The widget in the top left shows personal best info. By default, the top
 five sessions are chosen by speed. To show the top sessions by another measure,
 click on the 'Top sessions' table header. The number of sessions can be changed in
 Edit->Preferences->Data->Top sessions.
-
-The 'Best month' widget by default shows the month with the greatest number of
-PBs in the last 12 months. Again, these parameters can be changed in 
-Edit->Preferences->Data->Best month.

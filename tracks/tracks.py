@@ -123,6 +123,8 @@ class Tracks(QMainWindow):
             
             pb = activity_objects.personal_bests
             pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+            
+        self.setWindowTitle(f"Tracks - {name}")
     
     @Slot()
     def save(self, activity=None):
