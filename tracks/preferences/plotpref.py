@@ -306,6 +306,8 @@ class ColourButton(QLabel):
 
 class PlotPreferences(QWidget):
     
+    applied = Signal()
+    
     name = "Plot"
     
     def __init__(self, activity, plot_widget):
@@ -464,6 +466,8 @@ class PlotPreferences(QWidget):
             text = self.plotRangeCombo.currentText()
             months = parse_month_range(text)
         self._plot_widget.set_x_axis_range(months)
+        
+        self.applied.emit()
             
     @Slot(bool)
     def setCustomRange(self, custom):

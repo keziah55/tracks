@@ -39,7 +39,7 @@ class ActivityObjects(QObject):
         self.plot = plot
         self.preferences = {
             "data": DataPreferences(activity, personal_bests),
-            "Plot": PlotPreferences(activity, plot),
+            "plot": PlotPreferences(activity, plot),
         }
         
         self._connect_signals()
@@ -55,7 +55,7 @@ class ActivityObjects(QObject):
         self.personal_bests.statusMessage.connect(self.status_message)
         
         self.preferences["data"].applied.connect(self._apply_data_pref)
-        # self.preferences["plot"].applied.connect(self._apply_plot_pref)
+        self.preferences["plot"].applied.connect(self._apply_plot_pref)
         
     @Slot(object)
     def _data_changed(self, idx):
@@ -67,10 +67,11 @@ class ActivityObjects(QObject):
     def _apply_data_pref(self, summary_changed):
         if summary_changed:
             self.data_viewer.updateTopLevelItems()
+            self.request_save_activity.emit(self.activity.name)
             # self.personal_bests.new_data() ## is this necessary?
             
-    # def _apply_plot_pref(self, style_name, month_range):
-        
+    def _apply_plot_pref(self, *args, **kwargs):
+        self.request_save_activity.emit(self.activity.name)
 
 
 class ActivityManager(QObject):
@@ -127,14 +128,20 @@ class ActivityManager(QObject):
         if name in self._activities:
             return self._activities[name]
         
-        p = self._data_path.joinpath(f"{name}.json")
-        if not p.exists():
+        # p = self._data_path.joinpath(f"{name}.json")
+        # if not p.exists():
+        #     msg = f"No such activity '{name}'\n"
+        #     msg += f"Valid activities are: {', '.join(self.list_activities())}"
+        #     raise ValueError(msg)
+        
+        # with open(p, "r") as fileobj:
+        #     activity_json = json.load(fileobj)
+            
+        activity_json = self._activities_json().get(name, None)
+        if activity_json is None:
             msg = f"No such activity '{name}'\n"
             msg += f"Valid activities are: {', '.join(self.list_activities())}"
             raise ValueError(msg)
-        
-        with open(p, "r") as fileobj:
-            activity_json = json.load(fileobj)
             
         activity = Activity(activity_json['name'])
         for measure in activity_json['measures'].values():
