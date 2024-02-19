@@ -1,0 +1,117 @@
+{
+    "cycling": {
+        "name": "cycling",
+        "measures": {
+            "date": {
+                "name": "Date",
+                "dtype": "date",
+                "summary": null,
+                "is_metadata": true,
+                "sig_figs": null,
+                "unit": null,
+                "show_unit": true,
+                "plottable": false,
+                "cmp_func": null,
+                "relation": null
+            },
+            "time": {
+                "name": "Time",
+                "dtype": "duration",
+                "summary": "sum",
+                "is_metadata": false,
+                "sig_figs": null,
+                "unit": "h",
+                "show_unit": false,
+                "plottable": true,
+                "cmp_func": "hourMinSecToFloat",
+                "relation": null
+            },
+            "distance": {
+                "name": "Distance",
+                "dtype": "float",
+                "summary": "sum",
+                "is_metadata": false,
+                "sig_figs": 2,
+                "unit": "km",
+                "show_unit": true,
+                "plottable": true,
+                "cmp_func": "float",
+                "relation": null
+            },
+            "speed": {
+                "name": "Speed",
+                "dtype": "float",
+                "summary": "max",
+                "is_metadata": false,
+                "sig_figs": 2,
+                "unit": "km/h",
+                "show_unit": true,
+                "plottable": true,
+                "cmp_func": "float",
+                "relation": {
+                    "m0": {
+                        "name": "Distance",
+                        "dtype": "float",
+                        "summary": "sum",
+                        "is_metadata": false,
+                        "sig_figs": 2,
+                        "unit": "km",
+                        "show_unit": true,
+                        "plottable": true,
+                        "cmp_func": "float",
+                        "relation": null
+                    },
+                    "m1": {
+                        "name": "Time",
+                        "dtype": "duration",
+                        "summary": "sum",
+                        "is_metadata": false,
+                        "sig_figs": null,
+                        "unit": "h",
+                        "show_unit": false,
+                        "plottable": true,
+                        "cmp_func": "hourMinSecToFloat",
+                        "relation": null
+                    },
+                    "op": "Divide",
+                    "name": "Speed"
+                }
+            },
+            "calories": {
+                "name": "Calories",
+                "dtype": "float",
+                "summary": "sum",
+                "is_metadata": false,
+                "sig_figs": 1,
+                "unit": null,
+                "show_unit": true,
+                "plottable": true,
+                "cmp_func": "float",
+                "relation": null
+            },
+            "gear": {
+                "name": "Gear",
+                "dtype": "int",
+                "summary": "mean",
+                "is_metadata": true,
+                "sig_figs": null,
+                "unit": null,
+                "show_unit": true,
+                "plottable": false,
+                "cmp_func": "float",
+                "relation": null
+            }
+        },
+        "preferences": {
+            "plot": {
+                "current_series": "time",
+                "style": "dark",
+                "default_months": 6
+            },
+            "personal_bests": {
+                "sessions_key": "speed",
+                "num_best_sessions": 5
+            }
+        }
+    }
+}

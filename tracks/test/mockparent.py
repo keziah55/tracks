@@ -6,11 +6,13 @@ import json
 from pathlib import Path
 import pandas as pd
 
-def load_activity(json_path):
-    # json_path = Path(__file__).parent.parent.joinpath(".mock_test_dir", ".tracks", f"{name}.json")
+def load_activity(json_path, activity_name="cycling"):
+
     with open(json_path, "r") as fileobj:
-        activity_json = json.load(fileobj)
-    
+        all_activity_json = json.load(fileobj)
+        
+    activity_json = all_activity_json[activity_name]
+        
     activity = Activity(activity_json['name'])
     for measure in activity_json['measures'].values():
         activity.add_measure(**measure)
@@ -48,8 +50,8 @@ class MockParent:
             df.to_csv(self.tmpfile.name, index=False)
         self.df = pd.read_csv(self.tmpfile.name, parse_dates=['date'])
         
-        json_path = Path(__file__).parent.parent.joinpath(".mock_test_dir", ".tracks", "cycling.json")
-        self.activity = load_activity(json_path)
+        json_path = Path(__file__).parent.parent.joinpath(".mock_test_dir", ".tracks", "activities.json")
+        self.activity = load_activity(json_path, "cycling")
         
         self.data = Data(self.df, activity=self.activity)
         self.dataAnalysis = None
