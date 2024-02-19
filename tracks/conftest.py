@@ -44,7 +44,7 @@ def patch_settings(monkeypatch, patch_dir, activity_json_path):
     QCoreApplication.setApplicationName(app_name)
     QCoreApplication.setOrganizationName(org_name)
     
-    plot_style_file = conf_file.parent.joinpath('plot_styles.json')
+    plot_style_file = patch_dir.joinpath('.tracks', 'plot_styles.json')
     plot_style_file.unlink(missing_ok=True)
     monkeypatch.setattr(Settings, "fileName", lambda *args, **kwargs: conf_file)
 
