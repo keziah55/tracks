@@ -183,7 +183,7 @@ class Plot(_PlotWidget):
         
         self.dateAxis.axisDoubleClicked.connect(self.set_plot_range)
         
-        self.hgltPnt = None
+        self._highlight_point_item = None
         
         self.data = data
         
@@ -215,7 +215,7 @@ class Plot(_PlotWidget):
         
         self._current_point = {}
         
-        self._prevHgltPointColour = None
+        self._prev_highlight_point_colour = None
         
         # all points that are/were PBs can be highlighted
         self._showPBs = False
@@ -326,6 +326,8 @@ class Plot(_PlotWidget):
                 y1 = np.max(yPoints)
                 # set min and max for x and y in the viewBox
                 viewBox.setRange(xRange=(x0, x1), yRange=(y0, y1))
+            else:
+                viewBox.setRange(xRange=(x0, x1))
                 
     @Slot(object, bool)
     def set_x_axis_range(self, months, fromRecentSession=True):
@@ -381,14 +383,6 @@ class Plot(_PlotWidget):
         Mode must be 'new' (to add a new series) or 'set' to upadte the data in 
         an existing series.
         """
-        # get series and set axis tick formatter
-        # if key == 'time':
-        #     # series = self.data.time
-        #     self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec
-        # else:
-            
-        #     self.plotItem.getAxis('left').tickFormatter = None
-            
         series = self.data[key]
         self.plotItem.getAxis('left').tickFormatter = floatToHourMinSec if key == 'time' else None
             
@@ -468,7 +462,8 @@ class Plot(_PlotWidget):
         idx = self.data.datetimes.index(dt)
         pt = self.dataItem.scatter.points()[idx]
         self._ensure_point_visible(pt)
-        self._highlight_point(pt)
+        # ensure visible may have resrawn, so `pt` may no longer be valid, so highlight by index
+        self._highlight_point_from_index(idx)
         self.set_current_point(idx)
         
     def set_current_point_from_timestamp(self, ts):
@@ -485,36 +480,41 @@ class Plot(_PlotWidget):
             x1 = ts + 1e6
         self.set_plot_range(x0, x1)
         
+    def _highlight_point_from_index(self, idx):
+        """ Get scatter point at index `idx` and highlight it. """
+        pt = self.dataItem.scatter.points()[idx]
+        return self._highlight_point(pt)
+        
     @Slot(object)
     def _highlight_point(self, point=None):
         """ Change pen and brush of given point (and reset any previously 
             highlighted points). 
         """
         if point is None:
-            if self.hgltPnt is not None:
-                point = self.hgltPnt
+            if self._highlight_point_item is not None:
+                point = self._highlight_point_item
             else:
                 return None
         
         # reset previous hgltPoint pen and brush
-        if self._prevHgltPointColour is not None:
-            pen = mkPen(self._prevHgltPointColour)
-            brush = mkBrush(self._prevHgltPointColour)
+        if self._prev_highlight_point_colour is not None:
+            pen = mkPen(self._prev_highlight_point_colour)
+            brush = mkBrush(self._prev_highlight_point_colour)
             try:
-                self.hgltPnt.setPen(pen)
-                self.hgltPnt.setBrush(brush)
+                self._highlight_point_item.setPen(pen)
+                self._highlight_point_item.setBrush(brush)
             except:
                 pass
         # store current colour of new hgltPoint
-        self._prevHgltPointColour = point.pen().color().name()
+        self._prev_highlight_point_colour = point.pen().color().name()
         
         # set colour of new point
         colour = self.style['highlight_point']['colour']
         pen = mkPen(colour)
         brush = mkBrush(colour)
-        self.hgltPnt = point
-        self.hgltPnt.setPen(pen)
-        self.hgltPnt.setBrush(brush)
+        self._highlight_point_item = point
+        self._highlight_point_item.setPen(pen)
+        self._highlight_point_item.setBrush(brush)
         
     @Slot(bool)
     def _highlight_PBs(self, show):
