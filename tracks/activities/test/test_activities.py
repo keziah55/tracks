@@ -18,6 +18,13 @@ def get_format_test_params():
         ]
     return params
 
+def get_op_test_params():
+    params = [
+        (Divide, 15, 5, 3.0),
+        (Divide_time_min, 15, 5, 0.05)
+    ]
+    return params
+
 class TestActivities:
     
     @classmethod
@@ -193,3 +200,7 @@ class TestActivities:
         filtered = demo_activity.filter_measures("show_unit", lambda value: value is False)
         expected = ["time", "steps"]
         assert set(expected) == set(filtered.keys())
+
+@pytest.mark.parametrize(["op", "a", "b", "expected"], get_op_test_params())
+def test_operations(op, a, b, expected):
+    assert op.call(a,b) == expected
