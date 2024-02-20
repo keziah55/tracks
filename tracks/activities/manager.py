@@ -127,16 +127,7 @@ class ActivityManager(QObject):
         """
         if name in self._activities:
             return self._activities[name]
-        
-        # p = self._data_path.joinpath(f"{name}.json")
-        # if not p.exists():
-        #     msg = f"No such activity '{name}'\n"
-        #     msg += f"Valid activities are: {', '.join(self.list_activities())}"
-        #     raise ValueError(msg)
-        
-        # with open(p, "r") as fileobj:
-        #     activity_json = json.load(fileobj)
-            
+                    
         activity_json = self._activities_json().get(name, None)
         if activity_json is None:
             msg = f"No such activity '{name}'\n"

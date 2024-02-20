@@ -9,7 +9,7 @@ import re
 import json
 from .operations import operator_dict
 from tracks.util import floatToHourMinSec, get_cast_func, get_reduce_func
-    
+
 
 class Relation:
     """ 
@@ -123,7 +123,7 @@ class Measure:
         if unit is None and self._relation is not None:
             units = (self._relation.m0.unit, self._relation.m1.unit)
             if any([u is None for u in units]):
-                msg = f"No unit defined for either {self._relation.m0} or {self._relation.m1}"
+                msg = f"No unit defined for either {self._relation.m0} or {self._relation.m1} "
                 msg += "Cannot infer unit"
                 warnings.warn(msg)
             else:
@@ -256,7 +256,8 @@ class Activity:
     
     @property
     def json_file(self):
-        return f"{self._name.lower()}.json"
+        return "activities.json"
+        # return f"{self._name.lower()}.json"
         
     @property
     def measures(self):
@@ -323,11 +324,24 @@ class Activity:
         }
         return dct
     
-    def save(self, save_dir):
+    def save(self, save_dir, overwrite=False):
         """ Write json file to `save_dir` """
         p = save_dir.joinpath(self.json_file)
-        with open(p, 'w') as fileobj:
-            json.dump(self.to_json(), fileobj, indent=4)
+        if p.exists():
+            with open(p) as fileobj:
+                activities_json = json.load(fileobj)
+        else:
+            activities_json = {}
+            
+        key = f"{self._name.lower()}"
+        if not overwrite and key in activities_json:
+            msg = f"Activity '{key}' already exists. "
+            msg += "Either provide a different name or pass overwrite=True"
+            warnings.warn(msg)
+        else:
+            activities_json[f"{self._name.lower()}"] = self.to_json()
+            with open(p, 'w') as fileobj:
+                json.dump(activities_json, fileobj, indent=4)
             
     def get_relations(self):
         """ Return dict of measures in activity that are relations between others. """
