@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import Qt, QObject, Slot, Signal
 from qtpy.QtGui import QFont
-from tracks.util import dayMonthYearToFloat, intToStr
+from tracks.util import dayMonthYearToFloat, int_to_str
 from customQObjects.widgets import TimerDialog
 
 
@@ -152,7 +152,7 @@ class PBTable(QTableWidget):
             self.parent.numSessionsChanged.emit(rows)
 
     def _setToolTip(self, num):
-        s = intToStr(num)
+        s = int_to_str(num)
         msg = f"Top {s} sessions, by default, this is determined by fastest average speed.\n"
         msg += "Click on 'Time', 'Distance (km)' or 'Calories' to change the metric.\n"
         msg += "Click on a session to highlight it in the plot."
