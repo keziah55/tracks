@@ -182,10 +182,12 @@ class Tracks(QMainWindow):
             shortcut="Ctrl+Q",
             statusTip="Exit the application",
             triggered=self.close,
+            icon=QIcon.fromTheme("application-exit"),
         )
 
         self._save_act = QAction(
-            "&Save", self, shortcut="Ctrl+S", statusTip="Save data", triggered=self.save
+            "&Save", self, shortcut="Ctrl+S", statusTip="Save data", triggered=self.save,
+            icon=QIcon.fromTheme("document-save"),
         )
 
         self._preferences_act = QAction(
@@ -194,9 +196,11 @@ class Tracks(QMainWindow):
             shortcut="F12",
             statusTip="Edit preferences",
             triggered=self.prefDialog.show,
+            icon=QIcon.fromTheme("preferences-system"),
         )
 
     def _create_menus(self):
+        # return
         self._file_menu = self.menuBar().addMenu("&File")
         self._file_menu.addAction(self._save_act)
         self._activities_menu = self._file_menu.addMenu("&Activities")
@@ -217,12 +221,13 @@ class Tracks(QMainWindow):
 
     def _create_toolbars(self):
         return
-        # self._options_toolsbar = QToolBar("Options")
+        self._options_toolsbar = QToolBar("Options")
+        self._options_toolsbar.setObjectName("options_toolbar")
 
-        # actions = [self.saveAct, self._load_activity_act, self.preferencesAct, self.exitAct]
-        # self._options_toolsbar.addActions(actions)
+        actions = [self._save_act, self._preferences_act, self._exit_act]
+        self._options_toolsbar.addActions(actions)
 
-        # self.addToolBar(Qt.LeftToolBarArea, self._options_toolsbar)
+        self.addToolBar(Qt.LeftToolBarArea, self._options_toolsbar)
 
     def _activate_activity_switcher(self):
         self._keys_pressed = ["A", "ctrl", "shift"]
