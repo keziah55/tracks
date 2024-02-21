@@ -96,9 +96,9 @@ class Tracks(QMainWindow):
         self.activity_switcher = ListSelector(
             parent=self,
             values=self._activity_manager.list_activities(),
-            style="font-size:24pt",
+            style="font-size:16pt",
         )
-        self.activity_switcher.resize(200, 300)
+        self.activity_switcher.resize(150, 200)
         self.activity_switcher.hide()
 
         # self.installEventFilter(self)
