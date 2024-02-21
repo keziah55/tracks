@@ -126,22 +126,23 @@ class ActivityManager(QObject):
         Return objects associated with `name`
         """
         if name in self._activities:
-            return self._activities[name]
-                    
-        activity_json = self._activities_json().get(name, None)
-        if activity_json is None:
-            msg = f"No such activity '{name}'\n"
-            msg += f"Valid activities are: {', '.join(self.list_activities())}"
-            raise ValueError(msg)
+            activity_objects = self._activities[name]
+
+        else:                    
+            activity_json = self._activities_json().get(name, None)
+            if activity_json is None:
+                msg = f"No such activity '{name}'\n"
+                msg += f"Valid activities are: {', '.join(self.list_activities())}"
+                raise ValueError(msg)
+                
+            activity = Activity(activity_json['name'])
+            for measure in activity_json['measures'].values():
+                activity.add_measure(**measure)
+                
+            activity_objects = self._initialise_activity(activity)
+            self._activities[name] = activity_objects
             
-        activity = Activity(activity_json['name'])
-        for measure in activity_json['measures'].values():
-            activity.add_measure(**measure)
-            
-        activity_objects = self._initialise_activity(activity)
-        self._activities[name] = activity_objects
         self._current_activity = activity_objects.activity
-        
         self.save_activity(name)
             
         return activity_objects

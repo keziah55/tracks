@@ -8,7 +8,7 @@ from pathlib import Path
 from functools import partial
 from qtpy.QtWidgets import QMainWindow, QDockWidget, QAction, QSizePolicy, QLabel, QToolBar
 from qtpy.QtCore import Qt, Slot, QTimer
-from qtpy.QtGui import QIcon, QKeyEvent
+from qtpy.QtGui import QIcon
 from .activities import ActivityManager
 from .preferences import PreferencesDialog
 from .util import intToStr
@@ -112,6 +112,9 @@ class Tracks(QMainWindow):
     @Slot(str)
     def _load_activity(self, name):
         
+        if self.current_activity is not None and name == self.current_activity.name:
+            return
+        
         activity_objects = self._activity_manager.load_activity(name)
         
         new_widgets = False
@@ -193,13 +196,6 @@ class Tracks(QMainWindow):
             triggered=self.prefDialog.show
         )
         
-        # self._switch_activity_act = QAction(
-        #     "Switch &activity",
-        #     self,
-        #     shortcut="Ctrl+A",
-        #     triggered=self._activate_activity_switcher
-        # )
-        
     def _create_menus(self):
         self._file_menu = self.menuBar().addMenu("&File")
         self._file_menu.addAction(self._save_act)
@@ -258,31 +254,18 @@ class Tracks(QMainWindow):
             super().keyPressEvent(event)
             
     def keyReleaseEvent(self, event):
-        # print(f"{event.key()}, {event.modifiers()}, {event.modifiers()|Qt.ControlModifier}, {event.modifiers()|Qt.ShiftModifier}")
         if self.activity_switcher.isVisible():
-            if event.key() == Qt.Key_A:
-                if "A" in self._keys_pressed:
-                    print("remove A")
+            
+            match event.key():
+                case Qt.Key_A if "A" in self._keys_pressed:
                     self._keys_pressed.remove("A")
-            if event.modifiers()==Qt.ControlModifier|Qt.ShiftModifier:
-                if "ctrl" in self._keys_pressed:
-                    print("remove ctrl")
+                case Qt.Key_Control if "ctrl" in self._keys_pressed:
                     self._keys_pressed.remove("ctrl")
-                if "shift" in self._keys_pressed:
-                    print("remove shift")
-                    self._keys_pressed.remove("shift")
-            if event.modifiers()==Qt.ControlModifier:
-                
-                if "ctrl" in self._keys_pressed:
-                    print("remove ctrl")
-                    self._keys_pressed.remove("ctrl")
-            if event.modifiers()==Qt.ShiftModifier:
-                if "shift" in self._keys_pressed:
-                    print("remove shift")
+                case Qt.Key_Shift if "shift" in self._keys_pressed:
                     self._keys_pressed.remove("shift")
             
             if len(self._keys_pressed) == 0:
-                self._reject_activity_switcher()
+                self._accept_activity_switcher()
             # event.accept()
         else:
             super().keyPressEvent(event)
