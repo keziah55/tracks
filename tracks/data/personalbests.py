@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (
     QAbstractItemView,
 )
 from qtpy.QtCore import Qt, QObject, Slot, Signal
+from qtpy.QtGui import QFont
 from tracks.util import dayMonthYearToFloat, intToStr
 from customQObjects.widgets import TimerDialog
 
@@ -255,9 +256,9 @@ class PBTable(QTableWidget):
         for i in range(self.header.count()):
             font = self.horizontalHeaderItem(i).font()
             if i == idx:
-                font.setItalic(True)
+                font.setWeight(QFont.ExtraBold)
             else:
-                font.setItalic(False)
+                font.setWeight(QFont.Normal)
             self.horizontalHeaderItem(i).setFont(font)
 
     @Slot()

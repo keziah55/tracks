@@ -18,7 +18,7 @@ from qtpy.QtCore import Qt, Slot, QTimer
 from qtpy.QtGui import QIcon
 from .activities import ActivityManager
 from .preferences import PreferencesDialog
-from .util import intToStr
+from .util import int_to_str
 from customQObjects.widgets import StackedWidget, ListSelector
 from customQObjects.core import Settings
 
@@ -164,7 +164,7 @@ class Tracks(QMainWindow):
         self._dock_widgets[key] = dock
 
     def _set_pb_sessions_dock_label(self, num):
-        label = f"Top {intToStr(num)} sessions"
+        label = f"Top {int_to_str(num)} sessions"
         self._dock_widgets["PB sessions"].setWindowTitle(label)
 
     def closeEvent(self, *args, **kwargs):

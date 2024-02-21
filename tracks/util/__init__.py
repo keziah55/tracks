@@ -16,7 +16,7 @@ from .convertfuncs import (
     floatToHourMinSec,
     parse_month_range,
 )
-from .numbers import intToStr
+from .numbers import int_to_str
 from .activity_funcs import (
     get_cast_func,
     get_validate_func,
@@ -38,7 +38,7 @@ __all__ = [
     "parseDuration",
     "parseDate",
     "floatToHourMinSec",
-    "intToStr",
+    "int_to_str",
     "parse_month_range",
     "get_cast_func",
     "get_validate_func",

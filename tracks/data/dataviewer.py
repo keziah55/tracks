@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtCore import Signal, Slot
-from qtpy.QtGui import QKeySequence
+from qtpy.QtGui import QKeySequence, QFont
 import calendar
 from dataclasses import dataclass
 from .edititemdialog import EditItemDialog
@@ -359,9 +359,9 @@ class DataViewer(QTreeWidget):
         for i in range(self.header().count()):
             font = self.headerItem().font(i)
             if i == idx:
-                font.setItalic(True)
+                font.setWeight(QFont.ExtraBold)
             else:
-                font.setItalic(False)
+                font.setWeight(QFont.Normal)
             self.headerItem().setFont(i, font)
 
         self.sortItems(idx, order)

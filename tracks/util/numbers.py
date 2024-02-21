@@ -1,4 +1,4 @@
-def intToStr(num):
+def int_to_str(num):
     numbers = {
         1: "one",
         2: "two",
