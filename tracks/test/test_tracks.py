@@ -73,7 +73,7 @@ class TracksSetupTeardown:
         self.plot = ao.plot
         self.plotWidget = self.plot.plotWidget
         self.pb = ao.personal_bests
-        self.pbTable = self.pb.bestSessions
+        self.pbTable = self.pb
         self.prefDialog = self.app.prefDialog
         self.data = ao.data
 

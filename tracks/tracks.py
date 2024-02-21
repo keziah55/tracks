@@ -51,7 +51,7 @@ class Tracks(QMainWindow):
 
         self._stack_attrs = {
             self._viewer_stack: "data_viewer",
-            self._best_sessions_stack: ("personal_bests", "bestSessions"),
+            self._best_sessions_stack: "personal_bests",
             self._add_data_stack: "add_data",
             self._plot_stack: "plot",
         }
@@ -127,10 +127,10 @@ class Tracks(QMainWindow):
                 new_widgets = True
                 if isinstance(attr, str):
                     widget = getattr(activity_objects, attr)
-                elif isinstance(attr, (list, tuple)):
-                    widget = activity_objects
-                    for at in attr:
-                        widget = getattr(widget, at)
+                # elif isinstance(attr, (list, tuple)):
+                    # widget = activity_objects
+                    # for at in attr:
+                        # widget = getattr(widget, at)
                 stack.addWidget(widget, name)
             stack.setCurrentKey(name)
 

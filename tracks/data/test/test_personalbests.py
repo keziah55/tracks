@@ -35,7 +35,7 @@ class TestPersonalBests:
         self.pb.newPBdialog.timer.setInterval(100)  # don't need 3 seconds for tests
         self.widget = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(self.pb.bestSessions)
+        layout.addWidget(self.pb)
         self.widget.setLayout(layout)
 
         qtbot.addWidget(self.widget)
@@ -67,7 +67,7 @@ class TestPersonalBests:
             "gear": [6],
         }
 
-        self.pb.bestSessions.horizontalHeader().sectionClicked.emit(1)
+        self.pb.horizontalHeader().sectionClicked.emit(1)
         qtbot.wait(variables.shortWait)
 
         # don't need dialog to pop up
@@ -93,15 +93,15 @@ class TestPersonalBests:
             self.parent.data.append(new)
 
         rowNums = [
-            self.pb.bestSessions.verticalHeaderItem(i).text()
-            for i in range(self.pb.bestSessions.rowCount())
+            self.pb.verticalHeaderItem(i).text()
+            for i in range(self.pb.rowCount())
         ]
         assert rowNums == ["1=", "1=", "3", "4", "5"]
 
-        date0 = self.pb.bestSessions.item(0, 0).text()
+        date0 = self.pb.item(0, 0).text()
         assert date0 == "07 May 2021"
 
-        date1 = self.pb.bestSessions.item(1, 0).text()
+        date1 = self.pb.item(1, 0).text()
         assert date1 == "04 May 2021"
 
     def test_sort_column(self, setup, qtbot, variables):
@@ -138,18 +138,18 @@ class TestPersonalBests:
         }
 
         for column, expected in columns.items():
-            idx = self.pb.bestSessions._activity.measure_slugs.index(column)
+            idx = self.pb._activity.measure_slugs.index(column)
 
-            self.pb.bestSessions.horizontalHeader().sectionClicked.emit(idx)
+            self.pb.horizontalHeader().sectionClicked.emit(idx)
             qtbot.wait(variables.shortWait)
             items = [
-                self.pb.bestSessions.item(idx, 0).text()
-                for idx in range(self.pb.bestSessions.rowCount())
+                self.pb.item(idx, 0).text()
+                for idx in range(self.pb.rowCount())
             ]
             assert items == expected
 
     def test_get_best_sessions(self, setup, qtbot):
-        pb = self.pb.bestSessions._getBestSessions(
+        pb = self.pb._get_best_sessions(
             num=2, key="distance", order="ascending"
         )
         expected = [
@@ -173,4 +173,4 @@ class TestPersonalBests:
                 assert pb_data[key] == value
 
         with pytest.raises(ValueError):
-            self.pb.bestSessions._getBestSessions(order="acsending")
+            self.pb._get_best_sessions(order="acsending")

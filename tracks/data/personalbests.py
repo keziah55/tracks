@@ -11,17 +11,29 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QAbstractItemView,
 )
-from qtpy.QtCore import Qt, QObject, Slot, Signal
+from qtpy.QtCore import Qt, Slot, Signal
 from qtpy.QtGui import QFont
 from tracks.util import dayMonthYearToFloat, int_to_str
 from customQObjects.widgets import TimerDialog
 
 
-class PersonalBests(QObject):
-    """Object to manage the two PB widgets.
+class PersonalBests(QTableWidget):
+    """QTableWidget showing the top sessions.
 
-    The :meth:`new_data` method updates the data in each widget and creates
-    the dialog box with the correct message, if required.
+    By default, it will show the five fastest sessions. Clicking on another header
+    (except 'date' or 'Gear') will show the top five sessions for that column.
+
+    Parameters
+    ----------
+    data : Data
+        Data object.
+    actvity : Activity
+        Activity that is represented here
+    num_sessions : int
+        Number of rows to display, i.e. the number of top sessions to show.
+        Default is 5.
+    sessions_key : str
+        Key by which to get best session.
     """
 
     itemSelected = Signal(object)
@@ -47,18 +59,33 @@ class PersonalBests(QObject):
     statusMessage = Signal(str)
 
     def __init__(self, data, activity, num_sessions=5, sessions_key="speed"):
-        super().__init__()
+        columns = len(activity.header)
+        super().__init__(num_sessions, columns)
+        
         self.data = data
         self.newPBdialog = NewPBDialog()
-        self.bestSessions = PBTable(
-            parent=self, activity=activity, rows=num_sessions, key=sessions_key
-        )
+        
+        self._activity = activity
 
+        self.setHorizontalHeaderLabels(self._activity.header)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+        self.select_key = sessions_key
+        self.num_best_sessions = num_sessions
+
+        self.currentCellChanged.connect(self._cell_changed)
+        self.header.sectionClicked.connect(self._select_column)
+        measure = self._activity[self.select_key]
+        self._select_column(self._activity.header.index(measure.full_name))
+
+        self.newIdx = None
+        self._set_tool_tip(num_sessions)
+        
     @Slot(object)
     def new_data(self, idx=None):
-        self._emitStatusMessage()
+        self._emit_status_message()
 
-        msg = self.bestSessions.new_data()
+        msg = self._new_data()
 
         if msg is None:
             return None
@@ -70,95 +97,49 @@ class PersonalBests(QObject):
         self.newPBdialog.exec_()
 
         if msg is not None:
-            self.bestSessions.setTable(highlightNew=True)
+            self._set_table(highlightNew=True)
 
         self.statusMessage.emit("")
 
     def update_values(self, num_sessions=None):
-        self._emitStatusMessage()
+        self._emit_status_message()
 
         if num_sessions is not None:
-            self.bestSessions.setNumRows(num_sessions)
+            self._set_num_rows(num_sessions)
 
-        # TODO clear status message here?
-
-    def _emitStatusMessage(self):
+    def _emit_status_message(self):
         self.statusMessage.emit("Checking for new PBs...")
 
     def state(self) -> dict:
         """Return dict of values to be saved in settings"""
         state = {
-            "sessions_key": self.bestSessions.select_key,
-            "num_best_sessions": self.bestSessions.num_best_sessions,
+            "sessions_key": self.select_key,
+            "num_best_sessions": self.num_best_sessions,
         }
         return state
-
-
-class PBTable(QTableWidget):
-    """QTableWidget showing the top sessions.
-
-    By default, it will show the five fastest sessions. Clicking on another header
-    (except 'date' or 'Gear') will show the top five sessions for that column.
-
-    Parameters
-    ----------
-    parent : QObject
-        PersonalBests object that manages this object.
-    actvity : Activity
-        Activity that is represented here
-    rows : int
-        Number of rows to display, i.e. the number of top sessions to show.
-        Default is 5.
-    """
-
-    def __init__(self, parent, activity, rows=5, key="speed"):
-        columns = len(activity.header)
-        super().__init__(rows, columns)
-        self._activity = activity
-        self.parent = parent
-
-        self.setHorizontalHeaderLabels(self._activity.header)
-
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-
-        self.select_key = key
-        self.num_best_sessions = rows
-
-        self.currentCellChanged.connect(self._cellChanged)
-        self.header.sectionClicked.connect(self.selectColumn)
-        measure = self._activity[self.select_key]
-        self.selectColumn(self._activity.header.index(measure.full_name))
-
-        self.newIdx = None
-        self._setToolTip(rows)
-
-    @property
-    def data(self):
-        return self.parent.data
-
+        
     @property
     def header(self):
         return self.horizontalHeader()
 
     @Slot(int)
-    def setNumRows(self, rows):
+    def _set_num_rows(self, rows):
         if rows == self.rowCount():
             return
         self.num_best_sessions = rows
         self.setRowCount(rows)
-        self.setTable(key=self.select_key, order=self.order)
-        self._setToolTip(rows)
-        if self.parent is not None:
-            self.parent.numSessionsChanged.emit(rows)
+        self._set_table(key=self.select_key, order=self.order)
+        self._set_tool_tip(rows)
+        self.numSessionsChanged.emit(rows)
 
-    def _setToolTip(self, num):
+    def _set_tool_tip(self, num):
         s = int_to_str(num)
         msg = f"Top {s} sessions, by default, this is determined by fastest average speed.\n"
         msg += "Click on 'Time', 'Distance (km)' or 'Calories' to change the metric.\n"
         msg += "Click on a session to highlight it in the plot."
         self.setToolTip(msg)
 
-    def _getBestSessions(self, num=5, key="speed", order="descending"):
+    def _get_best_sessions(self, num=5, key="speed", order="descending"):
         validOrders = ["descending", "ascending"]
         if order not in validOrders:
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
@@ -205,10 +186,10 @@ class PBTable(QTableWidget):
         # return only `num` values
         return pb[:num]
 
-    def setTable(self, key="speed", order="descending", highlightNew=False):
+    def _set_table(self, key="speed", order="descending", highlightNew=False):
         """Find top N sessions and display in table."""
         n = self.rowCount()
-        self.items = self._getBestSessions(num=n, key=key, order=order)
+        self.items = self._get_best_sessions(num=n, key=key, order=order)
 
         self.select_key = key
         self.order = order
@@ -241,7 +222,7 @@ class PBTable(QTableWidget):
             self.setCurrentCell(self.newIdx, 0)
 
     @Slot(int)
-    def selectColumn(self, idx):
+    def _select_column(self, idx):
         """When column selected, set table to PBs for that measure."""
         col = self._activity.header[idx]
 
@@ -251,7 +232,7 @@ class PBTable(QTableWidget):
             return
 
         self.clearContents()
-        self.setTable(key=m.slug)
+        self._set_table(key=m.slug)
 
         for i in range(self.header.count()):
             font = self.horizontalHeaderItem(i).font()
@@ -262,15 +243,15 @@ class PBTable(QTableWidget):
             self.horizontalHeaderItem(i).setFont(font)
 
     @Slot()
-    def new_data(self):
+    def _new_data(self):
         """
         Check for new PBs.
 
         Return message string if there is a new PB. Otherwise return None.
         """
-        # TODO this calls _getBestSessions but not setTable?
-        # is _getBestSessions being called multiple times?
-        pb = self._getBestSessions(num=self.rowCount(), key=self.select_key)
+        # TODO this calls _get_best_sessions but not _set_table?
+        # is _get_best_sessions being called multiple times?
+        pb = self._get_best_sessions(num=self.rowCount(), key=self.select_key)
         newDates = [row["date"] for row in pb]
         dates = [row["date"] for row in self.items]
         if newDates != dates:
@@ -279,19 +260,19 @@ class PBTable(QTableWidget):
                 while newDates[i] == dates[i]:
                     i += 1
             self.newIdx = i
-            msg = self.makeMessage(self.select_key, i, pb[i][self.select_key])
+            msg = self._make_message(self.select_key, i, pb[i][self.select_key])
             return msg
         else:
             None
 
     @Slot(int, int, int, int)
-    def _cellChanged(self, row, column, previousRow, previousColumn):
+    def _cell_changed(self, row, column, previousRow, previousColumn):
         """Emit `itemSelected` with date of selected row"""
-        if self.parent is not None and len(self.items) > 0:
+        if len(self.items) > 0:
             idx = self.items[row]["idx"]
-            self.parent.itemSelected.emit(self.data.row(idx)["date"])
+            self.itemSelected.emit(self.data.row(idx)["date"])
 
-    def makeMessage(self, key, idx, value):
+    def _make_message(self, key, idx, value):
         """Return message string for new PB"""
         measure = self._activity[key]
         if measure.show_unit and measure.unit is not None:
