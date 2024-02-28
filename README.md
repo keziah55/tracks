@@ -35,6 +35,6 @@ Then simply `python main.py` to run the Tracks GUI.
 - [NumPy](https://numpy.org/)
 - [Pandas](https://pandas.pydata.org/)
 - [QtPy](https://pypi.org/project/QtPy/)
-- [PyQt5](https://pypi.org/project/PyQt5/) or [PySide2](https://doc.qt.io/qtforpython-5/index.html)
+- Any of: [PyQt5](https://pypi.org/project/PyQt5/), [PySide2](https://doc.qt.io/qtforpython-5/index.html), [PyQt6](https://pypi.org/project/PyQt6/), [PySide6](https://doc.qt.io/qtforpython-6/index.html)
 - [PyQtGraph](https://pypi.org/project/pyqtgraph/)
 - [customQObjects](https://github.com/keziah55/CustomPyQtObjects)

@@ -49,13 +49,6 @@ class Data(QObject):
         """
         super().__init__()
 
-        # if activity is None:
-        #     # TODO temporary workaround for when we create Data objects on the fly
-        #     from tracks.activities import load_activity
-        #     from pathlib import Path
-        #     p = Path.home().joinpath(".tracks", "cycling.json")
-        #     activity = load_activity(p)
-
         self.df = self._apply_relations(df, activity)
 
         self._activity = activity
