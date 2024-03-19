@@ -435,7 +435,7 @@ class Plot(_PlotWidget):
         """Plot monthly total distance."""
         colour = self.style["odometer"]["colour"]
         style = self._make_fill_style(colour)
-        # style['stepMode'] = 'right'
+        style['stepMode'] = 'right'
         dts, odo = self.data.getMonthlyOdometer()
         dts = [dt.timestamp() for dt in dts]
         if mode == "new":
