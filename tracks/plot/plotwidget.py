@@ -211,7 +211,7 @@ class Plot(_PlotWidget):
         # show grid on left and bottom axes
         self.plotItem.getAxis("left").setGrid(255)
         self.plotItem.getAxis("bottom").setGrid(255)
-
+        
         # cross hairs
         self.vLine = InfiniteLine(angle=90, movable=False)
         self.hLine = InfiniteLine(angle=0, movable=False)

@@ -6,6 +6,7 @@ from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem
 from qtpy.QtCore import Signal
 from datetime import datetime
 
+from pprint import pprint
 
 class CustomAxisItem(AxisItem):
     """Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.
@@ -19,6 +20,8 @@ class CustomAxisItem(AxisItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tickFormatter = None
+        self.setStyle(maxTickLevel=1)
+        self.setTickDensity(0.1)
 
     @property
     def tickFormatter(self):
@@ -33,7 +36,7 @@ class CustomAxisItem(AxisItem):
             return [self.tickFormatter(v) for v in values]
         else:
             return super().tickStrings(values, *args, **kwargs)
-
+        
 
 class CustomDateAxisItem(DateAxisItem):
     """DateAxisItem that emits `axisDoubleClicked` signal when the axis is
