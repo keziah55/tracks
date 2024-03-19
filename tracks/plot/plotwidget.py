@@ -322,7 +322,10 @@ class Plot(_PlotWidget):
         # apply to both the current scatter and background plot
         if not hasattr(self, "dataItem") or not hasattr(self, "backgroundItem"):
             return None
-        xRange0, xRange1 = self.view_boxes[0].xRange
+        
+        if (x0, x1) == self.view_boxes[0].xRange:
+            return None
+        
         data = [
             (
                 self.dataItem.scatter.data["x"],

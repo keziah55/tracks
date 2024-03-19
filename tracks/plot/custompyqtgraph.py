@@ -6,7 +6,6 @@ from pyqtgraph import DateAxisItem, ViewBox, AxisItem, PlotItem
 from qtpy.QtCore import Signal
 from datetime import datetime
 
-from pprint import pprint
 
 class CustomAxisItem(AxisItem):
     """Subclass of pyqtgraph.AxisItem, with a `tickFormatter` property.
@@ -157,12 +156,12 @@ class CustomViewBox(ViewBox):
 
     def setRange(self, rect=None, xRange=None, yRange=None, **kwargs):
         if rect is not None:
-            self.xRange = [rect.left(), rect.right()]
-            self.yRange = [rect.top(), rect.bottom()]
+            self.xRange = (rect.left(), rect.right())
+            self.yRange = (rect.top(), rect.bottom())
         if xRange is not None:
-            self.xRange = xRange
+            self.xRange = tuple(xRange)
         if yRange is not None:
-            self.yRange = yRange
+            self.yRange = tuple(yRange)
         super().setRange(rect, xRange, yRange, **kwargs)
 
 
