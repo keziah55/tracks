@@ -77,7 +77,7 @@ class PersonalBests(QTableWidget):
         self.header.sectionClicked.connect(self._select_column)
         measure = self._activity[self.select_key]
         self._select_column(self._activity.header.index(measure.full_name))
-
+        
         self.newIdx = None
         self._set_tool_tip(num_sessions)
         

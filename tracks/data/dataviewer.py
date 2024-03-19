@@ -189,7 +189,7 @@ class DataViewer(QTreeWidget):
         self.currentItemChanged.connect(self._itemChanged)
 
         self.itemSelectionChanged.connect(self._summariseSelected)
-
+        
         self.sortTree(0)
 
         msg = "Browse all sessions, grouped by month. Click on the headers \n"
