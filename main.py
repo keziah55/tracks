@@ -19,6 +19,12 @@ if __name__ == '__main__':
         with open(style_sheet) as fileobj:
             style = fileobj.read()
         app.setStyleSheet(style)
+        
+    # set desktop file, if it exists
+    # this allows the correct icon to be shown on wayland
+    p = Path.home().joinpath(".local", "share", "applications", "tracks.desktop")
+    if p.exists():
+        app.setDesktopFileName(p)
     
     window = Tracks()
     window.show()
