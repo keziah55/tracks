@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # this allows the correct icon to be shown on wayland
     p = Path.home().joinpath(".local", "share", "applications", "tracks.desktop")
     if p.exists():
-        app.setDesktopFileName(p)
+        app.setDesktopFileName(str(p))
     
     window = Tracks()
     window.show()
