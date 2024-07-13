@@ -9,7 +9,7 @@ from collections import namedtuple
 from datetime import datetime
 import calendar
 import numpy as np
-import pandas as pd
+# import pandas as pd
 import functools
 
 
@@ -210,7 +210,7 @@ class Data(QObject):
             self.dataChanged.emit(changed)
 
     @staticmethod
-    def _apply_relations(df, activity) -> pd.DataFrame():
+    def _apply_relations(df, activity):# -> pd.DataFrame():
         """
         Check if relational measures in `activity` are present in `df`.
 

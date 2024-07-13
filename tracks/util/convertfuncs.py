@@ -11,7 +11,7 @@ can be sorted.
 from datetime import date, datetime
 import calendar
 import re
-import pandas as pd
+# import pandas as pd
 
 
 def parse_month_range(s) -> int:
@@ -58,7 +58,7 @@ def parseDuration(value):
     return s
 
 
-def parseDate(value, pd_timestamp=False):
+def parseDate(value):#, pd_timestamp=False):
     """Convert string to datetime.date object (or pandas.Timestamp, if
     `pd_timestamp` is True).
 
@@ -133,9 +133,9 @@ def parseDate(value, pd_timestamp=False):
     value = value.strip()
     if not value:
         ret = today
-        if pd_timestamp:
-            # cast to pandas.Timestamp, if requested
-            ret = pd.Timestamp(ret)
+        # if pd_timestamp:
+        #     # cast to pandas.Timestamp, if requested
+        #     ret = pd.Timestamp(ret)
         return ret
 
     l = re.split(r"[\s/.-]", value)
@@ -170,9 +170,9 @@ def parseDate(value, pd_timestamp=False):
 
     # return value
     ret = date(*d)
-    if pd_timestamp:
-        # cast to pandas.Timestamp, if requested
-        ret = pd.Timestamp(ret)
+    # if pd_timestamp:
+    #     # cast to pandas.Timestamp, if requested
+    #     ret = pd.Timestamp(ret)
 
     return ret
 
