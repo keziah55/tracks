@@ -4,7 +4,10 @@
 Make a pandas DataFrame of random cycling data.
 """
 
-import pandas as pd
+try:
+    import pandas as pd
+except:
+    pass
 import numpy as np
 from datetime import datetime, timedelta, date
 from tracks.util import hourMinSecToFloat, parseDate

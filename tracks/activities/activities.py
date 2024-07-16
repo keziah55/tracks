@@ -27,7 +27,7 @@ class Relation:
     op : Operation
         Operation relating m0 and m1
     name : str
-        Name for this realtionship
+        Name for this relationship
     """
 
     def __init__(self, m0, m1, op, name):
@@ -78,7 +78,7 @@ class Measure:
         Number of significant figures to use when displaying this measure
     unit : str, optional
         Unit for this measure. If None, and this measure is a relation of two
-        other meaures, attempt to infer the unit from the relation.
+        other measures, attempt to infer the unit from the relation.
     show_unit : bool, True
         If `unit` is not None and `show_bool`, signal that the unit should
         appended to the name, where appropriate.
