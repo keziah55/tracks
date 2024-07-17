@@ -350,7 +350,16 @@ class Data:  # (QObject):
 
         groups = data.df.group_by_dynamic("date", every="1mo")
         groups = [(month[0], group) for month, group in groups]
-        # TODO: if `includeEmpty` need to check for missing months and add empty df
+
+        if includeEmpty:
+            # if `includeEmpty`, check for missing months and add empty df
+            new = []
+            for i, (month, _) in enumerate(groups[:-1]):
+                _, num_days = calendar.monthrange(month.year, month.month)
+                diff = groups[i+1][0] - month
+                if diff.days != num_days:
+                    pass
+            
         return groups
 
         # grouped = self.df.groupby(pd.Grouper(key="date", freq="M"))
@@ -565,7 +574,20 @@ if __name__ == "__main__":
 
     groups = data.df.group_by_dynamic("date", every="1mo")
     groups = [(month[0], group) for month, group in groups]
-    print(groups)
+    # print(groups)
+
+    for i, (month, _) in enumerate(groups[:-1]):
+        next_month = groups[i+1][0]
+        if next_month.year != month.year:
+            pass
+        if month.month < 12:
+            if next_month.month != month.month + 1:
+                # missing month(s)
+                pass
+
+        # _, num_days = calendar.monthrange(month.year, month.month)
+        # diff = groups[i+1][0] - month
+        # print(diff.days, num_days)
 
     # print(data.getMonth(5, 2024))
     # value = data.df["gear"][0]
