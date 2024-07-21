@@ -400,7 +400,7 @@ class Data:  # (QObject):
         odo = []
         dts = []
         
-        for month, df in months:
+        for month, df in dfs:
             col = df["distance"]
             distance = col.sum() if len(col) > 0 else 0
             dts.append(month)
