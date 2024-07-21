@@ -47,7 +47,7 @@ import functools
 def check_empty(func):
     @functools.wraps(func)
     def wrapped(self, *args, **kwargs):
-        if self.df.empty:
+        if self.df.is_empty():
             return []
         else:
             return func(self, *args, **kwargs)
@@ -214,7 +214,7 @@ class Data:  # (QObject):
         for relation_name in self._activity.get_relations():
             if relation_name not in dct:
                 schema.remove(relation_name)
-        
+
         tmp_df = pl.DataFrame(dct, schema=schema)
         tmp_df = self._apply_relations(tmp_df, self._activity)
         self.df.extend(tmp_df)
@@ -307,7 +307,7 @@ class Data:  # (QObject):
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df["date"]]
 
-    def getMonth(self, month, year, returnType="DataFrame"):
+    def getMonth(self, month, year, return_type="DataFrame"):
         """Return DataFrame or Data of data from the given month and year."""
         # ts0 = pd.Timestamp(day=1, month=month, year=year)
         ts0 = date(year, month, 1)
@@ -319,81 +319,75 @@ class Data:  # (QObject):
         ts1 = date(year, month, 1)
         # df = self.df[(self.df["date"] >= ts0) & (self.df["date"] < ts1)]
         df = self.df.filter((pl.col("date") >= ts0) & (pl.col("date") < ts1))
-        if returnType == "Data":
+        if return_type == "Data":
             df = Data(df, activity=self._activity)
         return df
 
     @check_empty
-    def splitMonths(self, includeEmpty=False, returnType="DataFrame"):
+    def splitMonths(self, include_empty=False, return_type="DataFrame"):
         """
         Split `df` into months.
 
         Parameters
         -----------
-        includeEmpty : bool
-            If True and if a month has no data, a monthYear string and empty
+        include_empty : bool
+            If True and if a month has no data, a `date` and empty
             DataFrame or Data object will be included in the returned list.
             Otherwise, it  will be ignored. Default is False.
-        returnType : {'DataFrame', 'Data'}
+        return_type : {'DataFrame', 'Data'}
             Type of object to return with each month's data. Default is
-            (pandas) 'DataFrame'
+            (polars) 'DataFrame'
 
         Returns
         -------
-        list of (monthYear string, DataFrame/Data) tuples
+        list of (`date`, DataFrame/Data) tuples
         """
-        validReturnTypes = ["DataFrame", "Data"]
-        if returnType not in validReturnTypes:
-            msg = f"Invalid returnType '{returnType}'. "
-            msg += f"Valid values are {', '.join(validReturnTypes)}"
+        valid_return_types = ["DataFrame", "Data"]
+        if return_type not in valid_return_types:
+            msg = f"Invalid return_type '{return_type}'. "
+            msg += f"Valid values are {', '.join(valid_return_types)}"
             raise ValueError(msg)
 
         groups = data.df.group_by_dynamic("date", every="1mo")
-        groups = [(month[0], group) for month, group in groups]
+        groups = [MonthData(month[0], group) for month, group in groups]
 
-        if includeEmpty:
-            # if `includeEmpty`, check for missing months and add empty df
-            new = []
-            for i, (month, _) in enumerate(groups[:-1]):
-                _, num_days = calendar.monthrange(month.year, month.month)
-                diff = groups[i+1][0] - month
-                if diff.days != num_days:
-                    pass
-            
+        if include_empty:
+            # if `include_empty`, check for missing months and add empty df
+            groups = self._add_empty_months(groups)
+
+        if return_type == "Data":
+            for n, (month, group) in enumerate(groups):
+                df = Data(group, activity=self._activity)
+                groups[n] = MonthData(month, df)
+
         return groups
 
-        # grouped = self.df.groupby(pd.Grouper(key="date", freq="M"))
-        # dfs = [group for _, group in grouped]
-        # lst = []
-        # for df in dfs:
-        #     if df.empty:
-        #         if not includeEmpty:
-        #             continue
-        #         else:
-        #             # go backwards until we find a non-empty dataframe
-        #             i = 0
-        #             while df.empty:
-        #                 i += 1
-        #                 df = lst[-i][1]
-        #             # get the first date
-        #             date = df["date"].iloc[0]
-        #             # get the month and year and adjust to find the missing month and year
-        #             month = date.month + i
-        #             year = date.year
-        #             if month > 12:
-        #                 month = 1
-        #                 year += 1
-        #             # make empty dataframe to add to lst
-        #             df = pd.DataFrame()
-        #     else:
-        #         date = df["date"].iloc[0]
-        #         month = date.month
-        #         year = date.year
-        #     monthYear = f"{calendar.month_name[month]} {year}"
-        #     if returnType == "Data":
-        #         df = Data(df, activity=self._activity)
-        #     lst.append(MonthData(monthYear, df))
-        # return lst
+    def _add_empty_months(self, groups):
+        missing = []
+
+        for i, (month, _) in enumerate(groups[:-1]):
+            expected_next_month = month.month + 1
+            expected_next_year = month.year
+            if expected_next_month > 12:
+                expected_next_month = 1
+                expected_next_year += 1
+
+            next_month = groups[i + 1][0]
+
+            while (next_month.month != expected_next_month) and (
+                next_month.year != expected_next_year
+            ):
+                month_dt = date(expected_next_year, expected_next_month, 1)
+                df = pl.DataFrame(schema=self._activity.measure_slugs)
+                missing.append(MonthData(month_dt, df))
+                expected_next_month += 1
+                if expected_next_month > 12:
+                    expected_next_month = 1
+                    expected_next_year += 1
+
+        groups += missing
+
+        return sorted(groups)
 
     def getMonthlyOdometer(self):
         """
@@ -402,30 +396,15 @@ class Data:  # (QObject):
         The datetime objects are required, as they add dummy 1st of the
         month data points to reset the total to 0km.
         """
-        dfs = self.splitMonths(includeEmpty=True)
+        dfs = self.splitMonths(include_empty=True)
         odo = []
         dts = []
-        for i, df in enumerate(dfs):
-            month_year, df = df
-            # at the start of every month, insert 0km entry
-            if df.empty:
-                # if there's no data in the df, get the month and year from the
-                # associated month_year string
-                month, year = month_year.split(" ")
-                month = list(calendar.month_name).index(month)
-                year = int(year)
-            else:
-                month = df["date"].iloc[0].month
-                year = df["date"].iloc[0].year
-            tmp = datetime(year, month, 1)
-            dts.append(tmp)
-            odo.append(0)
-
-            for _, row in df.iterrows():
-                dt = row["date"].to_pydatetime()
-                dist = odo[-1] + row["distance"]
-                dts.append(dt)
-                odo.append(dist)
+        
+        for month, df in months:
+            col = df["distance"]
+            distance = col.sum() if len(col) > 0 else 0
+            dts.append(month)
+            odo.append(distance)
 
         return dts, odo
 
@@ -444,7 +423,7 @@ class Data:  # (QObject):
         Returns
         -------
         idx : List[int]
-            list of indicies of PBs
+            list of indices of PBs
         """
         series = self[column]
         if pbCount > len(series):
@@ -572,32 +551,6 @@ if __name__ == "__main__":
 
     data = Data(df, activity=activity)
 
-    groups = data.df.group_by_dynamic("date", every="1mo")
-    groups = [(month[0], group) for month, group in groups]
-    # print(groups)
-
-    for i, (month, _) in enumerate(groups[:-1]):
-        next_month = groups[i+1][0]
-        if next_month.year != month.year:
-            pass
-        if month.month < 12:
-            if next_month.month != month.month + 1:
-                # missing month(s)
-                pass
-
-        # _, num_days = calendar.monthrange(month.year, month.month)
-        # diff = groups[i+1][0] - month
-        # print(diff.days, num_days)
-
-    # print(data.getMonth(5, 2024))
-    # value = data.df["gear"][0]
-    # print(data["date"][0], data["date"].dtype)
-    # dct = known_data()
-
-    # data.append(dct)
-    # print(data)
-
-
-    # data2 = pl.DataFrame(dct)
-    # print(data2)
+    months = data.splitMonths(include_empty=True)
+    # print(months)
     
