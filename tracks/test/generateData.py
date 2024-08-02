@@ -4,7 +4,7 @@
 Make a pandas DataFrame of random cycling data.
 """
 
-import pandas as pd
+import polars as pl
 import numpy as np
 from datetime import datetime, timedelta, date
 from tracks.util import hourMinSecToFloat, parseDate
@@ -13,7 +13,7 @@ from tracks.util import hourMinSecToFloat, parseDate
 def time_to_secs(t):
     msg = ""
     # don't actually need the datetime objects returned by strptime, but
-    # this is probably the easist way to check the format
+    # this is probably the easiest way to check the format
     try:
         datetime.strptime(t, "%H:%M:%S")
         hr, mins, sec = [int(s) for s in t.split(":")]
@@ -70,10 +70,10 @@ def make_dataframe(random=True, size=100, path=None):
     else:
         d = known_data()
 
-    df = pd.DataFrame.from_dict(d)
+    df = pl.from_dict(d)
 
     if path is not None:
-        df.to_csv(path, index=False)
+        df.write_csv(path)
 
     return df
 
@@ -98,7 +98,7 @@ def random_data(size):
 def known_data():
     dates = [f"{i:02}-04-2021" for i in range(26, 31)]
     dates += [f"{i:02}-05-2021" for i in range(1, 6)]
-    dates = [parseDate(d, pd_timestamp=True) for d in dates]
+    dates = [parseDate(d) for d in dates]
 
     times = [
         "00:53:27",
@@ -153,14 +153,16 @@ def make_dates(
         list of datetime objects
     """
     if end_date is None:
-        end_date = date.today().strftime(fmt)
+        end_date = date.today()
+    else:
+        end_date = date.fromisoformat(end_date)
     if start_date is None:
         today = date.today()
-        d = date(year=today.year - 2, month=today.month, day=today.day)
-        start_date = d.strftime(fmt)
+        start_date = date(year=today.year - 2, month=today.month, day=today.day)
+    else:
+        start_date = date.fromisoformat(start_date)
 
-    start = datetime.strptime(start_date, fmt)
-    dt = datetime.strptime(end_date, fmt) - datetime.strptime(start_date, fmt)
+    dt = end_date - start_date
     diff = dt.days
 
     if include_bounds:
@@ -168,7 +170,7 @@ def make_dates(
     rng = np.random.default_rng()
     days = rng.choice(np.arange(diff), size=size, replace=False, shuffle=False)
     days = np.sort(days)
-    dates = [start + timedelta(days=int(d)) for d in days]
+    dates = [start_date + timedelta(days=int(d)) for d in days]
     if include_bounds:
         dates.insert(0, start_date)
         dates.append(end_date)

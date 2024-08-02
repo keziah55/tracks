@@ -4,7 +4,7 @@ from . import make_dataframe
 import tempfile
 import json
 from pathlib import Path
-import pandas as pd
+import polars as pl
 
 
 def load_activity(json_path, activity_name="cycling"):
@@ -46,11 +46,11 @@ class MockParent:
         random = kwargs.get("random", True)
         if dct is None:
             size = kwargs.get("size", 500)
-            make_dataframe(random=random, size=size, path=self.tmpfile.name)
+            self.df = make_dataframe(random=random, size=size)#, path=self.tmpfile.name)
         else:
-            df = pd.DataFrame.from_dict(dct)
-            df.to_csv(self.tmpfile.name, index=False)
-        self.df = pd.read_csv(self.tmpfile.name, parse_dates=["date"])
+            self.df = pl.from_dict(dct)
+            # df.to_csv(self.tmpfile.name, index=False)
+        # self.df = pl.read_csv(self.tmpfile.name, parse_dates=["date"])
 
         json_path = Path(__file__).parent.parent.joinpath(
             ".mock_test_dir", ".tracks", "activities.json"

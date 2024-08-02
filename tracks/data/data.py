@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Object providing convenient access to the contents of a DataFrame.
 """
@@ -6,17 +7,17 @@ from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
 from collections import namedtuple
-from datetime import datetime
+from datetime import date, datetime
 import calendar
 import numpy as np
-# import pandas as pd
+import polars as pl
 import functools
 
 
 def check_empty(func):
     @functools.wraps(func)
     def wrapped(self, *args, **kwargs):
-        if self.df.empty:
+        if self.df.is_empty():
             return []
         else:
             return func(self, *args, **kwargs)
@@ -29,17 +30,17 @@ MonthData = namedtuple("MonthData", ["month_year", "data"])
 
 class Data(QObject):
     dataChanged = Signal(object)
-    """ 
+    """
     **signal** dataChanged(object `index`)
-    
+
     Emitted when the data in the object is changed, with the pandas index
     of the new rows.
     """
 
     newMax = Signal(str, object)
-    """ 
+    """
     **signal** newMax(str `column`, object `value`)
-        
+
     Emitted when newly added data contains a new max value for a given column.
     """
 
@@ -62,7 +63,7 @@ class Data(QObject):
         else:
             if len(dfs) == 0:
                 raise ValueError("Cannot concat empty sequence")
-            tmp_df = pd.concat(dfs, ignore_index=True)
+            tmp_df = pl.concat(dfs)
             new_data = Data(tmp_df, activity)
             return new_data
 
@@ -101,10 +102,10 @@ class Data(QObject):
 
     def __getattr__(self, name):
         ret = self.df[name]
-        if name in ["date"]:
-            ret = list(ret)
-        else:
-            ret = ret.to_numpy()
+        # if name in ["date"]:
+        #     ret = list(ret)
+        # else:
+        #     ret = ret.to_numpy()
         return ret
 
     def __repr__(self):
@@ -116,7 +117,8 @@ class Data(QObject):
 
         If `formatted` is True, also format the values.
         """
-        row = dict(self.df.iloc[idx])
+        row = dict(zip(self.df.columns, self.df.row(idx)))
+        # row = dict(self.df.iloc[idx])
         if formatted:
             row = {
                 name: self._activity.get_measure(name).formatted(value)
@@ -134,55 +136,70 @@ class Data(QObject):
             If provided, abridge the object to show only the first and last
             `headTail` rows. By default, do not abridge and return the full object.
         """
-        keys = self.df.columns
-        joinStr = "  "
-        columns = {key: self.formatted(key) for key in keys}
-        widths = {
-            key: max(
-                max([len(str(item)) for item in values]), len(key)
-            )  # +len(joinStr))
-            for key, values in columns.items()
-        }
-        size = len(self)
-        if headTail is not None and size > 2 * headTail:
-            indices = list(range(headTail)) + list(range(size - headTail, size))
-        else:
-            indices = range(size)
+        return repr(self.df)
+        # keys = self.df.columns
+        # joinStr = "  "
+        # columns = {key: self.formatted(key) for key in keys}
+        # widths = {
+        #     key: max(
+        #         max([len(str(item)) for item in values]), len(key)
+        #     )  # +len(joinStr))
+        #     for key, values in columns.items()
+        # }
+        # size = len(self)
+        # if headTail is not None and size > 2 * headTail:
+        #     indices = list(range(headTail)) + list(range(size - headTail, size))
+        # else:
+        #     indices = range(size)
 
-        s = ""
-        idxWidth = max(len(s), len(str(size)))
-        header = [f"{s:<{idxWidth}}"]
-        header += [f"{key:>{widths[key]}}" for key in columns]
-        rows = [joinStr.join(header)]
+        # s = ""
+        # idxWidth = max(len(s), len(str(size)))
+        # header = [f"{s:<{idxWidth}}"]
+        # header += [f"{key:>{widths[key]}}" for key in columns]
+        # rows = [joinStr.join(header)]
 
-        for n, idx in enumerate(indices):
-            if n >= 1:
-                if idx != indices[n - 1] + 1:
-                    rows.append("...")
-            pdIdx = self.df.index[idx]
-            row = [f"{pdIdx:>{idxWidth}}"]
-            for key, lst in columns.items():
-                value = lst[idx]
-                width = widths[key]
-                s = f"{value:>{width}}"
-                row.append(s)
-            rows.append(joinStr.join(row))
+        # for n, idx in enumerate(indices):
+        #     if n >= 1:
+        #         if idx != indices[n - 1] + 1:
+        #             rows.append("...")
+        #     pdIdx = self.df.index[idx]
+        #     row = [f"{pdIdx:>{idxWidth}}"]
+        #     for key, lst in columns.items():
+        #         value = lst[idx]
+        #         width = widths[key]
+        #         s = f"{value:>{width}}"
+        #         row.append(s)
+        #     rows.append(joinStr.join(row))
 
-        return "\n".join(rows)
+        # return "\n".join(rows)
 
-    @Slot(dict)
+    # @Slot(dict)
     def append(self, dct):
         """Append values in dict to DataFrame."""
         if not isinstance(dct, dict):
             msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
 
-        tmp_df = pd.DataFrame.from_dict(dct)
-        tmp_df = pd.concat([self.df, tmp_df], ignore_index=True)
-        tmp_df.sort_values("date", inplace=True)
-        index = tmp_df[~tmp_df.isin(self.df)].dropna(how="all").index
-        self.df = tmp_df
-        self._update_relations(index)
+        schema = self.df.columns
+        for relation_name in self._activity.get_relations():
+            if relation_name not in dct:
+                schema.remove(relation_name)
+
+        tmp_df = pl.DataFrame(dct, schema=schema)
+        tmp_df = self._apply_relations(tmp_df, self._activity)
+        self.df.extend(tmp_df)
+        self.df = self.df.sort("date")
+        # tmp_df = pl.concat([self.df, tmp_df])
+        # tmp_df.sort("date")
+        # self.df = tmp_df
+
+        # tmp_df = pd.DataFrame.from_dict(dct)
+        # tmp_df = pd.concat([self.df, tmp_df], ignore_index=True)
+        # tmp_df.sort_values("date", inplace=True)
+        # index = tmp_df[~tmp_df.isin(self.df)].dropna(how="all").index
+        # self.df = tmp_df
+        # self._update_relations(index)
+
         self.dataChanged.emit(index)
 
     def update(self, values):
@@ -202,15 +219,15 @@ class Data(QObject):
         changed = []
         for index, dct in values.items():
             for col, value in dct.items():
-                if self.df.at[index, col] != value:
-                    self.df.at[index, col] = value
+                if self.df[index, col] != value:
+                    self.df[index, col] = value
                     changed.append(index)
         if changed:
             self._update_relations(changed)
             self.dataChanged.emit(changed)
 
     @staticmethod
-    def _apply_relations(df, activity):# -> pd.DataFrame():
+    def _apply_relations(df, activity):  # -> pd.DataFrame():
         """
         Check if relational measures in `activity` are present in `df`.
 
@@ -221,7 +238,9 @@ class Data(QObject):
             if name not in df.columns:
                 m0 = df[relation.m0.slug]
                 m1 = df[relation.m1.slug]
-                df[name] = relation.op.call(m0, m1)
+                # df[name] = relation.op.call(m0, m1)
+                new_col = relation.op.call(m0, m1)
+                df = df.with_columns(new_col.alias(name))
         return df
 
     def _update_relations(self, idx):
@@ -230,7 +249,7 @@ class Data(QObject):
         for col, relation in self._activity.get_relations().items():
             m0 = self.df[relation.m0.slug][idx]
             m1 = self.df[relation.m1.slug][idx]
-            self.df.loc[idx, col] = relation.op.call(m0, m1)
+            self.df[idx, col] = relation.op.call(m0, m1)
 
     def setDataFrame(self, df):
         """Set new DataFrame"""
@@ -258,74 +277,87 @@ class Data(QObject):
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df["date"]]
 
-    def getMonth(self, month, year, returnType="DataFrame"):
+    def getMonth(self, month, year, return_type="DataFrame"):
         """Return DataFrame or Data of data from the given month and year."""
-        ts0 = pd.Timestamp(day=1, month=month, year=year)
+        # ts0 = pd.Timestamp(day=1, month=month, year=year)
+        ts0 = date(year, month, 1)
         month += 1
         if month > 12:
             month %= 12
             year += 1
-        ts1 = pd.Timestamp(day=1, month=month, year=year)
-        df = self.df[(self.df["date"] >= ts0) & (self.df["date"] < ts1)]
-        if returnType == "Data":
+        # ts1 = pd.Timestamp(day=1, month=month, year=year)
+        ts1 = date(year, month, 1)
+        # df = self.df[(self.df["date"] >= ts0) & (self.df["date"] < ts1)]
+        df = self.df.filter((pl.col("date") >= ts0) & (pl.col("date") < ts1))
+        if return_type == "Data":
             df = Data(df, activity=self._activity)
         return df
 
     @check_empty
-    def splitMonths(self, includeEmpty=False, returnType="DataFrame"):
+    def splitMonths(self, include_empty=False, return_type="DataFrame"):
         """
         Split `df` into months.
 
         Parameters
         -----------
-        includeEmpty : bool
-            If True and if a month has no data, a monthYear string and empty
+        include_empty : bool
+            If True and if a month has no data, a `date` and empty
             DataFrame or Data object will be included in the returned list.
             Otherwise, it  will be ignored. Default is False.
-        returnType : {'DataFrame', 'Data'}
+        return_type : {'DataFrame', 'Data'}
             Type of object to return with each month's data. Default is
-            (pandas) 'DataFrame'
+            (polars) 'DataFrame'
 
         Returns
         -------
-        list of (monthYear string, DataFrame/Data) tuples
+        list of (`date`, DataFrame/Data) tuples
         """
-        validReturnTypes = ["DataFrame", "Data"]
-        if returnType not in validReturnTypes:
-            msg = f"Invalid returnType '{returnType}'. Valid values are {', '.join(validReturnTypes)}"
+        valid_return_types = ["DataFrame", "Data"]
+        if return_type not in valid_return_types:
+            msg = f"Invalid return_type '{return_type}'. "
+            msg += f"Valid values are {', '.join(valid_return_types)}"
             raise ValueError(msg)
-        grouped = self.df.groupby(pd.Grouper(key="date", freq="M"))
-        dfs = [group for _, group in grouped]
-        lst = []
-        for df in dfs:
-            if df.empty:
-                if not includeEmpty:
-                    continue
-                else:
-                    # go backwards until we find a non-empty dataframe
-                    i = 0
-                    while df.empty:
-                        i += 1
-                        df = lst[-i][1]
-                    # get the first date
-                    date = df["date"].iloc[0]
-                    # get the month and year and adjust to find the missing month and year
-                    month = date.month + i
-                    year = date.year
-                    if month > 12:
-                        month = 1
-                        year += 1
-                    # make empty dataframe to add to lst
-                    df = pd.DataFrame()
-            else:
-                date = df["date"].iloc[0]
-                month = date.month
-                year = date.year
-            monthYear = f"{calendar.month_name[month]} {year}"
-            if returnType == "Data":
-                df = Data(df, activity=self._activity)
-            lst.append(MonthData(monthYear, df))
-        return lst
+
+        groups = self.df.group_by_dynamic("date", every="1mo")
+        groups = [MonthData(month[0], group) for month, group in groups]
+
+        if include_empty:
+            # if `include_empty`, check for missing months and add empty df
+            groups = self._add_empty_months(groups)
+
+        if return_type == "Data":
+            for n, (month, group) in enumerate(groups):
+                df = Data(group, activity=self._activity)
+                groups[n] = MonthData(month, df)
+
+        return groups
+
+    def _add_empty_months(self, groups):
+        missing = []
+
+        for i, (month, _) in enumerate(groups[:-1]):
+            expected_next_month = month.month + 1
+            expected_next_year = month.year
+            if expected_next_month > 12:
+                expected_next_month = 1
+                expected_next_year += 1
+
+            next_month = groups[i + 1][0]
+
+            while (next_month.month != expected_next_month) and (
+                next_month.year != expected_next_year
+            ):
+                month_dt = date(expected_next_year, expected_next_month, 1)
+                df = pl.DataFrame(schema=self._activity.measure_slugs)
+                missing.append(MonthData(month_dt, df))
+                expected_next_month += 1
+                if expected_next_month > 12:
+                    expected_next_month = 1
+                    expected_next_year += 1
+
+        groups += missing
+
+        return sorted(groups)
 
     def getMonthlyOdometer(self):
         """
@@ -334,27 +366,25 @@ class Data(QObject):
         The datetime objects are required, as they add dummy 1st of the
         month data points to reset the total to 0km.
         """
-        dfs = self.splitMonths(includeEmpty=True)
+        dfs = self.splitMonths(include_empty=True)
         odo = []
         dts = []
-        for i, df in enumerate(dfs):
-            month_year, df = df
+
+        for i, (month_year, df) in enumerate(dfs):
             # at the start of every month, insert 0km entry
-            if df.empty:
-                # if there's no data in the df, get the month and year from the
-                # associated month_year string
-                month, year = month_year.split(" ")
-                month = list(calendar.month_name).index(month)
-                year = int(year)
+            if df.is_empty():
+                # if there's no data in the df, make new dt
+                month = month_year.month
+                year = month_year.year
             else:
-                month = df["date"].iloc[0].month
-                year = df["date"].iloc[0].year
-            tmp = datetime(year, month, 1)
+                month = df["date"][0].month
+                year = df["date"][0].year
+            tmp = date(year, month, 1)
             dts.append(tmp)
             odo.append(0)
 
-            for _, row in df.iterrows():
-                dt = row["date"].to_pydatetime()
+            for row in df.rows(named=True):
+                dt = row["date"]
                 dist = odo[-1] + row["distance"]
                 dts.append(dt)
                 odo.append(dist)
@@ -376,12 +406,12 @@ class Data(QObject):
         Returns
         -------
         idx : List[int]
-            list of indicies of PBs
+            list of indices of PBs
         """
         series = self[column]
         if pbCount > len(series):
             pbCount = len(series)
-        best = series[:pbCount].copy()
+        best = list(series[:pbCount])
         idx = list(range(pbCount))  # first pbCount values will be PBs
         for n in range(pbCount, len(series)):
             if series[n] >= np.min(best):
@@ -393,7 +423,9 @@ class Data(QObject):
 
     def combineRows(self, date):
         """Combine all rows in the dataframe with the given data."""
-        idx = self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
+        # idx = self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
+        d = parseDate(date)
+        idx = self.df.with_row_index().filter(pl.col("date") == d)["index"]
 
         # sum 'simple' data
         cols = [
@@ -413,14 +445,14 @@ class Data(QObject):
                 new_value = floatToHourMinSec(new_value)
             else:
                 new_value = sum(series)
-            self.df.at[idx[0], col] = new_value
+            self.df[idx[0], col] = new_value
 
         i0, *idx = idx
 
         # recalculate relational data
         self._update_relations([i0])
 
-        self.df.drop(idx, inplace=True)
+        self._drop_by_index(idx)
         self.dataChanged.emit(i0)
 
     def removeRows(self, **kwargs):
@@ -428,9 +460,9 @@ class Data(QObject):
         Remove row(s) from the DataFrame by date or index.
 
         Pass either 'dates' or 'index' kwarg.
-
-        Note that this assumes dates are unique in the object.
         """
+        idx = kwargs.get("index", [])
+
         dates = kwargs.get("dates", None)
         if dates is not None:
             if isinstance(dates, str):
@@ -438,16 +470,84 @@ class Data(QObject):
             if not isinstance(dates, list):
                 raise TypeError("Data.removeRows takes list of dates")
 
-            idx = []
-            for date in dates:
-                idx += list(
-                    self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
-                )
+            dates = [parseDate(date) for date in dates]
+            idx += self.df.with_row_index().filter(pl.col("date").is_in(dates))["index"]
 
-            self.df.drop(idx, inplace=True)
+        if idx:
+            self._drop_by_index(idx)
             self.dataChanged.emit(None)
 
-        index = kwargs.get("index", None)
-        if index is not None:
-            self.df.drop(index, inplace=True)
-            self.dataChanged.emit(None)
+    def _drop_by_index(self, idx):
+        """
+        Drop rows from the Data object, by index.
+
+        Parameters
+        ----------
+        idx : list[int]
+            List of indices
+        """
+        self.df = (
+            self.df.with_row_index().filter(~pl.col("index").is_in(idx)).drop("index")
+        )
+
+
+if __name__ == "__main__":
+
+    def known_data():
+        dates = [f"{i:02}-04-2021" for i in range(26, 31)]
+        dates += [f"{i:02}-05-2021" for i in range(1, 6)]
+        dates = [parseDate(d) for d in dates]
+
+        times = [
+            "00:53:27",
+            "00:43:04",
+            "00:42:40",
+            "00:43:09",
+            "00:42:28",
+            "00:43:19",
+            "00:42:21",
+            "00:43:04",
+            "00:42:11",
+            "00:43:25",
+        ]
+        times = np.array([hourMinSecToFloat(t) for t in times])
+
+        dct = {
+            "date": dates,
+            "time": times,
+            "distance": np.array(
+                [30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 25.21, 25.08, 25.12]
+            ),
+            "gear": [6] * 10,
+        }
+        dct["calories"] = dct["distance"] * 14.956
+        # dct["speed"] = dct["distance"] / times
+        return dct
+
+    from pathlib import Path
+    import json
+    from tracks.activities import Activity
+
+    data_path = Path.home().joinpath(".tracks")
+    csv_file = data_path.joinpath("cycling_no_speed.csv")
+    df = pl.read_csv(csv_file, try_parse_dates=True)
+
+    json_path = data_path.joinpath("activities.json")
+    with open(json_path, "r") as fileobj:
+        all_activities = json.load(fileobj)
+    activity_json = all_activities.get("cycling")
+    activity = Activity(activity_json["name"])
+    for measure in activity_json["measures"].values():
+        activity.add_measure(**measure)
+
+    data = Data(df, activity=activity)
+
+    # df = self.df.filter((pl.col("date") >= ts0) & (pl.col("date") < ts1))
+
+    # d = parseDate("23/7/24")
+
+    # print(data)
+
+    # data.combineRows("23/7/24")
+
+    # print(data)
