@@ -269,7 +269,7 @@ class DataViewer(QTreeWidget):
                 indices.remove(idx)
                 # store month and year of changed items, so top level items can be
                 # updated where necessary
-                date = self.data.df.iloc[idx]["date"]
+                date = self.data.df[idx]["date"]
                 if (monthYear := (date.month, date.year)) not in changed:
                     changed.append(monthYear)
 
@@ -284,7 +284,7 @@ class DataViewer(QTreeWidget):
 
         # for remaining indices add new rows to tree
         for idx in indices:
-            date = self.data.df.iloc[idx]["date"]
+            date = self.data.df[idx]["date"]
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             data = self.data.getMonth(date.month, date.year, returnType="Data")
             summaries = list(data.make_summary().values())
@@ -385,7 +385,7 @@ class DataViewer(QTreeWidget):
                 item = IndexTreeWidgetItem(
                     rootItem,
                     activity=self._activity,
-                    index=data.df.index[rowIdx],
+                    index=rowIdx,#data.df.index[rowIdx],
                     headerLabels=self._activity.header,
                     row=data.row(rowIdx, formatted=True),
                 )
@@ -465,7 +465,7 @@ class DataViewer(QTreeWidget):
             )
             > 1
         ):
-            df = self.data.df.loc[idx]
+            df = self.data.df[idx]
             data = Data(df, activity=self._activity)
             s = self._summarise_data(data)
         if s:
