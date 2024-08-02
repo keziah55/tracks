@@ -6,6 +6,7 @@ Object to manage loading activities and their related widgets etc.
 
 from datetime import datetime
 import json
+
 # import pandas as pd
 import polars as pl
 from .activities import Activity
@@ -152,7 +153,7 @@ class ActivityManager(QObject):
     def _initialise_activity(self, activity: Activity) -> ActivityObjects:
         """Initialise objects for the given activity and return `ActivityObjects`"""
 
-        df = self._load_actvity_df(activity)
+        df = self._load_activity_df(activity)
         pref = self._get_activity_preferences(activity.name)
 
         data = Data(df, activity)
@@ -191,7 +192,7 @@ class ActivityManager(QObject):
         all_activities = self._activities_json()
         return list(all_activities.keys())
 
-    def _load_actvity_df(self, activity: Activity) -> pl.DataFrame:
+    def _load_activity_df(self, activity: Activity) -> pl.DataFrame:
         """Load dataframe for `activity`"""
 
         filepath = self._activity_csv_file(activity)

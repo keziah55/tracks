@@ -399,7 +399,7 @@ class Data:  # (QObject):
         dfs = self.splitMonths(include_empty=True)
         odo = []
         dts = []
-        
+
         for month, df in dfs:
             col = df["distance"]
             distance = col.sum() if len(col) > 0 else 0
@@ -428,7 +428,7 @@ class Data:  # (QObject):
         series = self[column]
         if pbCount > len(series):
             pbCount = len(series)
-        best = series[:pbCount].copy()
+        best = list(series[:pbCount])
         idx = list(range(pbCount))  # first pbCount values will be PBs
         for n in range(pbCount, len(series)):
             if series[n] >= np.min(best):
@@ -440,7 +440,9 @@ class Data:  # (QObject):
 
     def combineRows(self, date):
         """Combine all rows in the dataframe with the given data."""
-        idx = self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
+        # idx = self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
+        d = parseDate(date)
+        idx = self.df.with_row_index().filter(pl.col("date") == d)["index"]
 
         # sum 'simple' data
         cols = [
@@ -460,24 +462,24 @@ class Data:  # (QObject):
                 new_value = floatToHourMinSec(new_value)
             else:
                 new_value = sum(series)
-            self.df.at[idx[0], col] = new_value
+            self.df[idx[0], col] = new_value
 
         i0, *idx = idx
 
         # recalculate relational data
         self._update_relations([i0])
 
-        self.df.drop(idx, inplace=True)
-        self.dataChanged.emit(i0)
+        self._drop_by_index(idx)
+        # self.dataChanged.emit(i0)
 
     def removeRows(self, **kwargs):
         """
         Remove row(s) from the DataFrame by date or index.
 
         Pass either 'dates' or 'index' kwarg.
-
-        Note that this assumes dates are unique in the object.
         """
+        idx = kwargs.get("index", [])
+
         dates = kwargs.get("dates", None)
         if dates is not None:
             if isinstance(dates, str):
@@ -485,19 +487,25 @@ class Data:  # (QObject):
             if not isinstance(dates, list):
                 raise TypeError("Data.removeRows takes list of dates")
 
-            idx = []
-            for date in dates:
-                idx += list(
-                    self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
-                )
+            dates = [parseDate(date) for date in dates]
+            idx += self.df.with_row_index().filter(pl.col("date").is_in(dates))["index"]
 
-            self.df.drop(idx, inplace=True)
-            self.dataChanged.emit(None)
+        if idx:
+            self._drop_by_index(idx)
+            # self.dataChanged.emit(None)
 
-        index = kwargs.get("index", None)
-        if index is not None:
-            self.df.drop(index, inplace=True)
-            self.dataChanged.emit(None)
+    def _drop_by_index(self, idx):
+        """
+        Drop rows from the Data object, by index.
+
+        Parameters
+        ----------
+        idx : list[int]
+            List of indices
+        """
+        self.df = (
+            self.df.with_row_index().filter(~pl.col("index").is_in(idx)).drop("index")
+        )
 
 
 if __name__ == "__main__":
@@ -551,6 +559,12 @@ if __name__ == "__main__":
 
     data = Data(df, activity=activity)
 
-    months = data.splitMonths(include_empty=True)
-    # print(months)
-    
+    # df = self.df.filter((pl.col("date") >= ts0) & (pl.col("date") < ts1))
+
+    # d = parseDate("23/7/24")
+
+    print(data)
+
+    data.combineRows("23/7/24")
+
+    print(data)
