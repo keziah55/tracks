@@ -25,7 +25,7 @@ from .custompyqtgraph import (
     CustomDateAxisItem,
     CustomViewBox,
 )
-from tracks.util import floatToHourMinSec
+from tracks.util import floatToHourMinSec, date_to_timestamp
 
 
 class PlotWidget(QWidget):
@@ -360,7 +360,7 @@ class Plot(_PlotWidget):
         These two options are equivalent if there are sessions from the current
         month in the `Data` object.
         """
-        if self.data.df.empty:
+        if self.data.df.is_empty():
             return
         self.viewMonths = months
         if fromRecentSession:
@@ -440,7 +440,7 @@ class Plot(_PlotWidget):
         style = self._make_fill_style(colour)
         style['stepMode'] = 'right'
         dts, odo = self.data.getMonthlyOdometer()
-        dts = [dt.timestamp() for dt in dts]
+        dts = [date_to_timestamp(dt) for dt in dts]
         if mode == "new":
             self.backgroundItem = PlotCurveItem(dts, odo, **style)
             self.vb2.addItem(self.backgroundItem)
@@ -478,7 +478,7 @@ class Plot(_PlotWidget):
         """
         self._current_point["index"] = idx
         for name in self._activity.measures.keys():
-            self._current_point[name] = getattr(self.data, name)[idx]
+            self._current_point[name] = self.data[idx, name]# getattr(self.data, name)[idx]
         self.current_point_changed.emit(self._current_point)
 
     @Slot(object)
@@ -579,7 +579,7 @@ class Plot(_PlotWidget):
 
     @Slot(object)
     def _mouse_moved(self, pos):
-        if not self.data.df.empty and self.plotItem.sceneBoundingRect().contains(pos):
+        if not self.data.df.is_empty() and self.plotItem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotItem.vb.mapSceneToView(pos)
 
             idx = int(mousePoint.x())

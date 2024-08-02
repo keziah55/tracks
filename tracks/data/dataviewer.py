@@ -275,7 +275,7 @@ class DataViewer(QTreeWidget):
 
         # update top level items of changed months
         for month, year in changed:
-            data = self.data.getMonth(month, year, returnType="Data")
+            data = self.data.getMonth(month, year, return_type="Data")
             summaries = list(data.make_summary().values())
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             rootText = [monthYear] + summaries
@@ -286,7 +286,7 @@ class DataViewer(QTreeWidget):
         for idx in indices:
             date = self.data.df[idx]["date"]
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
-            data = self.data.getMonth(date.month, date.year, returnType="Data")
+            data = self.data.getMonth(date.month, date.year, return_type="Data")
             summaries = list(data.make_summary().values())
             rootText = [monthYear] + summaries
             if monthYear not in self.topLevelItemsDict:
@@ -325,7 +325,7 @@ class DataViewer(QTreeWidget):
         self.viewerUpdated.emit()
 
     def updateTopLevelItems(self):
-        dfs = self.data.splitMonths(returnType="Data")
+        dfs = self.data.splitMonths(return_type="Data")
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
@@ -371,13 +371,13 @@ class DataViewer(QTreeWidget):
         """Populate tree with data from Data object."""
 
         self.items = []
-        dfs = self.data.splitMonths(returnType="Data")
+        dfs = self.data.splitMonths(return_type="Data")
 
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
             summaries = list(data.make_summary().values())
-            rootText = [monthYear] + summaries
+            rootText = [monthYear.strftime("%d %b %Y")] + summaries
             rootItem = CycleTreeWidgetItem(self, row=rootText)
 
             # make rows of data for tree
@@ -475,7 +475,7 @@ class DataViewer(QTreeWidget):
         """Summarise month given by `item`"""
         if item not in self.topLevelItems:
             raise ValueError("_summarise_month can only summarise top-level tree items")
-        months = self.data.splitMonths(returnType="Data")
+        months = self.data.splitMonths(return_type="Data")
         month, *_ = [data for monthyear, data in months if monthyear == item.text(0)]
         return self._summarise_data(month)
 
@@ -493,7 +493,7 @@ class DataViewer(QTreeWidget):
                 "_summarise_months can only summarise top-level tree items"
             )
         selected_months = [item.text(0) for item in items]
-        months = self.data.splitMonths(returnType="Data")
+        months = self.data.splitMonths(return_type="Data")
 
         months = map(
             lambda tup: tup.data,

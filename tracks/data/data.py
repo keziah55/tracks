@@ -7,6 +7,7 @@ from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
 from collections import namedtuple
+from typing import NamedTuple
 from datetime import date, datetime
 import calendar
 import numpy as np
@@ -73,12 +74,12 @@ class Data(QObject):
 
     def summaryString(self, key, func=sum, unit=False):
         measure = self._activity[key]
-        try:
-            s = measure.summarised(self[key], include_unit=unit)
-        except Exception as err:
-            msg = f"Could not summarise measure '{measure}'.\n"
-            msg += f"Original error was: {err}"
-            raise RuntimeError(msg)
+        # try:
+        s = measure.summarised(self[key], include_unit=unit)
+        # except Exception as err:
+        #     msg = f"Could not summarise measure '{measure}'.\n"
+        #     msg += f"Original error was: {err}"
+        #     raise RuntimeError(msg)
         return s
 
     def make_summary(self) -> dict:
@@ -93,12 +94,25 @@ class Data(QObject):
         return len(self.df)
 
     def __getitem__(self, key):
-        if key in self.df.columns:
-            # return self.df[key]
-            # name = self._quickNames[key]
-            return getattr(self, key)
+        """
+        If given column name, return that column.
+
+        If given index and column name, return item at that position.
+        """
+        if isinstance(key, tuple):
+            idx, key = key
+            return self.df[int(idx), key]
+
+        elif isinstance(key, str):
+            if key in self.df.columns:
+                # return self.df[key]
+                # name = self._quickNames[key]
+                return getattr(self, key)
+            else:
+                raise NameError(f"{key} not a valid property name.")
+
         else:
-            raise NameError(f"{key} not a valid property name.")
+            raise KeyError(f"Cannot access item with key {key}")
 
     def __getattr__(self, name):
         ret = self.df[name]
@@ -120,10 +134,7 @@ class Data(QObject):
         row = dict(zip(self.df.columns, self.df.row(idx)))
         # row = dict(self.df.iloc[idx])
         if formatted:
-            row = {
-                name: self._activity.get_measure(name).formatted(value)
-                for name, value in row.items()
-            }
+            row = {name: self._activity.get_measure(name).formatted(value) for name, value in row.items()}
         return row
 
     def toString(self, headTail=None):
@@ -344,9 +355,7 @@ class Data(QObject):
 
             next_month = groups[i + 1][0]
 
-            while (next_month.month != expected_next_month) and (
-                next_month.year != expected_next_year
-            ):
+            while (next_month.month != expected_next_month) and (next_month.year != expected_next_year):
                 month_dt = date(expected_next_year, expected_next_month, 1)
                 df = pl.DataFrame(schema=self._activity.measure_slugs)
                 missing.append(MonthData(month_dt, df))
@@ -431,16 +440,13 @@ class Data(QObject):
         cols = [
             col
             for col in self.df.columns
-            if self._activity.get_measure(col).relation is None
-            and self._activity.get_measure(col).is_metadata is False
+            if self._activity.get_measure(col).relation is None and self._activity.get_measure(col).is_metadata is False
         ]
 
         for col in cols:
             series = self.df[col][idx]
             if col == "Time":
-                series = [
-                    hourMinSecToFloat(parseDuration(value)) for value in series
-                ]  # map(hourMinSecToFloat, series)
+                series = [hourMinSecToFloat(parseDuration(value)) for value in series]  # map(hourMinSecToFloat, series)
                 new_value = sum(series)
                 new_value = floatToHourMinSec(new_value)
             else:
@@ -486,9 +492,7 @@ class Data(QObject):
         idx : list[int]
             List of indices
         """
-        self.df = (
-            self.df.with_row_index().filter(~pl.col("index").is_in(idx)).drop("index")
-        )
+        self.df = self.df.with_row_index().filter(~pl.col("index").is_in(idx)).drop("index")
 
 
 if __name__ == "__main__":
@@ -515,9 +519,7 @@ if __name__ == "__main__":
         dct = {
             "date": dates,
             "time": times,
-            "distance": np.array(
-                [30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 25.21, 25.08, 25.12]
-            ),
+            "distance": np.array([30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 25.21, 25.08, 25.12]),
             "gear": [6] * 10,
         }
         dct["calories"] = dct["distance"] * 14.956

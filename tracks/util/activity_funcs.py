@@ -8,7 +8,7 @@ from .validate import isInt, isFloat, isDate, isDuration
 from .convertfuncs import parseDuration, parseDate, hourMinSecToFloat
 import numpy as np
 
-reduce_funcs = {"sum": sum, "min": min, "max": max, "mean": np.mean}
+reduce_funcs = {"sum": sum, "min": min, "max": max, "mean":lambda series: series.mean() }#np.mean}
 
 validate_funcs = {
     "date": isDate,

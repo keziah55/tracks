@@ -15,6 +15,7 @@ from .convertfuncs import (
     dayMonthYearToFloat,
     floatToHourMinSec,
     parse_month_range,
+    date_to_timestamp,
 )
 from .numbers import int_to_str
 from .activity_funcs import (
@@ -44,4 +45,5 @@ __all__ = [
     "get_validate_func",
     "get_reduce_func",
     "list_reduce_funcs",
+    "date_to_timestamp",
 ]

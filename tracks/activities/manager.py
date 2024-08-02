@@ -224,7 +224,7 @@ class ActivityManager(QObject):
         filepath = self._activity_csv_file(activity.activity)
 
         # backup csv
-        activity.data.df.to_csv(filepath, sep=self.csv_sep, index=False)
+        activity.data.df.write_csv(filepath, separator=self.csv_sep)
         self.backup_activity(activity_name)
 
         # save settings for this activity
@@ -242,7 +242,7 @@ class ActivityManager(QObject):
 
         bak = filepath.with_suffix(".bak")
 
-        activity.data.df.to_csv(bak, sep=self.csv_sep, index=False)
+        activity.data.df.write_csv(bak, separator=self.csv_sep)
 
     @default_current_activity
     def _activity_to_json(self, activity_name: str = None):

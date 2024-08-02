@@ -218,7 +218,8 @@ class Measure:
 
     def summarised(self, value, **kwargs):
         """Call `summary` func on `value`, then call `formatted` with this and kwargs"""
-        return self.formatted(self.summary(value), **kwargs)
+        s = self.summary(value)
+        return self.formatted(s, **kwargs)
 
 
 class Activity:

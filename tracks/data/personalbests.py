@@ -15,6 +15,7 @@ from qtpy.QtCore import Qt, Slot, Signal
 from qtpy.QtGui import QFont
 from tracks.util import dayMonthYearToFloat, int_to_str
 from customQObjects.widgets import TimerDialog
+import numpy as np
 
 
 class PersonalBests(QTableWidget):
@@ -27,7 +28,7 @@ class PersonalBests(QTableWidget):
     ----------
     data : Data
         Data object.
-    actvity : Activity
+    activity : Activity
         Activity that is represented here
     num_sessions : int
         Number of rows to display, i.e. the number of top sessions to show.
@@ -61,10 +62,10 @@ class PersonalBests(QTableWidget):
     def __init__(self, data, activity, num_sessions=5, sessions_key="speed"):
         columns = len(activity.header)
         super().__init__(num_sessions, columns)
-        
+
         self.data = data
         self.newPBdialog = NewPBDialog()
-        
+
         self._activity = activity
 
         self.setHorizontalHeaderLabels(self._activity.header)
@@ -77,10 +78,10 @@ class PersonalBests(QTableWidget):
         self.header.sectionClicked.connect(self._select_column)
         measure = self._activity[self.select_key]
         self._select_column(self._activity.header.index(measure.full_name))
-        
+
         self.newIdx = None
         self._set_tool_tip(num_sessions)
-        
+
     @Slot(object)
     def new_data(self, idx=None):
         self._emit_status_message()
@@ -117,7 +118,7 @@ class PersonalBests(QTableWidget):
             "num_best_sessions": self.num_best_sessions,
         }
         return state
-        
+
     @property
     def header(self):
         return self.horizontalHeader()
@@ -145,7 +146,7 @@ class PersonalBests(QTableWidget):
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
             raise ValueError(msg)
 
-        series = self.data[key]
+        series = np.array(self.data[key])
 
         # sort series and get indices
         slc = -1 if order == "descending" else 1
@@ -158,10 +159,7 @@ class PersonalBests(QTableWidget):
         for idx in indices:
             # get row (as strings)
             # formatting as strings now allows comparison of values to desired sig_figs
-            row = {
-                k: measure.formatted(self.data[k][idx])
-                for k, measure in self._activity.measures.items()
-            }
+            row = {k: measure.formatted(self.data[idx, k]) for k, measure in self._activity.measures.items()}
 
             if row[key] not in [dct[key] for dct in pb]:
                 # increment unique count if value is new

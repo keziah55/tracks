@@ -289,6 +289,17 @@ def dayMonthYearToFloat(value) -> float:
     return value
 
 
+def date_to_timestamp(d):
+    dt = datetime(
+        year=d.year,
+        month=d.month,
+        day=d.day,
+    )
+
+    ts = dt.timestamp()
+    return ts
+
+
 # def convertSecs(value, mode='hour') -> float:
 #     """ Convert seconds to minutes or hours.
 
