@@ -1,5 +1,5 @@
 numpy
-pandas<2.0
+polars
 qtpy
 PyQt5
 PyQt6

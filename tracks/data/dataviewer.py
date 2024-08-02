@@ -377,7 +377,7 @@ class DataViewer(QTreeWidget):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
             summaries = list(data.make_summary().values())
-            rootText = [monthYear.strftime("%d %b %Y")] + summaries
+            rootText = [monthYear.strftime("%B %Y")] + summaries
             rootItem = CycleTreeWidgetItem(self, row=rootText)
 
             # make rows of data for tree
