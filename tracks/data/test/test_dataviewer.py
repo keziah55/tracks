@@ -5,10 +5,9 @@ from tracks.test import make_dataframe, MockParent
 from qtpy.QtWidgets import QMessageBox, QDialog
 from qtpy.QtCore import Qt
 import random
-from datetime import datetime
-import tempfile
+from datetime import date, datetime
 import numpy as np
-import pandas as pd
+import polars as pl
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -74,9 +73,7 @@ class TestDataViewer:
         expanded = [item.text(0) for item in expanded]
 
         # new data
-        tmpfile = tempfile.NamedTemporaryFile()
-        make_dataframe(100, path=tmpfile.name)
-        df = pd.read_csv(tmpfile.name, parse_dates=["date"])
+        df = make_dataframe(100)
         data = Data(df, self.parent.activity)
         self.parent.data = data
 
@@ -136,13 +133,7 @@ class TestDataViewer:
     def test_edit_remove_rows(self, setup_known_data, qtbot, monkeypatch):
         edit = ["2021-04-26", "2021-04-28", "2021-05-04"]
         remove = ["2021-04-30", "2021-05-03"]
-
-        selectDates = [
-            datetime.strptime(d, "%Y-%m-%d").strftime("%d %b %Y") for d in edit
-        ]
-        selectDates += [
-            datetime.strptime(d, "%Y-%m-%d").strftime("%d %b %Y") for d in remove
-        ]
+        selectDates = ["26 Apr 2021", "28 Apr 2021", "04 May 2021", "30 Apr 2021", "03 May 2021"]
 
         for topLevelItem in self.widget.topLevelItems:
             for idx in range(topLevelItem.childCount()):
@@ -153,21 +144,21 @@ class TestDataViewer:
         dialogEdit = {
             0: {
                 "calories": 450.2,
-                "date": pd.Timestamp("2021-04-16 00:00:00"),
+                "date": date(2021, 4, 16),
                 "distance": 30.1,
                 "gear": 6,
                 "time": hourMinSecToFloat("00:53:27"),
             },
             2: {
                 "calories": 375.1,
-                "date": pd.Timestamp("2021-04-28 00:00:00"),
+                "date": date(2021, 4, 28),
                 "distance": 42.3,
                 "gear": 6,
                 "time": hourMinSecToFloat("01:00:05"),
             },
             8: {
                 "calories": 375.1,
-                "date": pd.Timestamp("2021-05-04 00:00:00"),
+                "date": date(2021, 5, 4),
                 "distance": 25.08,
                 "gear": 6,
                 "time": hourMinSecToFloat("00:42:11"),
@@ -176,42 +167,42 @@ class TestDataViewer:
 
         dialogRemove = [7, 4]
         monkeypatch.setattr(EditItemDialog, "exec_", lambda *args: QDialog.Accepted)
-        monkeypatch.setattr(
-            EditItemDialog, "getValues", lambda *args: (dialogEdit, dialogRemove)
-        )
+        monkeypatch.setattr(EditItemDialog, "getValues", lambda *args: (dialogEdit, dialogRemove))
 
         with qtbot.waitSignals([self.parent.data.dataChanged] * 2):
             self.widget._editItems()
 
         for d in remove:
-            assert (
-                pd.Timestamp(datetime.strptime(d, "%Y-%m-%d"))
-                not in self.parent.data["date"]
-            )
+            year, month, day = d.split("-")
+            d = date(int(year), int(month), int(day))
+            assert d not in self.parent.data["date"]
 
         for dct in dialogEdit.values():
-            row = self.parent.data.df.loc[self.parent.data.df["date"] == dct["date"]]
+            row = self.parent.data.df.filter(pl.col("date") == dct["date"])
             for col in dct.keys():
-                assert row[col].values[0] == dct[col]
+                assert row[col][0] == dct[col]
 
         # check that speed has updated for row where time and distance were changed
         dct = dialogEdit[2]
         expected = dct["distance"] / dct["time"]
-        row = self.parent.data.df.loc[self.parent.data.df["date"] == dct["date"]]
-        speed = row["speed"].values[0]
+        row = self.parent.data.df.filter(pl.col("date") == dct["date"])
+        speed = row["speed"]
         assert np.isclose(speed, expected)
 
     def test_edititemdialog(self, setup_known_data, qtbot):
         # like above test, but make the EditItemDialog directly, so we can test user input
-        edit = ["2021-04-26", "2021-04-28", "2021-05-04"]
-        remove = ["2021-04-30", "2021-05-03"]
+        # edit = ["2021-04-26", "2021-04-28", "2021-05-04"]
+        # remove = ["2021-04-30", "2021-05-03"]
 
-        editDates = [
-            datetime.strptime(d, "%Y-%m-%d").strftime("%d %b %Y") for d in edit
-        ]
-        removeDates = [
-            datetime.strptime(d, "%Y-%m-%d").strftime("%d %b %Y") for d in remove
-        ]
+        # editDates = [
+        #     datetime.strptime(d, "%Y-%m-%d").strftime("%d %b %Y") for d in edit
+        # ]
+        # removeDates = [
+        #     datetime.strptime(d, "%Y-%m-%d").strftime("%d %b %Y") for d in remove
+        # ]
+
+        editDates = ["26 Apr 2021", "28 Apr 2021", "04 May 2021"]
+        removeDates = ["30 Apr 2021", "03 May 2021"]
 
         selectDates = editDates + removeDates
 
@@ -283,21 +274,21 @@ class TestDataViewer:
         expected = {
             0: {
                 "calories": 450.2,
-                "date": pd.Timestamp("2021-04-16 00:00:00"),
+                "date": date(2021, 4, 16),  # pd.Timestamp("2021-04-16 00:00:00"),
                 "distance": 30.1,
                 "gear": 6,
                 "time": hourMinSecToFloat("00:53:27"),
             },
             2: {
                 "calories": 375.1,
-                "date": pd.Timestamp("2021-04-28 00:00:00"),
+                "date": date(2021, 4, 28),  # pd.Timestamp("2021-04-28 00:00:00"),
                 "distance": 42.3,
                 "gear": 6,
                 "time": hourMinSecToFloat("01:00:05"),
             },
             8: {
                 "calories": 375.1,
-                "date": pd.Timestamp("2021-05-04 00:00:00"),
+                "date": date(2021, 5, 4),  # pd.Timestamp("2021-05-04 00:00:00"),
                 "distance": 25.08,
                 "gear": 6,
                 "time": hourMinSecToFloat("00:42:11"),

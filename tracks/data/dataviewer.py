@@ -269,7 +269,7 @@ class DataViewer(QTreeWidget):
                 indices.remove(idx)
                 # store month and year of changed items, so top level items can be
                 # updated where necessary
-                date = self.data.df[idx]["date"]
+                date = self.data[idx, "date"]
                 if (monthYear := (date.month, date.year)) not in changed:
                     changed.append(monthYear)
 
@@ -372,6 +372,10 @@ class DataViewer(QTreeWidget):
 
         self.items = []
         dfs = self.data.splitMonths(return_type="Data")
+        # pandas df had persistent index, polars doesn't
+        # calculate equivalent index here
+        # starting from len(data), because we go through the months backwards
+        idx = len(self.data) - 1
 
         for monthYear, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
@@ -385,12 +389,13 @@ class DataViewer(QTreeWidget):
                 item = IndexTreeWidgetItem(
                     rootItem,
                     activity=self._activity,
-                    index=rowIdx,#data.df.index[rowIdx],
+                    index=idx, #rowIdx,#data.df.index[rowIdx],
                     headerLabels=self._activity.header,
                     row=data.row(rowIdx, formatted=True),
                 )
                 itemData = TreeItem(data["date"][rowIdx], rootItem, item)
                 self.items.append(itemData)
+                idx -= 1
 
         self.header().resizeSections(QHeaderView.ResizeToContents)
 
