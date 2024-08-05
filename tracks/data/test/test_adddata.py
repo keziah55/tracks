@@ -4,7 +4,7 @@ from tracks.test.mockparent import load_activity
 from qtpy.QtCore import Qt
 from datetime import date
 import random
-import pandas as pd
+import polars as pl
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -47,10 +47,10 @@ class TestAddData:
 
         expected = {
             "date": [
-                pd.Timestamp(year=2020, month=12, day=31),
-                pd.Timestamp(year=2021, month=1, day=1),
-                pd.Timestamp(year=2021, month=1, day=15),
-                pd.Timestamp(year=2021, month=2, day=9),
+                date(year=2020, month=12, day=31),
+                date(year=2021, month=1, day=1),
+                date(year=2021, month=1, day=15),
+                date(year=2021, month=2, day=9),
             ],
             "time": [
                 hourMinSecToFloat("00:45:02"),
