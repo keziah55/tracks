@@ -284,7 +284,7 @@ class DataViewer(QTreeWidget):
 
         # for remaining indices add new rows to tree
         for idx in indices:
-            date = self.data.df[idx]["date"]
+            date = self.data[idx, "date"]
             monthYear = f"{calendar.month_name[date.month]} {date.year}"
             data = self.data.getMonth(date.month, date.year, return_type="Data")
             summaries = list(data.make_summary().values())

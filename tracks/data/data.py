@@ -200,6 +200,11 @@ class Data(QObject):
         tmp_df = self._apply_relations(tmp_df, self._activity)
         self.df.extend(tmp_df)
         self.df = self.df.sort("date")
+
+        num_new = len(tmp_df)
+        size = len(self.df)
+        index = list(range(size-num_new, size))
+
         # tmp_df = pl.concat([self.df, tmp_df])
         # tmp_df.sort("date")
         # self.df = tmp_df

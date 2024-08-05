@@ -44,7 +44,7 @@ class AddDataTableMixin(object):
                 validate_func = partial(
                     get_validate_func("date"), allowEmpty=emptyDateValid
                 )
-                cast_func = partial(get_cast_func("date"), pd_timestamp=True)
+                cast_func = partial(get_cast_func("date"))
             else:
                 cast_func = get_cast_func(m.dtype)
                 validate_func = get_validate_func(m.dtype)
