@@ -5,6 +5,8 @@ from tracks.test import MockParent
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
 
+from pprint import pprint
+
 pytest_plugin = "pytest-qt"
 
 
@@ -13,7 +15,7 @@ def get_new_data(key):
     new_data_params = {
         "best session": (
             {
-                "date": [parseDate("6 April 2021", pd_timestamp=True)],
+                "date": [parseDate("6 April 2021")],
                 "time": [hourMinSecToFloat(parseDuration("00:42:15"))],
                 "distance": [25.1],
                 "calories": [375.4],
@@ -60,7 +62,7 @@ class TestPersonalBests:
     def test_new_data_different_column(self, setup, qtbot, monkeypatch, variables):
         # test dialog message when table is sorted by Time
         new = {
-            "date": [parseDate("7 April 2021", pd_timestamp=True)],
+            "date": [parseDate("7 April 2021")],
             "time": [hourMinSecToFloat(parseDuration("01:05:03"))],
             "distance": [25.08],
             "calories": [375.1],
@@ -80,7 +82,7 @@ class TestPersonalBests:
 
     def test_tied_data(self, setup, qtbot, monkeypatch):
         new = {
-            "date": [parseDate("7 May 2021", pd_timestamp=True)],
+            "date": [parseDate("7 May 2021")],
             "time": [hourMinSecToFloat(parseDuration("00:42:11"))],
             "distance": [25.08],
             "calories": [375.1],
@@ -146,6 +148,9 @@ class TestPersonalBests:
                 self.pb.item(idx, 0).text()
                 for idx in range(self.pb.rowCount())
             ]
+            # qtbot.wait(5000)
+            # pprint(items)
+            # pprint(expected)
             assert items == expected
 
     def test_get_best_sessions(self, setup, qtbot):
