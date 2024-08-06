@@ -138,7 +138,7 @@ class TestPersonalBests:
                 "02 May 2021",
             ],
         }
-
+        # qtbot.wait(5000)
         for column, expected in columns.items():
             idx = self.pb._activity.measure_slugs.index(column)
 
