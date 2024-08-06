@@ -5,8 +5,8 @@ from pathlib import Path
 import re
 from pprint import pformat
 import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
+import polars as pl
+from datetime import datetime, timedelta, date
 from qtpy.QtWidgets import QDialogButtonBox
 from qtpy.QtCore import Qt
 
@@ -40,8 +40,7 @@ class TestPreferences(TracksSetupTeardown):
             rng.append(default)
 
         signals = [
-            (vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged")
-            for n, vb in enumerate(self.plot.plotWidget.view_boxes)
+            (vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged") for n, vb in enumerate(self.plot.plotWidget.view_boxes)
         ]
 
         lastDate = self.data.date[-1]
@@ -65,14 +64,18 @@ class TestPreferences(TracksSetupTeardown):
 
             qtbot.wait(variables.wait)
 
-            assert axis.tickTimestamps[-1] >= lastDate.timestamp()
+            # `date` has no `.timestamp()` method, so convert to datetime to get ts
+            late_date_ts = datetime(lastDate.year, lastDate.month, lastDate.day).timestamp()
+
+            assert axis.tickTimestamps[-1] >= late_date_ts
             text = plotPref.plotRangeCombo.currentText()
             if text == "All":
                 dt = self.data.date[0]
             else:
                 dt = numMonths[text]
+            dt_ts = datetime(dt.year, dt.month, dt.day).timestamp()
 
-            assert axis.tickTimestamps[0] <= dt.timestamp()
+            assert axis.tickTimestamps[0] <= dt_ts
 
         with qtbot.waitSignal(plotPref.customRangeCheckBox.clicked):
             plotPref.customRangeCheckBox.click()
@@ -82,10 +85,10 @@ class TestPreferences(TracksSetupTeardown):
             button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
             qtbot.mouseClick(button, Qt.LeftButton)
 
-        assert axis.tickTimestamps[-1] >= lastDate.timestamp()
+        assert axis.tickTimestamps[-1] >= late_date_ts
         dt = self._subtractMonths(lastDate, 4)
         qtbot.wait(variables.wait)
-        assert axis.tickTimestamps[0] <= dt.timestamp()
+        assert axis.tickTimestamps[0] <= dt_ts
 
     def test_plot_style(self, setup, qtbot):
         self.prefDialog.pagesWidget.setCurrentIndex(self.plotIdx)
@@ -146,9 +149,7 @@ class TestPreferences(TracksSetupTeardown):
 
         with qtbot.waitSignal(plotPref.customStyle.cancelButton.clicked):
             qtbot.mouseClick(plotPref.customStyle.cancelButton, Qt.LeftButton)
-            assert (
-                plotPref.customStyle._colourButtonWidgets["speed"].colour != "#000000"
-            )
+            assert plotPref.customStyle._colourButtonWidgets["speed"].colour != "#000000"
 
         plotPref.customStyle._colourButtonWidgets["speed"].setColour("#000000")
 
@@ -179,49 +180,31 @@ class TestPreferences(TracksSetupTeardown):
         with qtbot.waitSignal(button.clicked, timeout=10000):
             qtbot.mouseClick(button, Qt.LeftButton)
 
-        def sortKey(item):
-            # round Speed to two decimal places when sorting
-            if item.dtype == float:
-                return np.around(item, decimals=2)
-            else:
-                # if it's a Date (pd.Timestamp) return directly
-                return item
-
-        df = self.data.df.sort_values(
-            by=["speed", "date"], ascending=False, key=sortKey
-        )
+        df = self.data.df.sort("date")
+        df = self.data.df.sort("speed", descending=True, maintain_order=True)
 
         for row in range(self.pbTable.rowCount()):
             for colNum, colName in enumerate(self.pbTable._activity.measure_slugs):
                 text = self.pbTable.item(row, colNum).text()
 
-                expected = df.iloc[row][colName]
-                expected = self.pbTable._activity.get_measure(colName).formatted(
-                    expected
-                )
+                expected = df[row, colName]
+                expected = self.pbTable._activity.get_measure(colName).formatted(expected)
                 expected = str(expected)
 
                 if text != expected:
                     p = Path(__file__).parent.joinpath("failed_test_data")
                     p.mkdir(parents=True, exist_ok=True)
                     df.to_csv(p.joinpath("test_num_pb_sessions_fail_sorted.csv"))
-                    self.data.df.to_csv(
-                        p.joinpath("test_num_pb_sessions_fail_unsorted.csv")
-                    )
+                    self.data.df.to_csv(p.joinpath("test_num_pb_sessions_fail_unsorted.csv"))
 
-                    h = [
-                        re.sub(r"\n", " ", name)
-                        for name in self.pbTable._activity.header
-                    ]
+                    h = [re.sub(r"\n", " ", name) for name in self.pbTable._activity.header]
                     tmpText = ", ".join(h) + "\n"
                     for r in range(self.pbTable.rowCount()):
                         tmpRow = []
                         for c in range(len(self.pbTable._activity.header)):
                             tmpRow.append(self.pbTable.item(r, c).text())
                         tmpText += ",".join(tmpRow) + "\n"
-                    with open(
-                        p.joinpath("test_num_pb_sessions_fail_pbtable.csv"), "w"
-                    ) as fileobj:
+                    with open(p.joinpath("test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
                         fileobj.write(tmpText)
 
                 assert text == expected, "see test_num_pb_sessions_fail_*.csv files"
@@ -239,9 +222,7 @@ class TestPreferences(TracksSetupTeardown):
                 num = random.randrange(0, comboBox.count())
             comboBox.setCurrentIndex(num)
 
-            with qtbot.waitSignal(
-                self.viewer.viewerUpdated, timeout=variables.longWait
-            ):
+            with qtbot.waitSignal(self.viewer.viewerUpdated, timeout=variables.longWait):
                 pbPref.apply()
 
             measure = comboBox.currentText()
@@ -250,9 +231,7 @@ class TestPreferences(TracksSetupTeardown):
             col = self.viewer._activity.header.index(viewerName)
 
             # known data is from April and May 2021
-            groups = self.data.df.groupby(
-                self.data.df["date"] <= pd.Timestamp(year=2021, month=4, day=30)
-            )
+            groups = self.data.df.groupby(self.data.df["date"] <= date(year=2021, month=4, day=30))
             qtbot.wait(variables.shortWait)
 
             idx = 0
