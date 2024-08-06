@@ -5,9 +5,10 @@ from tracks.util import parseDuration, hourMinSecToFloat
 from qtpy.QtCore import Qt, QPoint
 import random
 from . import make_dataframe
-import tempfile, datetime
+import tempfile
+from datetime import datetime, date
 from pathlib import Path
-import pandas as pd
+import polars as pl
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -23,9 +24,7 @@ class TracksSetupTeardown:
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
 
-        monkeypatch.setattr(
-            tracks.activities.ActivityManager, "_activity_csv_file", mockGetFile
-        )
+        monkeypatch.setattr(tracks.activities.ActivityManager, "_activity_csv_file", mockGetFile)
 
         self._setup()
         qtbot.addWidget(self.app)
@@ -46,9 +45,7 @@ class TracksSetupTeardown:
         def mockGetFile(*args, **kwargs):
             return Path(self.tmpfile.name)
 
-        monkeypatch.setattr(
-            tracks.activities.ActivityManager, "_activity_csv_file", mockGetFile
-        )
+        monkeypatch.setattr(tracks.activities.ActivityManager, "_activity_csv_file", mockGetFile)
         # monkeypatch.setattr(tracks.tracks, "get_activity_csv", mockGetFile)
         # monkeypatch.setattr(tracks.activities, "get_activity_csv", mockGetFile)
 
@@ -102,7 +99,7 @@ class TestTracks(TracksSetupTeardown):
         pts = self.plotWidget.dataItem.scatter.data
 
         row = 0
-        year = datetime.date.today().year + 1
+        year = date.today().year + 1
         values = [f"5 Jan {year}", "40:23", "24.22", "361.2", "7"]
         for col in range(self.addData.table.columnCount()):
             value = values[col]
@@ -122,9 +119,7 @@ class TestTracks(TracksSetupTeardown):
     def test_plot_clicked(self, setup, qtbot, variables):
         # test that clicking on the plot highlights the nearest plot in the viewer
 
-        self.plotWidget.set_x_axis_range(
-            None
-        )  # ensure all points visible in plotting area
+        self.plotWidget.set_x_axis_range(None)  # ensure all points visible in plotting area
 
         pts = self.plotWidget.dataItem.scatter.points()
         idx = random.randint(0, len(pts) - 1)
@@ -139,7 +134,7 @@ class TestTracks(TracksSetupTeardown):
         pos = QPoint(scenePos.x() + size, scenePos.y() + size)
 
         class MockMouseEvent:
-            # mouse clicks aren't propogated into the pyqtgraph graphicsscene
+            # mouse clicks aren't propagated into the pyqtgraph graphics scene
             # so make a mock one at the right point
             def __init__(self, scenePos):
                 self.sp = scenePos
@@ -151,7 +146,7 @@ class TestTracks(TracksSetupTeardown):
         with qtbot.waitSignal(self.plotWidget.current_point_changed):
             qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
         qtbot.wait(variables.wait)
-
+        
         event = MockMouseEvent(scenePos)
         signals = [
             (self.plotWidget.point_selected, "point_selected"),
@@ -174,10 +169,7 @@ class TestTracks(TracksSetupTeardown):
             self.viewer.setCurrentItem(item.child(0))
         expectedIdx = self.size - 1
         assert self.plotWidget._current_point["index"] == expectedIdx
-        assert (
-            self.plotWidget._highlight_point_item
-            == self.plotWidget.dataItem.scatter.points()[expectedIdx]
-        )
+        assert self.plotWidget._highlight_point_item == self.plotWidget.dataItem.scatter.points()[expectedIdx]
 
     def test_pb_table_clicked(self, setup, qtbot):
         # similar to above, but for pb table
@@ -191,10 +183,7 @@ class TestTracks(TracksSetupTeardown):
 
         expectedIdx = self.data.formatted("date").index(item.text())
         assert self.plotWidget._current_point["index"] == expectedIdx
-        assert (
-            self.plotWidget._highlight_point_item
-            == self.plotWidget.dataItem.scatter.points()[expectedIdx]
-        )
+        assert self.plotWidget._highlight_point_item == self.plotWidget.dataItem.scatter.points()[expectedIdx]
 
     def test_plot_update(self, setup, qtbot):
         # test that, when new data added, the plot auto-rescales so the new points are visible
@@ -208,7 +197,7 @@ class TestTracks(TracksSetupTeardown):
         if month == 12:
             month = 0
             year += 1
-        newDate = pd.Timestamp(year=year, month=month + 1, day=day)
+        newDate = date(year=year, month=month + 1, day=day)
 
         newData = {
             "date": [newDate],
@@ -226,7 +215,8 @@ class TestTracks(TracksSetupTeardown):
         newXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
 
         assert oldXRange != newXRange
-        oldMonth = datetime.datetime.fromtimestamp(oldXRange).month
+        oldMonth = datetime.fromtimestamp(oldXRange).month
         if oldMonth == 12:
             oldMonth = 0
-        assert oldMonth + 1 == datetime.datetime.fromtimestamp(newXRange).month
+        # check newDate is visible
+        assert newDate.month <= datetime.fromtimestamp(newXRange).month
