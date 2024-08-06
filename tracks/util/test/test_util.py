@@ -18,7 +18,7 @@ from tracks.util import (
 )
 import pytest
 from datetime import datetime, date
-import pandas as pd
+import polars as pl
 import numpy as np
 
 
@@ -148,16 +148,13 @@ def test_isDuration(value, valid):
 
 
 @pytest.mark.parametrize("value,expected", validDateStrings() + invalidDateStrings())
-@pytest.mark.parametrize("pd_timestamp", [True, False])
-def test_parseDate(value, expected, pd_timestamp):
+def test_parseDate(value, expected):
     if expected is None:
         with pytest.raises(ValueError):
-            parseDate(value, pd_timestamp=pd_timestamp)
+            parseDate(value)
     else:
         expected = date(expected["year"], expected["month"], expected["day"])
-        if pd_timestamp:
-            expected = pd.Timestamp(expected)
-        assert parseDate(value, pd_timestamp=pd_timestamp) == expected
+        assert parseDate(value) == expected
 
 
 def test_parseDate_type_error():
@@ -170,9 +167,7 @@ def test_parseDate_value_error():
         parseDate("25 Jn 2021")
 
 
-@pytest.mark.parametrize(
-    "value,expected", validDurationStrings() + invalidDurationStrings()
-)
+@pytest.mark.parametrize("value,expected", validDurationStrings() + invalidDurationStrings())
 def test_parseDuration(value, expected):
     if expected is None:
         with pytest.raises(ValueError):
