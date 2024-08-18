@@ -481,7 +481,7 @@ class DataViewer(QTreeWidget):
         if item not in self.topLevelItems:
             raise ValueError("_summarise_month can only summarise top-level tree items")
         months = self.data.splitMonths(return_type="Data")
-        month, *_ = [data for monthyear, data in months if monthyear == item.text(0)]
+        month, *_ = [data for monthyear, data in months if monthyear.strftime("%B %Y") == item.text(0)]
         return self._summarise_data(month)
 
     def _summarise_data(self, data):
