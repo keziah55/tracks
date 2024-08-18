@@ -146,43 +146,23 @@ class PersonalBests(QTableWidget):
             msg = f"Order '{order}' is invalid. Order must be one of: {', '.join(validOrders)}"
             raise ValueError(msg)
 
-        series = np.array(self.data[key])
+        descending = [order == "descending"]
+        cols = [key]
+        if key != "date":
+            # add 'date' as secondary sort key
+            descending.append(True)  # always sort by descending date
+            cols.append("date")
 
-        # sort series and get indices
-        slc = -1 if order == "descending" else 1
-        indices = series.argsort()[::slc]
+        df = self.data.sort(cols, descending=descending, return_type="DataFrame", with_index=True, index_name="idx")
+        df = df[:num]
 
-        # iterate through `indices` until we have `num` unique values
         pb = []
-        numUnique = 0
-
-        for idx in indices:
-            # get row (as strings)
-            # formatting as strings now allows comparison of values to desired sig_figs
-            row = {k: measure.formatted(self.data[idx, k]) for k, measure in self._activity.measures.items()}
-
-            if row[key] not in [dct[key] for dct in pb]:
-                # increment unique count if value is new
-                numUnique += 1
-
-            row["idx"] = idx
+        for row in df.rows(named=True):
+            for k, measure in self._activity.measures.items():
+                row[k] = measure.formatted(row[k])
             pb.append(row)
 
-            if numUnique == num:
-                break
-
-        # sort by both key and date, so that, if values are tied, most recent will be first
-        # use reverse=True for most recent date (and default order=descending)
-        # if order is ascending, will need to negate value
-        func = self._activity.get_measure(key).cmp_func
-        scale = 1 if order == "descending" else -1
-        pb.sort(
-            key=lambda dct: (scale * func(dct[key]), dayMonthYearToFloat(dct["date"])),
-            reverse=True,
-        )
-
-        # return only `num` values
-        return pb[:num]
+        return pb
 
     def _set_table(self, key="speed", order="descending", highlightNew=False):
         """Find top N sessions and display in table."""

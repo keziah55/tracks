@@ -203,7 +203,7 @@ class Data(QObject):
 
         num_new = len(tmp_df)
         size = len(self.df)
-        index = list(range(size-num_new, size))
+        index = list(range(size - num_new, size))
 
         # tmp_df = pl.concat([self.df, tmp_df])
         # tmp_df.sort("date")
@@ -498,6 +498,32 @@ class Data(QObject):
             List of indices
         """
         self.df = self.df.with_row_index().filter(~pl.col("index").is_in(idx)).drop("index")
+
+    def sort(self, *args, return_type="Data", with_index=False, index_name="index", **kwargs):
+        """
+        Return new Data object (or polars DataFrame) with sorted data.
+
+        See [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html)
+        for args.
+
+        Parameters
+        ----------
+        args
+            [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html) args
+        return_type : {"Data", "DataFrame"}
+            Whether to return as `Data` object or polars `DataFrame`
+        with_index : bool
+            If True, add index column before sorting.
+        index_name : str, optional
+            If `with_index`, optionally set the name of the index column. Default is "index".
+        kwargs
+            [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html) kwargs
+        """
+        df = self.df.with_row_index(name=index_name) if with_index else self.df
+        df = df.sort(*args, **kwargs)
+        if return_type == "Data":
+            df = Data(df, activity=self._activity)
+        return df
 
 
 if __name__ == "__main__":

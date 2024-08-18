@@ -138,7 +138,7 @@ class TestPersonalBests:
                 "02 May 2021",
             ],
         }
-        # qtbot.wait(5000)
+
         for column, expected in columns.items():
             idx = self.pb._activity.measure_slugs.index(column)
 
@@ -148,9 +148,6 @@ class TestPersonalBests:
                 self.pb.item(idx, 0).text()
                 for idx in range(self.pb.rowCount())
             ]
-            # qtbot.wait(5000)
-            # pprint(items)
-            # pprint(expected)
             assert items == expected
 
     def test_get_best_sessions(self, setup, qtbot):
@@ -173,6 +170,7 @@ class TestPersonalBests:
                 "calories": "375.1",
             },
         ]
+
         for n, pb_data in enumerate(pb):
             for key, value in expected[n].items():
                 assert pb_data[key] == value
