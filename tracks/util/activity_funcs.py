@@ -8,7 +8,12 @@ from .validate import isInt, isFloat, isDate, isDuration
 from .convertfuncs import parseDuration, parseDate, hourMinSecToFloat
 import numpy as np
 
-reduce_funcs = {"sum": sum, "min": min, "max": max, "mean":lambda series: series.mean() }#np.mean}
+
+def _mean(series):
+    return series.mean()
+
+
+reduce_funcs = {"sum": sum, "min": min, "max": max, "mean": _mean}
 
 validate_funcs = {
     "date": isDate,
@@ -36,6 +41,13 @@ def get_reduce_func(name):
     if f is None:
         raise ValueError(f"Could not get reduce func for '{name}'")
     return f
+
+
+def get_reduce_func_key(f):
+    for key, func in reduce_funcs.items():
+        if f == func:
+            return key
+    raise ValueError(f"Function {f} not in reduce_funcs dict")
 
 
 def get_validate_func(dtype):

@@ -23,6 +23,7 @@ from .activity_funcs import (
     get_validate_func,
     get_reduce_func,
     list_reduce_funcs,
+    get_reduce_func_key,
 )
 
 __all__ = [
@@ -46,4 +47,5 @@ __all__ = [
     "get_reduce_func",
     "list_reduce_funcs",
     "date_to_timestamp",
+    "get_reduce_func_key",
 ]

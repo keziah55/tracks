@@ -8,7 +8,7 @@ import warnings
 import re
 import json
 from .operations import operator_dict
-from tracks.util import floatToHourMinSec, get_cast_func, get_reduce_func
+from tracks.util import floatToHourMinSec, get_cast_func, get_reduce_func, get_reduce_func_key
 
 
 class Relation:
@@ -154,7 +154,8 @@ class Measure:
         return s
 
     def to_json(self):
-        summary = self.summary.__name__ if self.summary is not None else None
+        # summary = self.summary.__name__ if self.summary is not None else None
+        summary = get_reduce_func_key(self.summary) if self.summary is not None else None
         cmp_func = self.cmp_func.__name__ if self.cmp_func is not None else None
         relation = self.relation.to_json() if self.relation is not None else None
         dct = {
@@ -208,9 +209,7 @@ class Measure:
             case "duration":
                 s = floatToHourMinSec(value)
             case _:
-                raise RuntimeError(
-                    f"Don't know how to format measure of type {self.dtype}"
-                )
+                raise RuntimeError(f"Don't know how to format measure of type {self.dtype}")
 
         if include_unit and self.show_unit and self.unit is not None:
             s = f"{s} {self.unit}"
@@ -235,9 +234,7 @@ class Activity:
         if (m := self._measures.get(name, None)) is not None:
             return m
         error_msg = f"'Activity' has no measure '{name}'\n"
-        error_msg += (
-            "Note that you must use slugs if trying to access a measure via getattr\n"
-        )
+        error_msg += "Note that you must use slugs if trying to access a measure via getattr\n"
         error_msg += "Available slugs are:"
         for slug in self._measures.keys():
             error_msg += f"  {slug}"
@@ -333,11 +330,7 @@ class Activity:
 
     @property
     def user_input_header(self):
-        header = [
-            measure.full_name
-            for measure in self._measures.values()
-            if measure.relation is None
-        ]
+        header = [measure.full_name for measure in self._measures.values() if measure.relation is None]
         return header
 
     def to_json(self):
@@ -366,9 +359,5 @@ class Activity:
 
     def get_relations(self):
         """Return dict of measures in activity that are relations between others."""
-        relations = {
-            m.slug: m.relation
-            for m in self._measures.values()
-            if m.relation is not None
-        }
+        relations = {m.slug: m.relation for m in self._measures.values() if m.relation is not None}
         return relations
