@@ -82,7 +82,7 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
             self.setFont(idx, font)
 
     @property
-    def monthYear(self):
+    def month_year(self):
         return self.row[0]
 
 
@@ -242,7 +242,7 @@ class DataViewer(QTreeWidget):
 
     @property
     def topLevelItemsDict(self):
-        return {item.monthYear: item for item in self.topLevelItems}
+        return {item.month_year: item for item in self.topLevelItems}
 
     @Slot(object)
     def new_data(self, indices=None):
@@ -270,29 +270,29 @@ class DataViewer(QTreeWidget):
                 # store month and year of changed items, so top level items can be
                 # updated where necessary
                 date = self.data[idx, "date"]
-                if (monthYear := (date.month, date.year)) not in changed:
-                    changed.append(monthYear)
+                if (month_year := (date.month, date.year)) not in changed:
+                    changed.append(month_year)
 
         # update top level items of changed months
         for month, year in changed:
             data = self.data.getMonth(month, year, return_type="Data")
             summaries = list(data.make_summary().values())
-            monthYear = f"{calendar.month_name[date.month]} {date.year}"
-            rootText = [monthYear] + summaries
-            rootItem = self.topLevelItemsDict[monthYear]
+            month_year = f"{calendar.month_name[date.month]} {date.year}"
+            rootText = [month_year] + summaries
+            rootItem = self.topLevelItemsDict[month_year]
             rootItem.setRow(rootText)
 
         # for remaining indices add new rows to tree
         for idx in indices:
             date = self.data[idx, "date"]
-            monthYear = f"{calendar.month_name[date.month]} {date.year}"
+            month_year = f"{calendar.month_name[date.month]} {date.year}"
             data = self.data.getMonth(date.month, date.year, return_type="Data")
             summaries = list(data.make_summary().values())
-            rootText = [monthYear] + summaries
-            if monthYear not in self.topLevelItemsDict:
+            rootText = [month_year] + summaries
+            if month_year not in self.topLevelItemsDict:
                 rootItem = CycleTreeWidgetItem(self, row=rootText)
             else:
-                rootItem = self.topLevelItemsDict[monthYear]
+                rootItem = self.topLevelItemsDict[month_year]
                 rootItem.setRow(rootText)
 
             item = IndexTreeWidgetItem(
@@ -326,12 +326,13 @@ class DataViewer(QTreeWidget):
 
     def updateTopLevelItems(self):
         dfs = self.data.splitMonths(return_type="Data")
-        for monthYear, data in reversed(dfs):
+        for month_year, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
+            month_year = month_year.strftime("%B %Y")
             summaries = list(data.make_summary().values())
-            rootText = [monthYear] + summaries
-            rootItem = self.topLevelItemsDict[monthYear]
+            rootText = [month_year] + summaries
+            rootItem = self.topLevelItemsDict[month_year]
             rootItem.setRow(rootText)
         self.viewerUpdated.emit()
 
@@ -377,11 +378,11 @@ class DataViewer(QTreeWidget):
         # starting from len(data), because we go through the months backwards
         idx = len(self.data) - 1
 
-        for monthYear, data in reversed(dfs):
+        for month_year, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
             summaries = list(data.make_summary().values())
-            rootText = [monthYear.strftime("%B %Y")] + summaries
+            rootText = [month_year.strftime("%B %Y")] + summaries
             rootItem = CycleTreeWidgetItem(self, row=rootText)
 
             # make rows of data for tree
@@ -481,7 +482,7 @@ class DataViewer(QTreeWidget):
         if item not in self.topLevelItems:
             raise ValueError("_summarise_month can only summarise top-level tree items")
         months = self.data.splitMonths(return_type="Data")
-        month, *_ = [data for monthyear, data in months if monthyear.strftime("%B %Y") == item.text(0)]
+        month, *_ = [data for month_year, data in months if month_year.strftime("%B %Y") == item.text(0)]
         return self._summarise_data(month)
 
     def _summarise_data(self, data):

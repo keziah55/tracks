@@ -214,12 +214,17 @@ class TestPreferences(TracksSetupTeardown):
         pbPref = self.prefDialog.pagesWidget.widget(self.dataIdx)
 
         aliases = {"Distance": "Distance (km)", "Speed": "Speed (km/h)"}
-        funcs = {"sum": sum, "min": min, "max": max, "mean": np.mean}
+
+        def _mean(series):
+            return series.mean()
+
+        funcs = {"sum": sum, "min": min, "max": max, "mean": _mean}
 
         for name, comboBox in pbPref.summaryComboBoxes.items():
             num = comboBox.currentIndex()
             while num == comboBox.currentIndex():
                 num = random.randrange(0, comboBox.count())
+            num = 3
             comboBox.setCurrentIndex(num)
 
             with qtbot.waitSignal(self.viewer.viewerUpdated, timeout=variables.longWait):
@@ -231,16 +236,13 @@ class TestPreferences(TracksSetupTeardown):
             col = self.viewer._activity.header.index(viewerName)
 
             # known data is from April and May 2021
-            groups = self.data.df.groupby(self.data.df["date"] <= date(year=2021, month=4, day=30))
+            ts = date(year=2021, month=5, day=1)
+            groups = [self.data.df.filter(pl.col("date") >= ts), self.data.df.filter(pl.col("date") < ts)]
+
             qtbot.wait(variables.shortWait)
 
-            idx = 0
-            for _, df in groups:
+            for idx, df in enumerate(groups):
                 data = df[name]
-
                 expected = funcs[measure](data)
-
                 expected = self.pbTable._activity.get_measure(name).formatted(expected)
-
                 assert self.viewer.topLevelItems[idx].text(col) == expected
-                idx += 1
