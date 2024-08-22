@@ -26,6 +26,8 @@ from .activity_funcs import (
     get_reduce_func_key,
 )
 
+from .icon_data_path import get_data_path, make_foreground_icon
+
 __all__ = [
     "isInt",
     "isFloat",
@@ -48,4 +50,6 @@ __all__ = [
     "list_reduce_funcs",
     "date_to_timestamp",
     "get_reduce_func_key",
+    "get_data_path",
+    "make_foreground_icon",
 ]

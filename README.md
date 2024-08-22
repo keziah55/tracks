@@ -1,7 +1,6 @@
 # Tracks
 
-This GUI centres on the plotting, and uses PyQtGraph to create interactive
-plots of my cycling stats.
+A GUI to track and plot exercise data.
 
 A simple user guide can be found [here](https://keziah55.github.io/tracks/).
 
@@ -33,7 +32,7 @@ Then simply `python main.py` to run the Tracks GUI.
 ### Requirements
 
 - [NumPy](https://numpy.org/)
-- [Pandas](https://pandas.pydata.org/)
+- [Polars](https://pypi.org/project/polars/)
 - [QtPy](https://pypi.org/project/QtPy/)
 - Any of: [PyQt5](https://pypi.org/project/PyQt5/), [PySide2](https://doc.qt.io/qtforpython-5/index.html), [PyQt6](https://pypi.org/project/PyQt6/), [PySide6](https://doc.qt.io/qtforpython-6/index.html)
 - [PyQtGraph](https://pypi.org/project/pyqtgraph/)

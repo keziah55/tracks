@@ -24,8 +24,7 @@ from qtpy.QtGui import (
 
 # from pyqtgraph.graphicsItems.ScatterPlotItem import renderSymbol, drawSymbol
 from customQObjects.widgets import GroupBox, ComboBox
-from tracks import make_foreground_icon
-from tracks.util import parse_month_range
+from tracks.util import parse_month_range, make_foreground_icon
 
 
 class StyleDesigner(QWidget):

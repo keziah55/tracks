@@ -5,7 +5,7 @@ Class to manage reading/writing plot_styles.json
 """
 
 import json
-from tracks import get_data_path
+from tracks.util import get_data_path
 
 
 class PlotStyle:

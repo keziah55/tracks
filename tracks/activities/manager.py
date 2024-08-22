@@ -10,11 +10,10 @@ import json
 # import pandas as pd
 import polars as pl
 from .activities import Activity
-from tracks import get_data_path
 from tracks.plot import PlotWidget
 from tracks.data import Data, DataViewer, PersonalBests, AddData
 from tracks.preferences import DataPreferences, PlotPreferences
-from tracks.util import parse_month_range
+from tracks.util import parse_month_range, get_data_path
 from qtpy.QtCore import QObject, Signal, Slot
 
 

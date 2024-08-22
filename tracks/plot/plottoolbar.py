@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QToolBar, QApplication
 from qtpy.QtGui import QPalette
 from qtpy.QtCore import Qt, Signal
-from tracks import make_foreground_icon
+from tracks.util import make_foreground_icon
 
 
 class PlotToolBar(QToolBar):
