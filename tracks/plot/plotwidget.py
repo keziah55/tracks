@@ -337,7 +337,7 @@ class Plot(_PlotWidget):
 
         for xPoints, yData, viewBox in data:
             # find x-coords of points in the given month
-            mask = np.in1d(np.where(xPoints >= x0)[0], np.where(xPoints <= x1)[0])
+            mask = np.isin(np.where(xPoints >= x0)[0], np.where(xPoints <= x1)[0])
             if np.any(mask):
                 # select the corresponding y data
                 idx = np.where(xPoints >= x0)[0][mask]

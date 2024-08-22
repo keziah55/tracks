@@ -3,7 +3,6 @@ from tracks.test import make_dataframe
 from tracks.test.mockparent import load_activity
 import polars as pl
 import numpy as np
-import tempfile
 import random
 import pytest
 
@@ -13,9 +12,7 @@ pytest_plugin = "pytest-qt"
 
 @pytest.fixture
 def setup(activity_json_path):
-    # tmpfile = tempfile.NamedTemporaryFile()
-    df = make_dataframe(500)  # , path=tmpfile.name)
-    # df = pd.read_csv(tmpfile.name, parse_dates=["date"])
+    df = make_dataframe(500)
     activity = load_activity(activity_json_path)
     data = Data(df, activity=activity)
     return data, activity
@@ -77,9 +74,7 @@ def test_combine_rows(setup, qtbot):
 
 def test_monthly_odometer(setup):
     _, activity = setup
-    # tmpfile = tempfile.NamedTemporaryFile()
-    df = make_dataframe(random=False)#, path=tmpfile.name)
-    # df = pl.read_csv(tmpfile.name, parse_dates=["date"])
+    df = make_dataframe(random=False)
     data = Data(df, activity)
 
     dts, odo = data.getMonthlyOdometer()

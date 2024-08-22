@@ -65,9 +65,9 @@ class TestPreferences(TracksSetupTeardown):
             qtbot.wait(variables.wait)
 
             # `date` has no `.timestamp()` method, so convert to datetime to get ts
-            late_date_ts = datetime(lastDate.year, lastDate.month, lastDate.day).timestamp()
+            last_date_ts = datetime(lastDate.year, lastDate.month, lastDate.day).timestamp()
 
-            assert axis.tickTimestamps[-1] >= late_date_ts
+            assert axis.tickTimestamps[-1] >= last_date_ts
             text = plotPref.plotRangeCombo.currentText()
             if text == "All":
                 dt = self.data.date[0]
@@ -85,8 +85,9 @@ class TestPreferences(TracksSetupTeardown):
             button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
             qtbot.mouseClick(button, Qt.LeftButton)
 
-        assert axis.tickTimestamps[-1] >= late_date_ts
+        assert axis.tickTimestamps[-1] >= last_date_ts
         dt = self._subtractMonths(lastDate, 4)
+        dt_ts = datetime(dt.year, dt.month, dt.day).timestamp()
         qtbot.wait(variables.wait)
         assert axis.tickTimestamps[0] <= dt_ts
 

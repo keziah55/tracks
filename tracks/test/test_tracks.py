@@ -3,11 +3,12 @@ import tracks.tracks
 import tracks.activities
 from tracks.util import parseDuration, hourMinSecToFloat
 from qtpy.QtCore import Qt, QPoint
-import random
 from . import make_dataframe
+import random
 import tempfile
 from datetime import datetime, date
 from pathlib import Path
+import os
 import polars as pl
 import pytest
 
@@ -33,6 +34,8 @@ class TracksSetupTeardown:
         self.extraTeardown()
         self.app.close()
 
+        self.tmpfile.close()
+
         # can't do this with a fixture in conf file, as it's called when this method is called
         # presumably, qt has a lock on the file, so wouldn't be deleted in that case
         self._removeTmpConfig()
@@ -40,6 +43,7 @@ class TracksSetupTeardown:
     @pytest.fixture
     def setupKnownData(self, qtbot, monkeypatch, patch_settings):
         self.tmpfile = tempfile.NamedTemporaryFile()
+        # self.tmpfile = Path("tracks-test-tmpfile")
         make_dataframe(random=False, path=self.tmpfile.name)
 
         def mockGetFile(*args, **kwargs):
@@ -55,6 +59,8 @@ class TracksSetupTeardown:
         yield
         self.extraTeardown()
         self.app.close()
+
+        self.tmpfile.close()
 
         # can't do this with a fixture in conf file, as it's called when this method is called
         # presumably, qt has a lock on the file, so wouldn't be deleted in that case
@@ -142,9 +148,10 @@ class TestTracks(TracksSetupTeardown):
             def scenePos(self):
                 return self.sp
 
-        qtbot.wait(variables.wait)
-        with qtbot.waitSignal(self.plotWidget.current_point_changed):
-            qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
+        if os.environ["XDG_SESSION_TYPE"] != "wayland":
+            qtbot.wait(variables.wait)
+            with qtbot.waitSignal(self.plotWidget.current_point_changed):
+                qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
         qtbot.wait(variables.wait)
         
         event = MockMouseEvent(scenePos)
