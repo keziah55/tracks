@@ -74,12 +74,7 @@ class Data(QObject):
 
     def summaryString(self, key, func=sum, unit=False):
         measure = self._activity[key]
-        # try:
         s = measure.summarised(self[key], include_unit=unit)
-        # except Exception as err:
-        #     msg = f"Could not summarise measure '{measure}'.\n"
-        #     msg += f"Original error was: {err}"
-        #     raise RuntimeError(msg)
         return s
 
     def make_summary(self) -> dict:
@@ -116,10 +111,6 @@ class Data(QObject):
 
     def __getattr__(self, name):
         ret = self.df[name]
-        # if name in ["date"]:
-        #     ret = list(ret)
-        # else:
-        #     ret = ret.to_numpy()
         return ret
 
     def __repr__(self):
@@ -132,7 +123,6 @@ class Data(QObject):
         If `formatted` is True, also format the values.
         """
         row = dict(zip(self.df.columns, self.df.row(idx)))
-        # row = dict(self.df.iloc[idx])
         if formatted:
             row = {name: self._activity.get_measure(name).formatted(value) for name, value in row.items()}
         return row
@@ -148,41 +138,6 @@ class Data(QObject):
             `headTail` rows. By default, do not abridge and return the full object.
         """
         return repr(self.df)
-        # keys = self.df.columns
-        # joinStr = "  "
-        # columns = {key: self.formatted(key) for key in keys}
-        # widths = {
-        #     key: max(
-        #         max([len(str(item)) for item in values]), len(key)
-        #     )  # +len(joinStr))
-        #     for key, values in columns.items()
-        # }
-        # size = len(self)
-        # if headTail is not None and size > 2 * headTail:
-        #     indices = list(range(headTail)) + list(range(size - headTail, size))
-        # else:
-        #     indices = range(size)
-
-        # s = ""
-        # idxWidth = max(len(s), len(str(size)))
-        # header = [f"{s:<{idxWidth}}"]
-        # header += [f"{key:>{widths[key]}}" for key in columns]
-        # rows = [joinStr.join(header)]
-
-        # for n, idx in enumerate(indices):
-        #     if n >= 1:
-        #         if idx != indices[n - 1] + 1:
-        #             rows.append("...")
-        #     pdIdx = self.df.index[idx]
-        #     row = [f"{pdIdx:>{idxWidth}}"]
-        #     for key, lst in columns.items():
-        #         value = lst[idx]
-        #         width = widths[key]
-        #         s = f"{value:>{width}}"
-        #         row.append(s)
-        #     rows.append(joinStr.join(row))
-
-        # return "\n".join(rows)
 
     @Slot(dict)
     def append(self, dct):
@@ -204,17 +159,6 @@ class Data(QObject):
         num_new = len(tmp_df)
         size = len(self.df)
         index = list(range(size - num_new, size))
-
-        # tmp_df = pl.concat([self.df, tmp_df])
-        # tmp_df.sort("date")
-        # self.df = tmp_df
-
-        # tmp_df = pd.DataFrame.from_dict(dct)
-        # tmp_df = pd.concat([self.df, tmp_df], ignore_index=True)
-        # tmp_df.sort_values("date", inplace=True)
-        # index = tmp_df[~tmp_df.isin(self.df)].dropna(how="all").index
-        # self.df = tmp_df
-        # self._update_relations(index)
 
         self.dataChanged.emit(index)
 
@@ -243,7 +187,7 @@ class Data(QObject):
             self.dataChanged.emit(changed)
 
     @staticmethod
-    def _apply_relations(df, activity):  # -> pd.DataFrame():
+    def _apply_relations(df, activity) -> pl.DataFrame():
         """
         Check if relational measures in `activity` are present in `df`.
 
@@ -295,15 +239,12 @@ class Data(QObject):
 
     def getMonth(self, month, year, return_type="DataFrame"):
         """Return DataFrame or Data of data from the given month and year."""
-        # ts0 = pd.Timestamp(day=1, month=month, year=year)
         ts0 = date(year, month, 1)
         month += 1
         if month > 12:
             month %= 12
             year += 1
-        # ts1 = pd.Timestamp(day=1, month=month, year=year)
         ts1 = date(year, month, 1)
-        # df = self.df[(self.df["date"] >= ts0) & (self.df["date"] < ts1)]
         df = self.df.filter((pl.col("date") >= ts0) & (pl.col("date") < ts1))
         if return_type == "Data":
             df = Data(df, activity=self._activity)
@@ -437,7 +378,6 @@ class Data(QObject):
 
     def combineRows(self, date):
         """Combine all rows in the dataframe with the given data."""
-        # idx = self.df[self.df["date"] == parseDate(date, pd_timestamp=True)].index
         d = parseDate(date)
         idx = self.df.with_row_index().filter(pl.col("date") == d)["index"]
 
@@ -451,7 +391,7 @@ class Data(QObject):
         for col in cols:
             series = self.df[col][idx]
             if col == "Time":
-                series = [hourMinSecToFloat(parseDuration(value)) for value in series]  # map(hourMinSecToFloat, series)
+                series = [hourMinSecToFloat(parseDuration(value)) for value in series]
                 new_value = sum(series)
                 new_value = floatToHourMinSec(new_value)
             else:
@@ -524,63 +464,3 @@ class Data(QObject):
         if return_type == "Data":
             df = Data(df, activity=self._activity)
         return df
-
-
-if __name__ == "__main__":
-
-    def known_data():
-        dates = [f"{i:02}-04-2021" for i in range(26, 31)]
-        dates += [f"{i:02}-05-2021" for i in range(1, 6)]
-        dates = [parseDate(d) for d in dates]
-
-        times = [
-            "00:53:27",
-            "00:43:04",
-            "00:42:40",
-            "00:43:09",
-            "00:42:28",
-            "00:43:19",
-            "00:42:21",
-            "00:43:04",
-            "00:42:11",
-            "00:43:25",
-        ]
-        times = np.array([hourMinSecToFloat(t) for t in times])
-
-        dct = {
-            "date": dates,
-            "time": times,
-            "distance": np.array([30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 25.21, 25.08, 25.12]),
-            "gear": [6] * 10,
-        }
-        dct["calories"] = dct["distance"] * 14.956
-        # dct["speed"] = dct["distance"] / times
-        return dct
-
-    from pathlib import Path
-    import json
-    from tracks.activities import Activity
-
-    data_path = Path.home().joinpath(".tracks")
-    csv_file = data_path.joinpath("cycling_no_speed.csv")
-    df = pl.read_csv(csv_file, try_parse_dates=True)
-
-    json_path = data_path.joinpath("activities.json")
-    with open(json_path, "r") as fileobj:
-        all_activities = json.load(fileobj)
-    activity_json = all_activities.get("cycling")
-    activity = Activity(activity_json["name"])
-    for measure in activity_json["measures"].values():
-        activity.add_measure(**measure)
-
-    data = Data(df, activity=activity)
-
-    # df = self.df.filter((pl.col("date") >= ts0) & (pl.col("date") < ts1))
-
-    # d = parseDate("23/7/24")
-
-    # print(data)
-
-    # data.combineRows("23/7/24")
-
-    # print(data)
