@@ -184,7 +184,7 @@ class Data(QObject):
 
         # return "\n".join(rows)
 
-    # @Slot(dict)
+    @Slot(dict)
     def append(self, dct):
         """Append values in dict to DataFrame."""
         if not isinstance(dct, dict):

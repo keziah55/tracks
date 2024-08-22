@@ -456,27 +456,25 @@ class Plot(_PlotWidget):
 
     @Slot(object)
     def _plot_clicked(self, event):
-        """If the plot is clicked, emit `point_selected` signal with
-        `currentPoint` datetime.
-        """
+        """If the plot is clicked, emit `point_selected` signal with `currentPoint` datetime."""
         # get x and y bounds
-        yMin = 0  # no top axis
-        yMax = self.plotItem.getAxis("bottom").scenePos().y()
+        y_min = 0  # no top axis
+        y_max = self.plotItem.getAxis("bottom").scenePos().y()
         # left axis position is 1,1 (don't know why), so use the bottom axis x here
-        xMin = self.plotItem.getAxis("bottom").scenePos().x()
-        xMax = self.plotItem.getAxis("right").scenePos().x()
+        x_min = self.plotItem.getAxis("bottom").scenePos().x()
+        x_max = self.plotItem.getAxis("right").scenePos().x()
 
         pos = event.scenePos()
-        if xMin <= pos.x() <= xMax and yMin <= pos.y() <= yMax:  # event.double() and
+        if x_min <= pos.x() <= x_max and y_min <= pos.y() <= y_max:  # event.double() and
             idx = self._current_point["index"]
-            date = self.data.datetimes[idx]
+            date = self.data.date[idx]
             self.point_selected.emit(date)
 
     def set_current_point(self, idx):
         """Set the `current_point` dict from index `idx` in the `data` DataFrame
         and emit `current_point_changed` signal.
         """
-        self._current_point["index"] = idx
+        self._current_point["index"] = int(idx)
         for name in self._activity.measures.keys():
             self._current_point[name] = self.data[idx, name]# getattr(self.data, name)[idx]
         self.current_point_changed.emit(self._current_point)
