@@ -148,7 +148,8 @@ class TestTracks(TracksSetupTeardown):
             def scenePos(self):
                 return self.sp
 
-        if os.environ["XDG_SESSION_TYPE"] != "wayland":
+        if os.environ.get("WAYLAND_DISPLAY", None) is None:
+            # setting mouse position doesn't work on wayland, so skip this if using
             qtbot.wait(variables.wait)
             with qtbot.waitSignal(self.plotWidget.current_point_changed):
                 qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
