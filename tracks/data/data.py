@@ -77,9 +77,9 @@ class Data(QObject):
         s = measure.summarised(self[key], include_unit=unit)
         return s
 
-    def make_summary(self) -> dict:
+    def make_summary(self, unit=False) -> dict:
         summaries = {
-            slug: self.summaryString(slug)
+            slug: self.summaryString(slug, unit=unit)
             for slug, measure in self._activity.measures.items()
             if measure.summary is not None
         }

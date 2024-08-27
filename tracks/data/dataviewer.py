@@ -487,8 +487,8 @@ class DataViewer(QTreeWidget):
 
     def _summarise_data(self, data):
         """Return string of summarised `data`, where `data` is a :class:`Data` object"""
-        summary = list(data.make_summary().values())
-        s = f"{len(data)} sessions: "
+        summary = [f"{value}" for key, value in data.make_summary(unit=True).items()]
+        s = f"{len(data)} sessions; "
         s += "; ".join(summary)
         return s
 
@@ -499,6 +499,7 @@ class DataViewer(QTreeWidget):
                 "_summarise_months can only summarise top-level tree items"
             )
         selected_months = [item.text(0) for item in items]
+        
         months = self.data.splitMonths(return_type="Data")
 
         months = map(
@@ -506,8 +507,12 @@ class DataViewer(QTreeWidget):
             filter(lambda tup: tup.month_year in selected_months, months),
         )
 
-        concat_data = Data.concat(months, self._activity)
+        if (months:=list(months)):
 
-        s = f"{len(selected_months)} months; "
-        s += self._summarise_data(concat_data)
-        return s
+            concat_data = Data.concat(months, self._activity)
+
+            s = f"{len(selected_months)} months; "
+            s += self._summarise_data(concat_data)
+            return s
+        else:
+            return ""

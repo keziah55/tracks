@@ -5,7 +5,7 @@ Preferences for personal bests and data viewer.
 from qtpy.QtWidgets import QSpinBox, QComboBox, QLabel, QVBoxLayout, QWidget, QCheckBox
 from qtpy.QtCore import Signal
 from customQObjects.widgets import GroupBox
-from tracks.util import parse_month_range, list_reduce_funcs
+from tracks.util import parse_month_range, list_reduce_funcs, get_reduce_func_key
 
 
 class FuncComboBox(QComboBox):
@@ -37,16 +37,19 @@ class DataPreferences(QWidget):
         summaryCriteriaGroup = GroupBox("Summary criteria", layout="grid")
 
         names = [
-            (m.slug, m.name)
+            # (m.slug, m.name)
+            m
             for m in self._activity.measures.values()
             if m.summary is not None
         ]
         self.summaryComboBoxes = {}
-        for row, (slug, name) in enumerate(names):
-            summaryCriteriaGroup.addWidget(QLabel(name), row, 0)
-            box = FuncComboBox()
-            self.summaryComboBoxes[slug] = box
+        for row, measure in enumerate(names):
+            summaryCriteriaGroup.addWidget(QLabel(measure.name), row, 0)
+            box = FuncComboBox(default=get_reduce_func_key(measure.summary))
+            self.summaryComboBoxes[measure.slug] = box
             summaryCriteriaGroup.addWidget(box, row, 1)
+
+        
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(summaryCriteriaGroup)
