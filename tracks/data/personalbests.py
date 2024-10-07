@@ -13,9 +13,8 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import Qt, Slot, Signal
 from qtpy.QtGui import QFont
-from tracks.util import dayMonthYearToFloat, int_to_str
+from tracks.util import int_to_str
 from customQObjects.widgets import TimerDialog
-import numpy as np
 
 
 class PersonalBests(QTableWidget):
@@ -39,21 +38,21 @@ class PersonalBests(QTableWidget):
 
     itemSelected = Signal(object)
     """ itemSelected(Timestamp `ts`)
-    
-        Emitted when an item in the PB table is selected, either by 
+
+        Emitted when an item in the PB table is selected, either by
         clicking on it or by navigating with the up or down keys. The datetime
         timestamp of the selected row is passed with this signal.
     """
 
     numSessionsChanged = Signal(int)
     """ numSessionsChanged(int `numSessions`)
-    
+
         Emitted when the number of sessions shown in the PBTable is changed.
     """
 
     monthCriterionChanged = Signal(str)
     """ monthCriterionChanged(str `criterion`)
-    
+
         Emitted when the criterion for calculating the best month is changed.
     """
 
@@ -94,7 +93,7 @@ class PersonalBests(QTableWidget):
         msg += "<br><span>Congratulations!</span>"
         msg = f"<center>{msg}</center>"
 
-        self.newPBdialog.setMessage(msg)
+        self.newPBdialog.set_message(msg)
         self.newPBdialog.exec_()
 
         if msg is not None:
@@ -153,7 +152,9 @@ class PersonalBests(QTableWidget):
             descending.append(True)  # always sort by descending date
             cols.append("date")
 
-        df = self.data.sort(cols, descending=descending, return_type="DataFrame", with_index=True, index_name="idx")
+        df = self.data.sort(
+            cols, descending=descending, return_type="DataFrame", with_index=True, index_name="idx"
+        )
         df = df[:num]
 
         pb = []
@@ -292,5 +293,5 @@ class NewPBDialog(TimerDialog):
         self.setLayout(self.layout)
         self.setWindowTitle("New personal best")
 
-    def setMessage(self, text):
+    def set_message(self, text):
         self.label.setText(text)

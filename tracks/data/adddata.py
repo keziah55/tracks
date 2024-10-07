@@ -41,15 +41,15 @@ class AddData(AddDataTableMixin, QWidget):
     User input is validated live; it is not possible to submit invalid data.
     """
 
-    newData = Signal(dict)
-    """ **signal** newData(dict `data`)
-    
+    new_data = Signal(dict)
+    """ **signal** new_data(dict `data`)
+
         Emitted with a dict to be appended to the DataFrame.
     """
 
-    rowRemoved = Signal()
-    """ **signal** rowRemoved()
-    
+    row_removed = Signal()
+    """ **signal** row_removed()
+
         Emitted when the current row is removed from the table.
     """
 
@@ -61,7 +61,7 @@ class AddData(AddDataTableMixin, QWidget):
         self._clicked = []
         self._makeEmptyRow()
 
-        self.table.currentCellChanged.connect(self._cellClicked)
+        self.table.currentCellChanged.connect(self._cell_clicked)
 
         self.addLineButton = QPushButton("New line")
         self.rmvLineButton = QPushButton("Remove line")
@@ -73,8 +73,8 @@ class AddData(AddDataTableMixin, QWidget):
             self.okButton.setShortcut(QKeySequence(Qt.Key_Enter))
 
         self.addLineButton.clicked.connect(self._makeEmptyRow)
-        self.rmvLineButton.clicked.connect(self._removeSelectedRow)
-        self.okButton.clicked.connect(self._addData)
+        self.rmvLineButton.clicked.connect(self._remove_selected_row)
+        self.okButton.clicked.connect(self._add_data)
 
         self.buttonLayout = QHBoxLayout()
         self.buttonLayout.addWidget(self.addLineButton)
@@ -99,7 +99,7 @@ class AddData(AddDataTableMixin, QWidget):
         return QSize(width, height)
 
     @Slot(int, int)
-    def _cellClicked(self, row, col):
+    def _cell_clicked(self, row, col):
         if (row, col) not in self._clicked:
             self._clicked.append((row, col))
 
@@ -125,28 +125,28 @@ class AddData(AddDataTableMixin, QWidget):
             item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, i, item)
         self._clicked = [item for item in self._clicked if item[0] != row]
-        self._cellClicked(row, 0)
+        self._cell_clicked(row, 0)
 
     @Slot()
-    def _removeSelectedRow(self):
+    def _remove_selected_row(self):
         """Remove the currently selected row from the table."""
         row = self.table.currentRow()
         self._clicked = [item for item in self._clicked if item[0] != row]
         self.table.removeRow(row)
-        self.rowRemoved.emit()
+        self.row_removed.emit()
 
     @Slot()
-    def _addData(self):
+    def _add_data(self):
         """Take all data from the table and emit it as a list of dicts with
-        the `newData` signal, then clear the table.
+        the `new_data` signal, then clear the table.
         """
         self.table.focusNextChild()
         valid = self._validate()
         if not valid:
             return None
 
-        values = self._getValues()
-        self.newData.emit(values)
+        values = self._get_values()
+        self.new_data.emit(values)
 
         for row in reversed(range(self.table.rowCount())):
             self.table.removeRow(row)

@@ -9,7 +9,8 @@ ValidateFuncs = namedtuple("ValidateFuncs", ["validate", "cast"])
 
 
 class AddDataTableMixin(object):
-    """Mixin providing validation and type casting for a table for adding data.
+    """
+    Mixin providing validation and type casting for a table for adding data.
 
     Should be used as part of a widget that has a `table` attribute. If it
     also has a `okButton`, this will be enabled/diabled when validation
@@ -18,7 +19,7 @@ class AddDataTableMixin(object):
 
     invalid = Signal(int, int)
     """ **signal** invalid(int `row`, int `col`)
-    
+
         Emitted if the data in cell `row`,`col` is invalid.
     """
 
@@ -60,21 +61,21 @@ class AddDataTableMixin(object):
         self.invalid.connect(self._invalid)
 
     @property
-    def defaultBrush(self):
+    def _default_brush(self):
         # made this a property rather than setting in constructor as the mixin
         # doesn't have a `table` attribute when __init__ is called
         return self.table.item(0, 0).background()
 
     @property
-    def invalidBrush(self):
+    def _invalid_brush(self):
         return QBrush(QColor("#910404"))
 
     @Slot(int, int)
     def _invalid(self, row, col):
         """
-        Set the background of cell `row`,`col` to the `invalidBrush` and disable the 'Ok' button.
+        Set the background of cell `row`,`col` to the `_invalid_brush` and disable the 'Ok' button.
         """
-        self.table.item(row, col).setBackground(self.invalidBrush)
+        self.table.item(row, col).setBackground(self._invalid_brush)
         if hasattr(self, "okButton"):
             self.okButton.setEnabled(False)
 
@@ -104,16 +105,16 @@ class AddDataTableMixin(object):
                     allValid = False
                 elif (
                     valid
-                    and self.table.item(row, col).background() == self.invalidBrush
+                    and self.table.item(row, col).background() == self._invalid_brush
                 ):
-                    self.table.item(row, col).setBackground(self.defaultBrush)
+                    self.table.item(row, col).setBackground(self._default_brush)
 
         if allValid and hasattr(self, "okButton"):
             self.okButton.setEnabled(True)
 
         return allValid
 
-    def _getValues(self):
+    def _get_values(self):
         values = {name: [] for name in self._measures}
 
         self.table.sortItems(0, Qt.AscendingOrder)

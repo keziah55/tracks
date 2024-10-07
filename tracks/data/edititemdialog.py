@@ -17,9 +17,9 @@ from .adddatatablemixin import AddDataTableMixin
 class Row:
     """Data class for a row in the table."""
 
-    ## was using the dataclass decorator
-    ## this worked with pyqt5, but not pyside2
-    ## TypeError: unhashable type: 'Row'
+    # was using the dataclass decorator
+    # this worked with pyqt5, but not pyside2
+    # TypeError: unhashable type: 'Row'
 
     def __init__(self, index, tableItems, checkBox):
         self.index = index
@@ -128,7 +128,7 @@ class EditItemDialog(AddDataTableMixin, QDialog):
 
         self.setWindowTitle("Edit or remove data")
 
-    def getValues(self):
+    def get_values(self):
         """Return dict of index: row dict pairs, and list of indices to be removed."""
 
         values = {}

@@ -89,9 +89,7 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
 class IndexTreeWidgetItem(QTreeWidgetItem):
     """QTreeWidgetItem that stores the index of the DataFrame row it represents."""
 
-    def __init__(
-        self, *args, activity=None, index=None, headerLabels=[], row={}, **kwargs
-    ):
+    def __init__(self, *args, activity=None, index=None, headerLabels=[], row={}, **kwargs):
         super().__init__(*args, **kwargs)
         self._activity = activity
         self.index = index
@@ -132,28 +130,28 @@ class DataViewer(QTreeWidget):
         Spacing to add to width in `sizeHint`. Default is 5.
     """
 
-    itemSelected = Signal(object)
-    """ **signal** itemSelected(CycleTreeWidgetItem `item`)
-    
+    item_selected = Signal(object)
+    """ **signal** item_selected(CycleTreeWidgetItem `item`)
+
         Emitted when an item in the tree is selected, either by clicking
         on it or by navigating with the up or down keys.
     """
 
-    viewerSorted = Signal()
-    """ **signal** viewerSorted()
-    
+    viewer_sorted = Signal()
+    """ **signal** viewer_sorted()
+
         Emitted after the DataViewer items have been sorted.
     """
 
-    selectedSummary = Signal(str)
-    """ **signal** selectedSummary(str `summaryString`)
-    
+    selected_summary = Signal(str)
+    """ **signal** selected_summary(str `summaryString`)
+
         Emitted with a string summarising selected items.
     """
 
-    viewerUpdated = Signal()
-    """ **signal** viewerUpdated() 
-    
+    viewer_updated = Signal()
+    """ **signal** viewer_updated()
+
         Emitted when `new_data` has finished.
     """
 
@@ -179,18 +177,18 @@ class DataViewer(QTreeWidget):
 
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
-        self.makeTree()
+        self.make_tree()
 
         self.sortColumn = None
         self.sortDescending = [True for _ in range(len(self._activity.header))]
         self.header().setSectionsClickable(True)
-        self.header().sectionClicked.connect(self.sortTree)
+        self.header().sectionClicked.connect(self.sort_tree)
 
-        self.currentItemChanged.connect(self._itemChanged)
+        self.currentItemChanged.connect(self._item_changed)
 
-        self.itemSelectionChanged.connect(self._summariseSelected)
-        
-        self.sortTree(0)
+        self.itemSelectionChanged.connect(self._summarise_selected)
+
+        self.sort_tree(0)
 
         msg = "Browse all sessions, grouped by month. Click on the headers \n"
         msg += "to sort by that metric in ascending or descending order.\n"
@@ -199,35 +197,33 @@ class DataViewer(QTreeWidget):
 
         self.editAction = QAction("Edit")
         self.editAction.setShortcut(QKeySequence("Ctrl+E"))
-        self.editAction.triggered.connect(self._editItems)
+        self.editAction.triggered.connect(self._edit_items)
         self.addAction(self.editAction)
 
         self.mergeAction = QAction("Merge")
         self.mergeAction.setShortcut(QKeySequence("Ctrl+M"))
-        self.mergeAction.triggered.connect(self.combineRows)
+        self.mergeAction.triggered.connect(self.combine_rows)
         self.addAction(self.mergeAction)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self._showContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
 
-    def _showContextMenu(self, pos):
+    def _show_context_menu(self, pos):
         menu = QMenu()
         menu.addAction(self.editAction)
         menu.addAction(self.mergeAction)
         menu.exec_(self.mapToGlobal(pos))
 
-    def _editItems(self):
-        items = [
-            item for item in self.selectedItems() if item not in self.topLevelItems
-        ]
+    def _edit_items(self):
+        items = [item for item in self.selectedItems() if item not in self.top_level_items]
         if items:
             self.dialog = EditItemDialog(self._activity, items, self._activity.header)
             result = self.dialog.exec_()
             if result == EditItemDialog.Accepted:
-                values, remove = self.dialog.getValues()
+                values, remove = self.dialog.get_values()
                 self.data.update(values)
                 if remove:
-                    self.data.removeRows(index=remove)
+                    self.data.remove_rows(index=remove)
 
     def sizeHint(self):
         width = self.header().length() + self.widthSpace
@@ -235,14 +231,14 @@ class DataViewer(QTreeWidget):
         return QSize(width, height)
 
     @property
-    def topLevelItems(self):
+    def top_level_items(self):
         """List of top level QTreeWidgetItems."""
         items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
         return items
 
     @property
-    def topLevelItemsDict(self):
-        return {item.month_year: item for item in self.topLevelItems}
+    def top_level_itemsDict(self):
+        return {item.month_year: item for item in self.top_level_items}
 
     @Slot(object)
     def new_data(self, indices=None):
@@ -255,7 +251,7 @@ class DataViewer(QTreeWidget):
         """
         if indices is None:
             # clear and remake tree
-            self._makeTree()
+            self._make_tree()
             return
 
         indices = list(indices)  # cast to list so updated items can be removed
@@ -275,24 +271,24 @@ class DataViewer(QTreeWidget):
 
         # update top level items of changed months
         for month, year in changed:
-            data = self.data.getMonth(month, year, return_type="Data")
+            data = self.data.get_month(month, year, return_type="Data")
             summaries = list(data.make_summary().values())
             month_year = f"{calendar.month_name[date.month]} {date.year}"
             rootText = [month_year] + summaries
-            rootItem = self.topLevelItemsDict[month_year]
+            rootItem = self.top_level_itemsDict[month_year]
             rootItem.setRow(rootText)
 
         # for remaining indices add new rows to tree
         for idx in indices:
             date = self.data[idx, "date"]
             month_year = f"{calendar.month_name[date.month]} {date.year}"
-            data = self.data.getMonth(date.month, date.year, return_type="Data")
+            data = self.data.get_month(date.month, date.year, return_type="Data")
             summaries = list(data.make_summary().values())
             rootText = [month_year] + summaries
-            if month_year not in self.topLevelItemsDict:
+            if month_year not in self.top_level_itemsDict:
                 rootItem = CycleTreeWidgetItem(self, row=rootText)
             else:
-                rootItem = self.topLevelItemsDict[month_year]
+                rootItem = self.top_level_itemsDict[month_year]
                 rootItem.setRow(rootText)
 
             item = IndexTreeWidgetItem(
@@ -305,39 +301,39 @@ class DataViewer(QTreeWidget):
             itemData = TreeItem(self.data["date"][idx], rootItem, item)
             self.items.append(itemData)
 
-        self.sortTree(self.sortColumn, switchOrder=False)
+        self.sort_tree(self.sortColumn, switchOrder=False)
 
-        self.viewerUpdated.emit()
+        self.viewer_updated.emit()
 
-    def _makeTree(self):
+    def _make_tree(self):
         """Clear and remake tree, preserving which items are expanded."""
         expanded = []
-        for item in self.topLevelItems:
+        for item in self.top_level_items:
             if item.isExpanded():
                 expanded.append(item.text(0))
 
         self.clear()
-        self.makeTree()
-        for item in self.topLevelItems:
+        self.make_tree()
+        for item in self.top_level_items:
             if item.text(0) in expanded:
                 self.expandItem(item)
 
-        self.viewerUpdated.emit()
+        self.viewer_updated.emit()
 
-    def updateTopLevelItems(self):
-        dfs = self.data.splitMonths(return_type="Data")
+    def update_top_level_items(self):
+        dfs = self.data.split_months(return_type="Data")
         for month_year, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
             month_year = month_year.strftime("%B %Y")
             summaries = list(data.make_summary().values())
             rootText = [month_year] + summaries
-            rootItem = self.topLevelItemsDict[month_year]
+            rootItem = self.top_level_itemsDict[month_year]
             rootItem.setRow(rootText)
-        self.viewerUpdated.emit()
+        self.viewer_updated.emit()
 
     @Slot(int)
-    def sortTree(self, idx, switchOrder=True):
+    def sort_tree(self, idx, switchOrder=True):
         """
         Sort the tree based on column `idx`.
 
@@ -352,7 +348,7 @@ class DataViewer(QTreeWidget):
         order = Qt.DescendingOrder if self.sortDescending[idx] else Qt.AscendingOrder
 
         # set sort column index
-        for rootItem in self.topLevelItems:
+        for rootItem in self.top_level_items:
             rootItem.sortColumn = idx
         self.sortColumn = idx
 
@@ -366,13 +362,13 @@ class DataViewer(QTreeWidget):
             self.headerItem().setFont(i, font)
 
         self.sortItems(idx, order)
-        self.viewerSorted.emit()
+        self.viewer_sorted.emit()
 
-    def makeTree(self):
+    def make_tree(self):
         """Populate tree with data from Data object."""
 
         self.items = []
-        dfs = self.data.splitMonths(return_type="Data")
+        dfs = self.data.split_months(return_type="Data")
         # pandas df had persistent index, polars doesn't
         # calculate equivalent index here
         # starting from len(data), because we go through the months backwards
@@ -390,7 +386,7 @@ class DataViewer(QTreeWidget):
                 item = IndexTreeWidgetItem(
                     rootItem,
                     activity=self._activity,
-                    index=idx, #rowIdx,#data.df.index[rowIdx],
+                    index=idx,
                     headerLabels=self._activity.header,
                     row=data.row(rowIdx, formatted=True),
                 )
@@ -401,7 +397,7 @@ class DataViewer(QTreeWidget):
         self.header().resizeSections(QHeaderView.ResizeToContents)
 
     @Slot()
-    def combineRows(self):
+    def combine_rows(self):
         """Combine selected rows, if the date and gear values are the same."""
         selected = self.selectedItems()
         if len(selected) <= 1:
@@ -426,25 +422,25 @@ class DataViewer(QTreeWidget):
                 "Cannot combine selected data - gears do not match.",
             )
         else:
-            self.data.combineRows(dates[0])
+            self.data.combine_rows(dates[0])
 
     @Slot(object)
-    def highlightItem(self, date):
+    def highlight_item(self, date):
         for item in self.items:
             if item.dateTime == date:
                 self.setCurrentItem(item.treeWidgetItem)
 
     @Slot(QTreeWidgetItem, QTreeWidgetItem)
-    def _itemChanged(self, currentItem, previousItem):
+    def _item_changed(self, currentItem, previousItem):
         for item in self.items:
             if item.treeWidgetItem == currentItem:
-                self.itemSelected.emit(item.dateTime)
+                self.item_selected.emit(item.dateTime)
                 break
 
     @Slot()
-    def _summariseSelected(self):
+    def _summarise_selected(self):
         """
-        Emit :attr:`selectedSummary` with string for status bar.
+        Emit :attr:`selected_summary` with string for status bar.
 
         If a top level item is selected, summarise it. Otherwise, summarise
         multiple selected items.
@@ -454,10 +450,10 @@ class DataViewer(QTreeWidget):
         s = ""
         if (
             len(self.selectedItems()) == 1
-            and (item := self.selectedItems()[0]) in self.topLevelItems
+            and (item := self.selectedItems()[0]) in self.top_level_items
         ):
             s = self._summarise_month(item)
-        elif all([item in self.topLevelItems for item in self.selectedItems()]):
+        elif all([item in self.top_level_items for item in self.selectedItems()]):
             s = self._summarise_months(self.selectedItems())
         elif (
             len(
@@ -465,7 +461,7 @@ class DataViewer(QTreeWidget):
                     idx := [
                         item.index
                         for item in self.selectedItems()
-                        if item not in self.topLevelItems
+                        if item not in self.top_level_items
                     ]
                 )
             )
@@ -475,14 +471,16 @@ class DataViewer(QTreeWidget):
             data = Data(df, activity=self._activity)
             s = self._summarise_data(data)
         if s:
-            self.selectedSummary.emit(s)
+            self.selected_summary.emit(s)
 
     def _summarise_month(self, item):
         """Summarise month given by `item`"""
-        if item not in self.topLevelItems:
+        if item not in self.top_level_items:
             raise ValueError("_summarise_month can only summarise top-level tree items")
-        months = self.data.splitMonths(return_type="Data")
-        month, *_ = [data for month_year, data in months if month_year.strftime("%B %Y") == item.text(0)]
+        months = self.data.split_months(return_type="Data")
+        month, *_ = [
+            data for month_year, data in months if month_year.strftime("%B %Y") == item.text(0)
+        ]
         return self._summarise_data(month)
 
     def _summarise_data(self, data):
@@ -494,20 +492,18 @@ class DataViewer(QTreeWidget):
 
     def _summarise_months(self, items):
         """Return summary string from list of top-level items"""
-        if any([item not in self.topLevelItems for item in items]):
-            raise ValueError(
-                "_summarise_months can only summarise top-level tree items"
-            )
+        if any([item not in self.top_level_items for item in items]):
+            raise ValueError("_summarise_months can only summarise top-level tree items")
         selected_months = [item.text(0) for item in items]
-        
-        months = self.data.splitMonths(return_type="Data")
+
+        months = self.data.split_months(return_type="Data")
 
         months = map(
             lambda tup: tup.data,
             filter(lambda tup: tup.month_year in selected_months, months),
         )
 
-        if (months:=list(months)):
+        if months := list(months):
 
             concat_data = Data.concat(months, self._activity)
 

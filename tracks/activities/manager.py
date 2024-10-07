@@ -53,8 +53,8 @@ class ActivityObjects(QObject):
         self.data_viewer.itemSelected.connect(self.plot.set_current_point_from_date)
         self.personal_bests.itemSelected.connect(self.plot.set_current_point_from_date)
 
-        self.data.dataChanged.connect(self._data_changed)
-        self.data_viewer.selectedSummary.connect(self.status_message)
+        self.data.data_changed.connect(self._data_changed)
+        self.data_viewer.selected_summary.connect(self.status_message)
         self.personal_bests.statusMessage.connect(self.status_message)
 
         self.preferences["data"].applied.connect(self._apply_data_pref)

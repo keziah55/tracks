@@ -5,8 +5,6 @@ from tracks.test import MockParent
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
 import pytest
 
-from pprint import pprint
-
 pytest_plugin = "pytest-qt"
 
 
@@ -43,7 +41,7 @@ class TestPersonalBests:
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)
 
-        self.parent.data.dataChanged.connect(self.pb.new_data)
+        self.parent.data.data_changed.connect(self.pb.new_data)
         self.widget.show()
 
     @pytest.mark.parametrize("key", ["best session"])
@@ -51,7 +49,7 @@ class TestPersonalBests:
         new, expected_dialog, expected_label = get_new_data(key)
 
         signals = [
-            (self.parent.data.dataChanged, "data.dataChanged"),
+            (self.parent.data.data_changed, "data.data_changed"),
             (self.pb.newPBdialog.accepted, "dialog.accepted"),
         ]
         with qtbot.waitSignals(signals):
@@ -74,7 +72,7 @@ class TestPersonalBests:
 
         # don't need dialog to pop up
         monkeypatch.setattr(NewPBDialog, "exec_", lambda *args: QDialog.Accepted)
-        with qtbot.waitSignal(self.parent.data.dataChanged):
+        with qtbot.waitSignal(self.parent.data.data_changed):
             self.parent.data.append(new)
 
         expected = "<center><span>New #1 time - </span><span style='color: #f7f13b'>01:05:03</span>!<br><span>Congratulations!</span></center>"
@@ -91,13 +89,10 @@ class TestPersonalBests:
 
         # don't need dialog to pop up
         monkeypatch.setattr(NewPBDialog, "exec_", lambda *args: QDialog.Accepted)
-        with qtbot.waitSignal(self.parent.data.dataChanged):
+        with qtbot.waitSignal(self.parent.data.data_changed):
             self.parent.data.append(new)
 
-        rowNums = [
-            self.pb.verticalHeaderItem(i).text()
-            for i in range(self.pb.rowCount())
-        ]
+        rowNums = [self.pb.verticalHeaderItem(i).text() for i in range(self.pb.rowCount())]
         assert rowNums == ["1=", "1=", "3", "4", "5"]
 
         date0 = self.pb.item(0, 0).text()
@@ -144,16 +139,11 @@ class TestPersonalBests:
 
             self.pb.horizontalHeader().sectionClicked.emit(idx)
             qtbot.wait(variables.shortWait)
-            items = [
-                self.pb.item(idx, 0).text()
-                for idx in range(self.pb.rowCount())
-            ]
+            items = [self.pb.item(idx, 0).text() for idx in range(self.pb.rowCount())]
             assert items == expected
 
     def test_get_best_sessions(self, setup, qtbot):
-        pb = self.pb._get_best_sessions(
-            num=2, key="distance", order="ascending"
-        )
+        pb = self.pb._get_best_sessions(num=2, key="distance", order="ascending")
         expected = [
             {
                 "date": "04 May 2021",

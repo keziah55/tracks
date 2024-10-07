@@ -7,9 +7,7 @@ from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
 from collections import namedtuple
-from typing import NamedTuple
 from datetime import date, datetime
-import calendar
 import numpy as np
 import polars as pl
 import functools
@@ -30,17 +28,17 @@ MonthData = namedtuple("MonthData", ["month_year", "data"])
 
 
 class Data(QObject):
-    dataChanged = Signal(object)
+    data_changed = Signal(object)
     """
-    **signal** dataChanged(object `index`)
+    **signal** data_changed(object `index`)
 
     Emitted when the data in the object is changed, with the pandas index
     of the new rows.
     """
 
-    newMax = Signal(str, object)
+    new_max = Signal(str, object)
     """
-    **signal** newMax(str `column`, object `value`)
+    **signal** new_max(str `column`, object `value`)
 
     Emitted when newly added data contains a new max value for a given column.
     """
@@ -59,7 +57,7 @@ class Data(QObject):
     def concat(datas, activity):
         try:
             dfs = [data.df for data in datas]
-        except:
+        except AttributeError:
             raise TypeError("All values supplied to `Data.concat` must be Data objects")
         else:
             if len(dfs) == 0:
@@ -72,14 +70,14 @@ class Data(QObject):
         measure = self._activity[key]
         return [measure.formatted(v) for v in self.df[key]]
 
-    def summaryString(self, key, func=sum, unit=False):
+    def summary_string(self, key, func=sum, unit=False):
         measure = self._activity[key]
         s = measure.summarised(self[key], include_unit=unit)
         return s
 
     def make_summary(self, unit=False) -> dict:
         summaries = {
-            slug: self.summaryString(slug, unit=unit)
+            slug: self.summary_string(slug, unit=unit)
             for slug, measure in self._activity.measures.items()
             if measure.summary is not None
         }
@@ -114,7 +112,7 @@ class Data(QObject):
         return ret
 
     def __repr__(self):
-        return self.toString(headTail=5)
+        return self.to_string(headTail=5)
 
     def row(self, idx, formatted=False):
         """
@@ -124,10 +122,13 @@ class Data(QObject):
         """
         row = dict(zip(self.df.columns, self.df.row(idx)))
         if formatted:
-            row = {name: self._activity.get_measure(name).formatted(value) for name, value in row.items()}
+            row = {
+                name: self._activity.get_measure(name).formatted(value)
+                for name, value in row.items()
+            }
         return row
 
-    def toString(self, headTail=None):
+    def to_string(self, headTail=None):
         """
         Return Data object as a string.
 
@@ -160,7 +161,7 @@ class Data(QObject):
         size = len(self.df)
         index = list(range(size - num_new, size))
 
-        self.dataChanged.emit(index)
+        self.data_changed.emit(index)
 
     def update(self, values):
         """
@@ -171,7 +172,7 @@ class Data(QObject):
         given column and index is different from that supplied in the
         dictionary, it will be updated.
 
-        If changes are made, `dataChanged` is emitted.
+        If changes are made, `data_changed` is emitted.
 
         Example `values` structure:
             {10: {'distance':25, 'Calories':375}}
@@ -184,7 +185,7 @@ class Data(QObject):
                     changed.append(index)
         if changed:
             self._update_relations(changed)
-            self.dataChanged.emit(changed)
+            self.data_changed.emit(changed)
 
     @staticmethod
     def _apply_relations(df, activity) -> pl.DataFrame():
@@ -211,15 +212,15 @@ class Data(QObject):
             m1 = self.df[relation.m1.slug][idx]
             self.df[idx, col] = relation.op.call(m0, m1)
 
-    def setDataFrame(self, df):
+    def set_data_frame(self, df):
         """Set new DataFrame"""
         # TODO activity, _apply_relations etc?
         # called if csv changed on disk
         self.df = df
-        self.dataChanged.emit(self.df.index)
+        self.data_changed.emit(self.df.index)
 
     @property
-    def dateTimestamps(self):
+    def date_timestamps(self):
         """
         Return 'date' column, converted to array of timestamps (time since epoch).
 
@@ -237,7 +238,7 @@ class Data(QObject):
         # calling datetime.strptime
         return [datetime.strptime(d.strftime(fmt), fmt) for d in self.df["date"]]
 
-    def getMonth(self, month, year, return_type="DataFrame"):
+    def get_month(self, month, year, return_type="DataFrame"):
         """Return DataFrame or Data of data from the given month and year."""
         ts0 = date(year, month, 1)
         month += 1
@@ -251,7 +252,7 @@ class Data(QObject):
         return df
 
     @check_empty
-    def splitMonths(self, include_empty=False, return_type="DataFrame"):
+    def split_months(self, include_empty=False, return_type="DataFrame"):
         """
         Split `df` into months.
 
@@ -301,7 +302,9 @@ class Data(QObject):
 
             next_month = groups[i + 1][0]
 
-            while (next_month.month != expected_next_month) and (next_month.year != expected_next_year):
+            while (next_month.month != expected_next_month) and (
+                next_month.year != expected_next_year
+            ):
                 month_dt = date(expected_next_year, expected_next_month, 1)
                 df = pl.DataFrame(schema=self._activity.measure_slugs)
                 missing.append(MonthData(month_dt, df))
@@ -314,14 +317,14 @@ class Data(QObject):
 
         return sorted(groups)
 
-    def getMonthlyOdometer(self):
+    def get_monthly_odometer(self):
         """
         Return list of datetime objects and list of floats.
 
         The datetime objects are required, as they add dummy 1st of the
         month data points to reset the total to 0km.
         """
-        dfs = self.splitMonths(include_empty=True)
+        dfs = self.split_months(include_empty=True)
         odo = []
         dts = []
 
@@ -347,7 +350,7 @@ class Data(QObject):
         return dts, odo
 
     @check_empty
-    def getPBs(self, column, pbCount):
+    def get_pbs(self, column, pbCount):
         """
         Return indices where the value in `column` was a PB (at the time).
 
@@ -376,7 +379,7 @@ class Data(QObject):
                 best[minIdx] = series[n]
         return idx
 
-    def combineRows(self, date):
+    def combine_rows(self, date):
         """Combine all rows in the dataframe with the given data."""
         d = parseDate(date)
         idx = self.df.with_row_index().filter(pl.col("date") == d)["index"]
@@ -385,7 +388,8 @@ class Data(QObject):
         cols = [
             col
             for col in self.df.columns
-            if self._activity.get_measure(col).relation is None and self._activity.get_measure(col).is_metadata is False
+            if self._activity.get_measure(col).relation is None
+            and self._activity.get_measure(col).is_metadata is False
         ]
 
         for col in cols:
@@ -404,9 +408,9 @@ class Data(QObject):
         self._update_relations([i0])
 
         self._drop_by_index(idx)
-        self.dataChanged.emit(i0)
+        self.data_changed.emit(i0)
 
-    def removeRows(self, **kwargs):
+    def remove_rows(self, **kwargs):
         """
         Remove row(s) from the DataFrame by date or index.
 
@@ -426,7 +430,7 @@ class Data(QObject):
 
         if idx:
             self._drop_by_index(idx)
-            self.dataChanged.emit(None)
+            self.data_changed.emit(None)
 
     def _drop_by_index(self, idx):
         """
@@ -443,13 +447,15 @@ class Data(QObject):
         """
         Return new Data object (or polars DataFrame) with sorted data.
 
-        See [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html)
+        See
+        [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html)
         for args.
 
         Parameters
         ----------
         args
-            [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html) args
+            [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html)
+            args
         return_type : {"Data", "DataFrame"}
             Whether to return as `Data` object or polars `DataFrame`
         with_index : bool
@@ -457,7 +463,8 @@ class Data(QObject):
         index_name : str, optional
             If `with_index`, optionally set the name of the index column. Default is "index".
         kwargs
-            [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html) kwargs
+            [Dataframe.sort](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.sort.html)
+            kwargs
         """
         df = self.df.with_row_index(name=index_name) if with_index else self.df
         df = df.sort(*args, **kwargs)

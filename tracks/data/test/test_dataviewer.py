@@ -24,12 +24,12 @@ class TestDataViewer:
         self.parent = MockParent(random=False)
         self._setup(qtbot)
 
-        for item in self.widget.topLevelItems:
+        for item in self.widget.top_level_items:
             self.widget.expandItem(item)
 
     def _setup(self, qtbot):
         self.widget = DataViewer(self.parent.data, self.parent.activity)
-        self.parent.data.dataChanged.connect(self.widget.new_data)
+        self.parent.data.data_changed.connect(self.widget.new_data)
         qtbot.addWidget(self.widget)
         self.widget.setGeometry(100, 100, 500, 600)
         self.widget.show()
@@ -46,7 +46,7 @@ class TestDataViewer:
         for column in columns:
             idx = self.widget._activity.header.index(column)
 
-            expected = [item.text(idx) for item in self.widget.topLevelItems]
+            expected = [item.text(idx) for item in self.widget.top_level_items]
 
             if column == "Date":
                 expected = sorted(expected, key=monthYearToFloat)
@@ -57,17 +57,17 @@ class TestDataViewer:
 
             for _ in range(2):
                 expected.reverse()
-                with qtbot.waitSignal(self.widget.viewerSorted):
+                with qtbot.waitSignal(self.widget.viewer_sorted):
                     self.widget.header().sectionClicked.emit(idx)
-                items = [item.text(idx) for item in self.widget.topLevelItems]
+                items = [item.text(idx) for item in self.widget.top_level_items]
                 assert items == expected
 
     def test_new_data(self, setup, qtbot):
         # expand some headers
         min_expanded = 3
-        num = len(self.widget.topLevelItems) // 4
+        num = len(self.widget.top_level_items) // 4
         num = max(min_expanded, num)
-        expanded = random.sample(self.widget.topLevelItems, num)
+        expanded = random.sample(self.widget.top_level_items, num)
         for item in expanded:
             self.widget.expandItem(item)
         expanded = [item.text(0) for item in expanded]
@@ -79,25 +79,25 @@ class TestDataViewer:
 
         self.widget.new_data()
 
-        for item in self.widget.topLevelItems:
+        for item in self.widget.top_level_items:
             if item.isExpanded():
                 assert item.text(0) in expanded
 
     def test_combine_data(self, setup, qtbot, monkeypatch):
-        ret = self.widget.combineRows()
+        ret = self.widget.combine_rows()
         assert ret is None
 
         # pick a top-level item
-        item = random.sample(self.widget.topLevelItems, k=1)[0]
+        item = random.sample(self.widget.top_level_items, k=1)[0]
         idx = random.sample(range(item.childCount()), k=1)[0]
         item = item.child(idx)
         self.widget.setCurrentItem(item)
 
-        ret = self.widget.combineRows()
+        ret = self.widget.combine_rows()
         assert ret is None
 
         # pick another
-        item = random.sample(self.widget.topLevelItems, k=1)[0]
+        item = random.sample(self.widget.top_level_items, k=1)[0]
         idx = random.sample(range(item.childCount()), k=1)[0]
         item = item.child(idx)
         item.setSelected(True)
@@ -109,14 +109,14 @@ class TestDataViewer:
         assert date0 != date1
 
         monkeypatch.setattr(QMessageBox, "warning", lambda *args: QMessageBox.Yes)
-        with qtbot.assertNotEmitted(self.widget.data.dataChanged):
-            self.widget.combineRows()
+        with qtbot.assertNotEmitted(self.widget.data.data_changed):
+            self.widget.combine_rows()
 
         gears = [item.text(5) for item in self.widget.selectedItems()]
 
         while len(set(gears)) == 1:
             # gears are the same, so select more items until gears differ
-            item = random.sample(self.widget.topLevelItems, k=1)[0]
+            item = random.sample(self.widget.top_level_items, k=1)[0]
             idx = random.sample(range(item.childCount()), k=1)[0]
             item = item.child(idx)
             item.setSelected(True)
@@ -127,15 +127,15 @@ class TestDataViewer:
             item.setText(0, date0)
 
         monkeypatch.setattr(QMessageBox, "warning", lambda *args: QMessageBox.Yes)
-        with qtbot.assertNotEmitted(self.widget.data.dataChanged):
-            self.widget.combineRows()
+        with qtbot.assertNotEmitted(self.widget.data.data_changed):
+            self.widget.combine_rows()
 
     def test_edit_remove_rows(self, setup_known_data, qtbot, monkeypatch):
         edit = ["2021-04-26", "2021-04-28", "2021-05-04"]
         remove = ["2021-04-30", "2021-05-03"]
         selectDates = ["26 Apr 2021", "28 Apr 2021", "04 May 2021", "30 Apr 2021", "03 May 2021"]
 
-        for topLevelItem in self.widget.topLevelItems:
+        for topLevelItem in self.widget.top_level_items:
             for idx in range(topLevelItem.childCount()):
                 item = topLevelItem.child(idx)
                 if item.text(0) in selectDates:
@@ -167,10 +167,10 @@ class TestDataViewer:
 
         dialogRemove = [7, 4]
         monkeypatch.setattr(EditItemDialog, "exec_", lambda *args: QDialog.Accepted)
-        monkeypatch.setattr(EditItemDialog, "getValues", lambda *args: (dialogEdit, dialogRemove))
+        monkeypatch.setattr(EditItemDialog, "get_values", lambda *args: (dialogEdit, dialogRemove))
 
-        with qtbot.waitSignals([self.parent.data.dataChanged] * 2):
-            self.widget._editItems()
+        with qtbot.waitSignals([self.parent.data.data_changed] * 2):
+            self.widget._edit_items()
 
         for d in remove:
             year, month, day = d.split("-")
@@ -206,7 +206,7 @@ class TestDataViewer:
 
         selectDates = editDates + removeDates
 
-        for topLevelItem in self.widget.topLevelItems:
+        for topLevelItem in self.widget.top_level_items:
             for idx in range(topLevelItem.childCount()):
                 item = topLevelItem.child(idx)
                 if item.text(0) in selectDates:
@@ -269,7 +269,7 @@ class TestDataViewer:
                 for key, value in new.items():
                     row.tableItems[key].setText(str(value))
 
-        values, remove = dialog.getValues()
+        values, remove = dialog.get_values()
         assert set(remove) == {4, 7}
         expected = {
             0: {

@@ -4,7 +4,6 @@ from tracks.test.mockparent import load_activity
 from qtpy.QtCore import Qt
 from datetime import date
 import random
-import polars as pl
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -83,7 +82,7 @@ class TestAddData:
 
         assert self.okButton.isEnabled()
 
-        with qtbot.waitSignal(self.widget.newData, check_params_cb=check_values):
+        with qtbot.waitSignal(self.widget.new_data, check_params_cb=check_values):
             qtbot.mouseClick(self.okButton, Qt.LeftButton)
 
     def test_remove_line(self, setup, qtbot):
@@ -100,7 +99,7 @@ class TestAddData:
 
             self.table.setCurrentCell(row, col)
 
-            with qtbot.waitSignal(self.widget.rowRemoved):
+            with qtbot.waitSignal(self.widget.row_removed):
                 qtbot.mouseClick(self.rmvLineButton, Qt.LeftButton)
 
     def test_invalid(self, setup, qtbot, variables):
@@ -128,4 +127,4 @@ class TestAddData:
                 self.table.focusNextChild()
 
             assert self.okButton.isEnabled() is False
-            assert self.table.item(0, col).background() == self.widget.invalidBrush
+            assert self.table.item(0, col).background() == self.widget._invalid_brush
