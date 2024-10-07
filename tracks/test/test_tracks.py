@@ -9,7 +9,6 @@ import tempfile
 from datetime import datetime, date
 from pathlib import Path
 import os
-import polars as pl
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -74,7 +73,7 @@ class TracksSetupTeardown:
         self.addData = ao.add_data
         self.viewer = ao.data_viewer
         self.plot = ao.plot
-        self.plotWidget = self.plot.plotWidget
+        self.plotWidget = self.plot._plot_widget
         self.pb = ao.personal_bests
         self.pbTable = self.pb
         self.prefDialog = self.app.prefDialog
@@ -101,7 +100,7 @@ class TracksSetupTeardown:
 
 class TestTracks(TracksSetupTeardown):
     def test_add_data(self, setup, qtbot):
-        numTopLevelItems = len(self.viewer.topLevelItems)
+        num_top_level_items = len(self.viewer.top_level_items)
         pts = self.plotWidget.dataItem.scatter.data
 
         row = 0
@@ -111,12 +110,12 @@ class TestTracks(TracksSetupTeardown):
             value = values[col]
             self.addData.table.item(row, col).setText(str(value))
 
-        with qtbot.waitSignal(self.addData.newData):
+        with qtbot.waitSignal(self.addData.new_data):
             qtbot.mouseClick(self.addData.okButton, Qt.LeftButton)
 
-        assert len(self.viewer.topLevelItems) == numTopLevelItems + 1
+        assert len(self.viewer.top_level_items) == num_top_level_items + 1
         expected = [f"05 Jan {year}", "00:40:23", "24.22", "35.99", "361.2", "7"]
-        item = self.viewer.topLevelItems[0].child(0)
+        item = self.viewer.top_level_items[0].child(0)
         for idx in range(item.columnCount()):
             assert item.text(idx) == expected[idx]
 
@@ -166,11 +165,11 @@ class TestTracks(TracksSetupTeardown):
 
     def test_viewer_clicked(self, setup, qtbot):
         # test that clicking on an item in the viewer highlights the corresponding point in the plot
-        item = self.viewer.topLevelItems[0]
+        item = self.viewer.top_level_items[0]
         with qtbot.waitSignal(self.viewer.itemExpanded):
             self.viewer.expandItem(item)
         signals = [
-            (self.viewer.itemSelected, "viewer.itemSelected"),
+            (self.viewer.item_selected, "viewer.item_selected"),
             (self.plotWidget.current_point_changed, "plotWidget.current_point_changed"),
         ]
         with qtbot.waitSignals(signals):
@@ -183,7 +182,7 @@ class TestTracks(TracksSetupTeardown):
         # similar to above, but for pb table
         item = self.pbTable.item(1, 0)
         signals = [
-            (self.pb.itemSelected, "pbTable.itemSelected"),
+            (self.pb.item_selected, "pbTable.item_selected"),
             (self.plotWidget.current_point_changed, "plotWidget.current_point_changed"),
         ]
         with qtbot.waitSignals(signals):
@@ -215,12 +214,12 @@ class TestTracks(TracksSetupTeardown):
             "gear": [6],
         }
 
-        oldXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
+        oldXRange = self.plot._plot_widget.plotItem.vb.xRange[1]
 
-        with qtbot.waitSignal(self.data.dataChanged):
+        with qtbot.waitSignal(self.data.data_changed):
             self.data.append(newData)
 
-        newXRange = self.plot.plotWidget.plotItem.vb.xRange[1]
+        newXRange = self.plot._plot_widget.plotItem.vb.xRange[1]
 
         assert oldXRange != newXRange
         oldMonth = datetime.fromtimestamp(oldXRange).month

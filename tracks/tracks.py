@@ -43,9 +43,7 @@ class Tracks(QMainWindow):
         self._add_data_stack = StackedWidget()
         self._plot_stack = StackedWidget()
 
-        self._best_sessions_stack.setSizePolicy(
-            QSizePolicy.Preferred, QSizePolicy.Expanding
-        )
+        self._best_sessions_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self._viewer_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self._add_data_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
 
@@ -75,9 +73,7 @@ class Tracks(QMainWindow):
             self._create_dock_widget(*args)
         self.setCentralWidget(self._plot_stack)
 
-        pb = self._activity_manager.get_activity_objects(
-            self.current_activity.name
-        ).personal_bests
+        pb = self._activity_manager.get_activity_objects(self.current_activity.name).personal_bests
         state = pb.state()
         self._set_pb_sessions_dock_label(state["num_best_sessions"])
 
@@ -128,9 +124,9 @@ class Tracks(QMainWindow):
                 if isinstance(attr, str):
                     widget = getattr(activity_objects, attr)
                 # elif isinstance(attr, (list, tuple)):
-                    # widget = activity_objects
-                    # for at in attr:
-                        # widget = getattr(widget, at)
+                # widget = activity_objects
+                # for at in attr:
+                # widget = getattr(widget, at)
                 stack.addWidget(widget, name)
             stack.setCurrentKey(name)
 
@@ -139,7 +135,7 @@ class Tracks(QMainWindow):
                 self.prefDialog.add_page(name, page)
 
             pb = activity_objects.personal_bests
-            pb.numSessionsChanged.connect(self._set_pb_sessions_dock_label)
+            pb.num_sessions_changed.connect(self._set_pb_sessions_dock_label)
 
         self.setWindowTitle(f"Tracks - {name}")
 
@@ -186,7 +182,11 @@ class Tracks(QMainWindow):
         )
 
         self._save_act = QAction(
-            "&Save", self, shortcut="Ctrl+S", statusTip="Save data", triggered=self.save,
+            "&Save",
+            self,
+            shortcut="Ctrl+S",
+            statusTip="Save data",
+            triggered=self.save,
             icon=QIcon.fromTheme("document-save"),
         )
 

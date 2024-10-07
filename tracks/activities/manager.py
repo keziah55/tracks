@@ -48,14 +48,14 @@ class ActivityObjects(QObject):
         self._connect_signals()
 
     def _connect_signals(self):
-        self.add_data.newData.connect(self.data.append)
-        self.plot.point_selected.connect(self.data_viewer.highlightItem)
-        self.data_viewer.itemSelected.connect(self.plot.set_current_point_from_date)
-        self.personal_bests.itemSelected.connect(self.plot.set_current_point_from_date)
+        self.add_data.new_data.connect(self.data.append)
+        self.plot.point_selected.connect(self.data_viewer.highlight_item)
+        self.data_viewer.item_selected.connect(self.plot.set_current_point_from_date)
+        self.personal_bests.item_selected.connect(self.plot.set_current_point_from_date)
 
         self.data.data_changed.connect(self._data_changed)
         self.data_viewer.selected_summary.connect(self.status_message)
-        self.personal_bests.statusMessage.connect(self.status_message)
+        self.personal_bests.status_message.connect(self.status_message)
 
         self.preferences["data"].applied.connect(self._apply_data_pref)
         self.preferences["plot"].applied.connect(self._apply_plot_pref)

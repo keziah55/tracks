@@ -36,14 +36,12 @@ class TestPlotWidget:
     def setup_reduced_points(self, qtbot):
         self.parent = MockParent(size=50)
 
-        self.widget = PlotWidget(
-            self.parent.data, self.parent.activity, y_series="speed"
-        )
+        self.widget = PlotWidget(self.parent.data, self.parent.activity, y_series="speed")
         qtbot.addWidget(self.widget)
         self.widget.showMaximized()
 
     def test_switch_series(self, setup, qtbot):
-        plotLabel = self.widget.plotLabel
+        plotLabel = self.widget._plot_label
 
         def callback(name):
             return name == key
@@ -62,17 +60,15 @@ class TestPlotWidget:
                 qtbot.mouseClick(label, Qt.LeftButton)
 
             if key != "date":
-                axis = self.widget.plotWidget.plotItem.getAxis("left")
+                axis = self.widget._plot_widget._plot_item.getAxis("left")
                 axisLabel = axis.labelText
                 assert axisLabel == self.parent.activity[key].full_name
 
-    @pytest.mark.skip(
-        "Cannot get click in right place, test is flaky. Test this manually"
-    )
+    @pytest.mark.skip("Cannot get click in right place, test is flaky. Test this manually")
     def test_month_zoom(self, setup, qtbot, variables):
         qtbot.wait(variables.wait)
 
-        axis = self.widget.plotWidget.plotItem.getAxis("bottom")
+        axis = self.widget._plot_widget._plot_item.getAxis("bottom")
 
         geom = axis.geometry()
         middleX = geom.x() + (geom.width() // 2)
@@ -111,26 +107,24 @@ class TestPlotWidget:
         y = size.height() // 2
 
         idx = None
-        plotWidget = self.widget.plotWidget
-        plotLabel = self.widget.plotLabel
+        plot_widget = self.widget._plot_widget
+        plot_label = self.widget._plot_label
 
         for x in range(0, size.width(), 5):
             pos = QPoint(x, y)
-            qtbot.mouseMove(plotWidget, pos)
+            qtbot.mouseMove(plot_widget, pos)
 
-            if plotWidget._current_point and idx != plotWidget._current_point["index"]:
-                idx = plotWidget._current_point["index"]
-                pt = plotWidget.dataItem.scatter.data[idx]
+            if plot_widget._current_point and idx != plot_widget._current_point["index"]:
+                idx = plot_widget._current_point["index"]
+                # pt = plot_widget.dataItem.scatter.data[idx]
 
-                dateLabel = plotLabel._widgets["date"]
-                value = self.widget.plotWidget._current_point["date"]
+                dateLabel = plot_label._widgets["date"]
+                value = self.widget._plot_widget._current_point["date"]
                 value = value.strftime("%a %d %b %Y")
-                expected = (
-                    f"<div style='font-size: {dateLabel.fontSize}pt'>{value}</div>"
-                )
+                expected = f"<div style='font-size: {dateLabel.fontSize}pt'>{value}</div>"
                 assert dateLabel.text() == expected
 
-                distLabel = plotLabel._widgets["distance"]
+                distLabel = plot_label._widgets["distance"]
                 value = f"{self.widget.plotWidget._current_point['distance']:.2f}"
                 expected = f"<div style='font-size: {distLabel.fontSize}pt; "
                 expected += f"color: {distLabel.colour}'>"
@@ -139,4 +133,4 @@ class TestPlotWidget:
 
         # move mouse back to middle before next test
         pos = QPoint(size.width() // 2, y)
-        qtbot.mouseMove(plotWidget, pos)
+        qtbot.mouseMove(plot_widget, pos)

@@ -36,27 +36,27 @@ class PersonalBests(QTableWidget):
         Key by which to get best session.
     """
 
-    itemSelected = Signal(object)
-    """ itemSelected(Timestamp `ts`)
+    item_selected = Signal(object)
+    """ item_selected(Timestamp `ts`)
 
         Emitted when an item in the PB table is selected, either by
         clicking on it or by navigating with the up or down keys. The datetime
         timestamp of the selected row is passed with this signal.
     """
 
-    numSessionsChanged = Signal(int)
-    """ numSessionsChanged(int `numSessions`)
+    num_sessions_changed = Signal(int)
+    """ num_sessions_changed(int `numSessions`)
 
         Emitted when the number of sessions shown in the PBTable is changed.
     """
 
-    monthCriterionChanged = Signal(str)
-    """ monthCriterionChanged(str `criterion`)
+    month_criterion_changed = Signal(str)
+    """ month_criterion_changed(str `criterion`)
 
         Emitted when the criterion for calculating the best month is changed.
     """
 
-    statusMessage = Signal(str)
+    status_message = Signal(str)
 
     def __init__(self, data, activity, num_sessions=5, sessions_key="speed"):
         columns = len(activity.header)
@@ -99,7 +99,7 @@ class PersonalBests(QTableWidget):
         if msg is not None:
             self._set_table(highlightNew=True)
 
-        self.statusMessage.emit("")
+        self.status_message.emit("")
 
     def update_values(self, num_sessions=None):
         self._emit_status_message()
@@ -108,7 +108,7 @@ class PersonalBests(QTableWidget):
             self._set_num_rows(num_sessions)
 
     def _emit_status_message(self):
-        self.statusMessage.emit("Checking for new PBs...")
+        self.status_message.emit("Checking for new PBs...")
 
     def state(self) -> dict:
         """Return dict of values to be saved in settings"""
@@ -130,7 +130,7 @@ class PersonalBests(QTableWidget):
         self.setRowCount(rows)
         self._set_table(key=self.select_key, order=self.order)
         self._set_tool_tip(rows)
-        self.numSessionsChanged.emit(rows)
+        self.num_sessions_changed.emit(rows)
 
     def _set_tool_tip(self, num):
         s = int_to_str(num)
@@ -246,10 +246,10 @@ class PersonalBests(QTableWidget):
 
     @Slot(int, int, int, int)
     def _cell_changed(self, row, column, previousRow, previousColumn):
-        """Emit `itemSelected` with date of selected row"""
+        """Emit `item_selected` with date of selected row"""
         if len(self.items) > 0:
             idx = self.items[row]["idx"]
-            self.itemSelected.emit(self.data.row(idx)["date"])
+            self.item_selected.emit(self.data.row(idx)["date"])
 
     def _make_message(self, key, idx, value):
         """Return message string for new PB"""

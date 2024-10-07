@@ -414,7 +414,7 @@ class PlotPreferences(QWidget):
         self.customRangeCheckBox = QCheckBox("Custom range")
         self.customRangeSpinBox = QSpinBox()
         self.customRangeSpinBox.setSuffix(" months")
-        maxMonths = len(self._plot_widget.plotWidget.data.splitMonths())
+        maxMonths = len(self._plot_widget._plot_widget.data.split_months())
         self.customRangeSpinBox.setRange(1, maxMonths)
         self.customRangeCheckBox.clicked.connect(self.setCustomRange)
 
