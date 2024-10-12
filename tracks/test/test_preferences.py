@@ -40,7 +40,7 @@ class TestPreferences(TracksSetupTeardown):
             rng.append(default)
 
         signals = [
-            (vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged") for n, vb in enumerate(self.plot.plotWidget.view_boxes)
+            (vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged") for n, vb in enumerate(self.plot._plot_widget.view_boxes)
         ]
 
         lastDate = self.data.date[-1]
@@ -60,7 +60,7 @@ class TestPreferences(TracksSetupTeardown):
                 button = self.prefDialog.buttonBox.button(QDialogButtonBox.Apply)
                 qtbot.mouseClick(button, Qt.LeftButton)
 
-            axis = self.plot.plotWidget.getAxis("bottom")
+            axis = self.plot._plot_widget.getAxis("bottom")
 
             qtbot.wait(variables.wait)
 
@@ -228,7 +228,7 @@ class TestPreferences(TracksSetupTeardown):
             num = 3
             comboBox.setCurrentIndex(num)
 
-            with qtbot.waitSignal(self.viewer.viewerUpdated, timeout=variables.longWait):
+            with qtbot.waitSignal(self.viewer.viewer_updated, timeout=variables.longWait):
                 pbPref.apply()
 
             measure = comboBox.currentText()
@@ -246,4 +246,4 @@ class TestPreferences(TracksSetupTeardown):
                 data = df[name]
                 expected = funcs[measure](data)
                 expected = self.pbTable._activity.get_measure(name).formatted(expected)
-                assert self.viewer.topLevelItems[idx].text(col) == expected
+                assert self.viewer.top_level_items[idx].text(col) == expected

@@ -237,7 +237,7 @@ class DataViewer(QTreeWidget):
         return items
 
     @property
-    def top_level_itemsDict(self):
+    def top_level_items_dict(self):
         return {item.month_year: item for item in self.top_level_items}
 
     @Slot(object)
@@ -275,7 +275,7 @@ class DataViewer(QTreeWidget):
             summaries = list(data.make_summary().values())
             month_year = f"{calendar.month_name[date.month]} {date.year}"
             rootText = [month_year] + summaries
-            rootItem = self.top_level_itemsDict[month_year]
+            rootItem = self.top_level_items_dict[month_year]
             rootItem.setRow(rootText)
 
         # for remaining indices add new rows to tree
@@ -285,10 +285,10 @@ class DataViewer(QTreeWidget):
             data = self.data.get_month(date.month, date.year, return_type="Data")
             summaries = list(data.make_summary().values())
             rootText = [month_year] + summaries
-            if month_year not in self.top_level_itemsDict:
+            if month_year not in self.top_level_items_dict:
                 rootItem = CycleTreeWidgetItem(self, row=rootText)
             else:
-                rootItem = self.top_level_itemsDict[month_year]
+                rootItem = self.top_level_items_dict[month_year]
                 rootItem.setRow(rootText)
 
             item = IndexTreeWidgetItem(
@@ -328,7 +328,7 @@ class DataViewer(QTreeWidget):
             month_year = month_year.strftime("%B %Y")
             summaries = list(data.make_summary().values())
             rootText = [month_year] + summaries
-            rootItem = self.top_level_itemsDict[month_year]
+            rootItem = self.top_level_items_dict[month_year]
             rootItem.setRow(rootText)
         self.viewer_updated.emit()
 

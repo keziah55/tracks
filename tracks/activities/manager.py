@@ -69,7 +69,7 @@ class ActivityObjects(QObject):
 
     def _apply_data_pref(self, summary_changed):
         if summary_changed:
-            self.data_viewer.updateTopLevelItems()
+            self.data_viewer.update_top_level_items()
             self.request_save_activity.emit(self.activity.name)
             # self.personal_bests.new_data() ## is this necessary?
 
