@@ -22,7 +22,6 @@ cd $testDir
 echo "cd $testDir"
 
 git clone https://github.com/keziah55/tracks.git
-git checkout $branch
 
 # make venv in tracks-test, not tracks, because pytest was picking up
 # conftest.py files from modules installed in the venv (e.g. numpy)
@@ -31,6 +30,8 @@ python3 -m venv .venv
 
 cd tracks
 echo "cd tracks"
+
+git checkout $branch
 
 ../.venv/bin/python -m pip -V
 
