@@ -73,6 +73,5 @@ join_array () {
 }
 qts=`join_array , "${qt_bindings[@]}"`
 
-../.venv/bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts --qt $qts
-
+../.venv/bin/python reports/makeTestReport.py --out "$resultsDir/report.html" --ts $ts
 mv "$resultsDir" "$origDir"
