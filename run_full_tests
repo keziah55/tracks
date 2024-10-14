@@ -35,9 +35,9 @@ git checkout $branch
 
 ../.venv/bin/python -m pip -V
 
-pythonVersion=`python3 -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')"`
-if [[ $pythonVersion == "3.11" ]]; then
-    echo "PySide2 from PyPI not compatible with Python 3.11"
+minor_python=`python3 -c "import sys; v=sys.version_info; print(v.minor)"`
+if [[ $minor_python -ge 12 ]]; then
+    echo "PySide2 not compatible with Python 3.11+"
     declare -a qt_bindings=("pyqt5" "pyside6" "pyqt6")
 else
     declare -a qt_bindings=("pyside2" "pyqt5" "pyside6" "pyqt6")
