@@ -244,7 +244,7 @@ class ReportWriter:
         
         self.notPassed = {"error":[], "failed":[], "skipped":[]}
         
-        qt0, *qtApis = [self.testsuites.keys()] #self.qtApis
+        qt0, *qtApis = list(self.testsuites.keys()) #self.qtApis
         
         for testcase in self.testsuites[qt0].findall("testcase"):
             
