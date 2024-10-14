@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script to create html report from pytest results for both PyQt5 and PySide2.
+Script to create html report from pytest results for all Qt bindings.
 """
 
 import xml.etree.ElementTree as ET
@@ -12,7 +12,6 @@ from importlib.metadata import packages_distributions, version
 import argparse
 import platform
 import subprocess
-import glob
 import numpy as np
 
 
@@ -42,20 +41,26 @@ class ReportWriter:
         self.ts = self._get_timestamp(ts)
         self.duration = self._get_duration(ts)
 
-        self._qt_lookup = {
+        self._qt_apis = [
+            re.match(r"(?P<qt>\w+)-coverage.xml", d.name) for d in self.results_dir.iterdir()
+        ]
+        self._qt_apis = [m.group("qt") for m in self._qt_apis if m is not None]
+
+        self._not_passed = None
+        self._missed = None
+
+    @staticmethod
+    def _pretty_qt(qt):
+        qt_lookup = {
             "pyqt5": "PyQt5",
             "pyside2": "PySide2",
             "pyqt6": "PyQt6",
             "pyside6": "PySide6",
         }
-
-        qts = [re.match(r"(?P<qt>\w+)-coverage.xml", d.name) for d in self.results_dir.iterdir()]
-        qts = [m.group("qt") for m in qts if m is not None]
-
-        self.qtApis = [
-            self._qt_lookup.get(q, q) for q in qts
-        ]  # if qt is not None else ["PyQt5", "PySide2", "PyQt6", "PySide6"]
-        self.qtApisLower = [s.lower() for s in self.qtApis]
+        s = qt_lookup.get(qt, None)
+        if s is None:
+            raise KeyError(f"No pretty version of '{qt}'")
+        return s
 
     @classmethod
     def _get_timestamp(cls, ts):
@@ -83,15 +88,20 @@ class ReportWriter:
     @staticmethod
     def _get_test_case_status(testcase):
         """Check if a `testcase` element has a "skipped", "failure" or "error" child."""
-        if testcase.find("skipped") is not None:
-            status = "skipped"
-        elif testcase.find("failure") is not None:
-            status = "failed"
-        elif testcase.find("error") is not None:
-            status = "error"
-        else:
-            status = "passed"
-        return status
+        statuses = ["skipped", "failure", "error"]
+        for status in statuses:
+            if testcase.find(status) is not None:
+                return status
+        return "passed"
+        # if testcase.find("skipped") is not None:
+        #     status = "skipped"
+        # elif testcase.find("failure") is not None:
+        #     status = "failed"
+        # elif testcase.find("error") is not None:
+        #     status = "error"
+        # else:
+        #     status = "passed"
+        # return status
 
     @staticmethod
     def _get_dependency_versions():
@@ -109,7 +119,8 @@ class ReportWriter:
 
     @staticmethod
     def _make_toc(lst, depth=2):
-        """From list of html tags, put headers up to `depth` into a table of contents.
+        """
+        From list of html tags, put headers up to `depth` into a table of contents.
 
         Return a list of strings.
         """
@@ -137,15 +148,15 @@ class ReportWriter:
 
     @classmethod
     def _make_traceback_message(cls, name, lst):
-        """From list of (qtApi, testcase) pairs, and child `name`, make summary html."""
+        """From list of (qt_api, testcase) pairs, and child `name`, make summary html."""
         html = []
-        for qtApi, testcase in lst:
-            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+        for qt_api, testcase in lst:
+            test_name = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
             element = testcase.find(name)
             message = cls._escape_html(element.attrib["message"])
             traceback = cls._escape_html(element.text)
             html += [
-                f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>',
+                f'<h3 id="{qt_api}-{test_name}">{test_name}; {qt_api}</h3>',
                 "<h4>Message:</h4>",
                 f"<span class=traceback>{message}</span>",
                 "<h4>Traceback:</h4>",
@@ -156,12 +167,12 @@ class ReportWriter:
     @classmethod
     def _make_message(cls, name, lst):
         html = []
-        for qtApi, testcase in lst:
-            testName = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
+        for qt_api, testcase in lst:
+            test_name = f"{testcase.attrib['classname']}.{testcase.attrib['name']}"
             element = testcase.find(name)
             message = cls._escape_html(element.attrib["message"])
             html += [
-                f'<h3 id="{qtApi}-{testName}">{testName}; {qtApi}</h3>',
+                f'<h3 id="{qt_api}-{test_name}">{test_name}; {qt_api}</h3>',
                 "<h4>Message:</h4>",
                 f"<span class=traceback>{message}</span>",
             ]
@@ -170,7 +181,7 @@ class ReportWriter:
     def _get_test_suites(self):
         """Return testsuite elements for each Qt API."""
         testsuites = {}
-        for api in self.qtApisLower:
+        for api in self._qt_apis:
             file = self.results_dir.joinpath(f"{api}-results.xml")
             if file.exists():
                 tree = ET.parse(file)
@@ -179,7 +190,7 @@ class ReportWriter:
 
     def _get_coverage(self):
         coverage = {}
-        for api in self.qtApisLower:
+        for api in self._qt_apis:
             file = self.results_dir.joinpath(f"{api}-coverage.xml")
             coverage[api] = {}
             if file.exists():
@@ -197,14 +208,10 @@ class ReportWriter:
 
     def _make_summary_info(self):
         """Make section summarising Python and system versions; timestamp and duration."""
-        try:
-            # from python 3.10
-            osInfo = platform.freedesktop_os_release()
-        except AttributeError:
-            osInfo = platform.freedesktop_os_release()
         html = [
             '<h1 id="summary">Summary</h1>',
-            f"<p>Python {platform.python_version()} on {osInfo['PRETTY_NAME']}, {platform.release()}</p>",
+            f"<p>Python {platform.python_version()} on "
+            f"{platform.freedesktop_os_release()['PRETTY_NAME']}, {platform.release()}</p>",
         ]
 
         s = f"<p>Tests started at {self.ts}"
@@ -223,7 +230,7 @@ class ReportWriter:
         """Make html table summarising test results and return as list of strings."""
         html = []
         html = ['<h2 id="test-results">Test results</h2>', "<table class=summaryTable>", "<tr>"]
-        tableHeader = [
+        table_header = [
             "Qt API",
             "Tests",
             "Passed",
@@ -233,8 +240,8 @@ class ReportWriter:
             "Time",
             "Coverage",
         ]
-        html += [f"<th>{header}</th>" for header in tableHeader]
-        for qtApi, testsuite in self.testsuites.items():
+        html += [f"<th>{header}</th>" for header in table_header]
+        for qt_api, testsuite in self.testsuites.items():
             total = int(testsuite.attrib["tests"])
             errors = int(testsuite.attrib["errors"])
             failures = int(testsuite.attrib["failures"])
@@ -242,12 +249,12 @@ class ReportWriter:
             passed = total - errors - failures - skipped
             time = testsuite.attrib["time"]
 
-            cov = float(self.coverage[qtApi]["summary"]["line-rate"])
+            cov = float(self.coverage[qt_api]["summary"]["line-rate"])
             cov = f"{cov*100:0.2f}%"
 
-            tableRow = [qtApi, total, passed, skipped, failures, errors, time, cov]
-            tableRow = [f"<td>{item}</td>" for item in tableRow]
-            html += ["<tr>"] + tableRow + ["</tr>"]
+            table_row = [qt_api, total, passed, skipped, failures, errors, time, cov]
+            table_row = [f"<td>{item}</td>" for item in table_row]
+            html += ["<tr>"] + table_row + ["</tr>"]
         html += ["</table>"]
 
         return html
@@ -262,19 +269,20 @@ class ReportWriter:
         return html
 
     def _make_breakdown_table(self):
-        """Make html table of test results and return as list of strings.
+        """
+        Make html table of test results and return as list of strings.
 
         Also populates `notPassed` dict.
         """
         html = ['<h1 id="breakdown">Breakdown</h1>', "<table class=breakdownTable>"]
-        tableHeader = ["Test"] + self.qtApis
-        html += [f"<th>{header}</th>" for header in tableHeader]
+        table_header = ["Test"] + [self._pretty_qt(qt) for qt in self._qt_apis]
+        html += [f"<th>{header}</th>" for header in table_header]
 
-        self.notPassed = {"error": [], "failed": [], "skipped": []}
+        self._not_passed = {"error": [], "failed": [], "skipped": []}
 
-        qt0, *qtApis = self.qtApis
+        qt0, *qt_apis = self._qt_apis
 
-        for testcase in self.testsuites[qt0.lower()].findall("testcase"):
+        for testcase in self.testsuites[qt0].findall("testcase"):
 
             classname = testcase.attrib["classname"]
             name = testcase.attrib["name"]
@@ -282,8 +290,8 @@ class ReportWriter:
             testcases = {qt0: testcase}
 
             # find this test in the other testsuite(s)
-            for qt in qtApis:
-                testcases[qt] = self.testsuites[qt.lower()].findall(
+            for qt in qt_apis:
+                testcases[qt] = self.testsuites[qt].findall(
                     f"*[@classname='{classname}'][@name='{name}']"
                 )[0]
 
@@ -292,7 +300,7 @@ class ReportWriter:
             for qt, tc in testcases.items():
                 status = self._get_test_case_status(tc)
                 if status != "passed":
-                    self.notPassed[status].append((qt, tc))
+                    self._not_passed[status].append((qt, tc))
                     href = f"{qt}-{classname}.{name}"
                     td = f"<a href=#{href}>{tc.attrib['time']}s</a>"
                 else:
@@ -305,16 +313,17 @@ class ReportWriter:
         return html
 
     def _make_not_passed_section(self):
-        """Make sections detailing errors, failures and skipped tests.
+        """
+        Make sections detailing errors, failures and skipped tests.
 
         Return list of html strings.
         """
-        if not hasattr(self, "notPassed"):
+        if self._not_passed is None:
             msg = "'_make_breakdown_table' must be called before '_make_not_passed_section'"
             raise RuntimeError(msg)
 
         html = []
-        for name, lst in self.notPassed.items():
+        for name, lst in self._not_passed.items():
             if len(lst) > 0:
                 html += [f'<h1 id="{name}Tests">{name.capitalize()} ({len(lst)})</h1>']
                 if name == "skipped":
@@ -331,7 +340,7 @@ class ReportWriter:
 
         warnInfo = {}
 
-        for api in self.qtApisLower:
+        for api in self._qt_apis:
             file = self.results_dir.joinpath(f"{api}-output.log")
 
             files = []  # list of file lists
@@ -402,17 +411,18 @@ class ReportWriter:
         return html
 
     def _make_coverage_table(self):
-        """Make html table of file test coverage and return as list of strings.
+        """
+        Make html table of file test coverage and return as list of strings.
 
         Also populates `missed` dict.
         """
         html = ['<h1 id="coverage">Coverage</h1>', "<table class=breakdownTable>"]
-        tableHeader = ["File"] + self.qtApis
-        html += [f"<th>{header}</th>" for header in tableHeader]
+        table_header = ["File"] + [self._pretty_qt(qt) for qt in self._qt_apis]
+        html += [f"<th>{header}</th>" for header in table_header]
 
-        self.missed = {}
+        self._missed = {}
 
-        qt0, *qtApis = self.qtApisLower
+        qt0, *qt_apis = self._qt_apis
 
         for package in self.coverage[qt0]["packages"].findall("package"):
             name = package.attrib["name"]
@@ -424,10 +434,10 @@ class ReportWriter:
                 miss = self._get_missed_lines(file)
                 results = [cov]
                 if cov < 1:
-                    self.missed[fname] = {qt0: miss}
+                    self._missed[fname] = {qt0: miss}
 
                 # find this file in the other coverage report(s)
-                for qt in qtApis:
+                for qt in qt_apis:
                     classes = (
                         self.coverage[qt]["packages"]
                         .findall(f"*[@name='{name}']")[0]
@@ -438,9 +448,9 @@ class ReportWriter:
                     miss = self._get_missed_lines(file)
                     results.append(cov)
                     if cov < 1:
-                        if fname not in self.missed:
-                            self.missed[fname] = {}
-                        self.missed[fname][qt] = miss
+                        if fname not in self._missed:
+                            self._missed[fname] = {}
+                        self._missed[fname][qt] = miss
 
                 # make this row of html
                 html += ["<tr>", f"<td class=fileName>{fname}</td>"]
@@ -489,17 +499,17 @@ class ReportWriter:
     def _make_missed_lines_table(self):
         """Make html table of missed lines and return as list of strings"""
 
-        if not hasattr(self, "missed"):
+        if self._missed is None:
             msg = "'_make_coverage_table' must be called before '_make_missed_lines_table'"
             raise RuntimeError(msg)
 
         html = ['<h2 id="missed">Missed lines</h2>', "<table class=breakdownTable>"]
-        tableHeader = ["File"] + self.qtApis
-        html += [f"<th>{header}</th>" for header in tableHeader]
+        table_header = ["File"] + [self._pretty_qt(qt) for qt in self._qt_apis]
+        html += [f"<th>{header}</th>" for header in table_header]
 
-        for fname, dct in self.missed.items():
+        for fname, dct in self._missed.items():
             html += [f'<tr id="missed-{fname}">', f"<td class=fileName>{fname}</td>"]
-            for qt in self.qtApisLower:
+            for qt in self._qt_apis:
                 miss = dct.get(qt, "")
                 html += [f'<td id="{qt}-missed-{fname}">{miss}</td>']
             html += ["</tr>"]
