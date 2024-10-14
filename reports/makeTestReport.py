@@ -46,24 +46,6 @@ class ReportWriter:
         self.qtApis = [qtLookup.get(q, q) for q in qt] if qt is not None else ["PyQt5", "PySide2", "PyQt6", "PySide6"]
         self.qtApisLower = [s.lower() for s in self.qtApis]
         
-    @staticmethod
-    def _getOSrelease():
-        """ Return contents of /etc/os-release as dict. 
-        
-            This method can be removed once we're using python 3.10, as
-            platform.freedesktop_os_release() will do this.
-        """
-        dct = {}
-        with open("/etc/os-release") as fileobj:
-            while True:
-                line = fileobj.readline()
-                if not line:
-                    break
-                else:
-                    m = re.match(r'(?P<key>\w+)=(?P<value>.+)', line)
-                    dct[m.group('key')] =  m.group('value').strip('"')
-        return dct
-        
     @classmethod
     def _getTimestamp(cls, ts):
         """ Return formatted timestamp string, either from current time (ms) or given time. """
@@ -202,7 +184,7 @@ class ReportWriter:
             # from python 3.10
             osInfo = platform.freedesktop_os_release()
         except AttributeError:
-            osInfo = self._getOSrelease()
+            osInfo = platform.freedesktop_os_release()
         html = ['<h1 id="summary">Summary</h1>', 
                 f"<p>Python {platform.python_version()} on {osInfo['PRETTY_NAME']}, {platform.release()}</p>"]
         
@@ -262,9 +244,9 @@ class ReportWriter:
         
         self.notPassed = {"error":[], "failed":[], "skipped":[]}
         
-        qt0, *qtApis = self.qtApis
+        qt0, *qtApis = [self.testsuites.keys()] #self.qtApis
         
-        for testcase in self.testsuites[qt0.lower()].findall("testcase"):
+        for testcase in self.testsuites[qt0].findall("testcase"):
             
             classname = testcase.attrib['classname']
             name = testcase.attrib['name']
