@@ -12,6 +12,7 @@ from importlib.metadata import packages_distributions, version
 import argparse
 import platform
 import subprocess
+import glob
 import numpy as np
 
 class ReportWriter:
@@ -43,7 +44,11 @@ class ReportWriter:
         self.duration = self._getDuration(ts)
         
         qtLookup = {"pyqt5":"PyQt5", "pyside2":"PySide2", "pyqt6":"PyQt6", "pyside6":"PySide6"}
-        self.qtApis = [qtLookup.get(q, q) for q in qt] if qt is not None else ["PyQt5", "PySide2", "PyQt6", "PySide6"]
+        
+        qts = [re.match(r"(?P<qt>\w+)-coverage.xml", d.name) for d in self.resultsDir.iterdir()]
+        qts = [m.group("qt") for m in qts if m is not None]
+        
+        # self.qtApis = [qtLookup.get(q, q) for q in qt] if qt is not None else ["PyQt5", "PySide2", "PyQt6", "PySide6"]
         self.qtApisLower = [s.lower() for s in self.qtApis]
         
     @classmethod
@@ -244,7 +249,7 @@ class ReportWriter:
         
         self.notPassed = {"error":[], "failed":[], "skipped":[]}
         
-        qt0, *qtApis = list(self.testsuites.keys()) #self.qtApis
+        qt0, *qtApis = self.qtApis #list(self.testsuites.keys()) #self.qtApis
         
         for testcase in self.testsuites[qt0].findall("testcase"):
             
