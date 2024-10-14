@@ -49,7 +49,6 @@ fi
 
 mkdir "$resultsDir"
 
-# test with pyside2, then pyqt5
 for qt_api in "${qt_bindings[@]}"; do
     export QT_API=$qt_api
     export PYTEST_QT_API=$qt_api

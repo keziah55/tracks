@@ -125,7 +125,7 @@ class TestPlotWidget:
                 assert dateLabel.text() == expected
 
                 distLabel = plot_label._widgets["distance"]
-                value = f"{self.widget.plotWidget._current_point['distance']:.2f}"
+                value = f"{self.widget._plot_widget._current_point['distance']:.2f}"
                 expected = f"<div style='font-size: {distLabel.fontSize}pt; "
                 expected += f"color: {distLabel.colour}'>"
                 expected += f"Distance: {value} km</div>"
