@@ -4,6 +4,7 @@ origDir="$PWD"
 testDir="../tracks-test"
 resultsDir="results"
 ts=`date +%s%6N` # timestamp in ms
+branch=`git branch --show-current`
 
 # remove resultsDir from current directory, so the results can be moved over at the end of this script
 if [ -d "$resultsDir" ]; then
@@ -21,6 +22,7 @@ cd $testDir
 echo "cd $testDir"
 
 git clone https://github.com/keziah55/tracks.git
+git checkout $branch
 
 # make venv in tracks-test, not tracks, because pytest was picking up
 # conftest.py files from modules installed in the venv (e.g. numpy)
