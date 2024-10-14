@@ -6,8 +6,6 @@ Object to manage loading activities and their related widgets etc.
 
 from datetime import datetime
 import json
-
-# import pandas as pd
 import polars as pl
 from .activities import Activity
 from tracks.plot import PlotWidget
