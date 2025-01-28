@@ -50,10 +50,15 @@ class StyleDesigner(QWidget):
         "crosshair": "crosshair",
     }
 
+    # @classmethod
+    # def reverseSymbolDict(cls):
+    #     return {value: key for key, value in cls.symbols.items()}
+    
     @classmethod
-    @property
-    def reverseSymbolDict(cls):
-        return {value: key for key, value in cls.symbols.items()}
+    def reverse_symbol_lookup(cls, long_name):
+        for key, value in cls.symbols.items():
+            if long_name == value:
+                return key
 
     def __init__(
         self, name=None, style=None, styleKeys=None, symbolKeys=[], invalidNames=[]
@@ -209,7 +214,7 @@ class StyleDesigner(QWidget):
             symbol = self.gridLayout.itemAtPosition(row, 2)
             if symbol is not None:
                 symbol = symbol.widget().currentText().lower()
-                style[key]["symbol"] = self.reverseSymbolDict[symbol]
+                style[key]["symbol"] = self.reverse_symbol_lookup(symbol)
         return self.name, style
 
     def _saveStyle(self):
