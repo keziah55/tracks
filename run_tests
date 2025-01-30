@@ -1,5 +1,5 @@
 #!/bin/bash
 
-export QT_API=pyqt5
-export PYTEST_QT_API=pyqt5
+export QT_API=pyside6
+export PYTEST_QT_API=pyside6
 python3 -m pytest -v --cov=tracks --cov-report term-missing $@

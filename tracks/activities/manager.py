@@ -200,7 +200,6 @@ class ActivityManager(QObject):
             with open(filepath, "w") as fileobj:
                 fileobj.write(s)
 
-        # df = pd.read_csv(filepath, sep=self.csv_sep, parse_dates=["date"])
         df = pl.read_csv(filepath, separator=self.csv_sep, try_parse_dates=True)
 
         return df
