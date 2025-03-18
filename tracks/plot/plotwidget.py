@@ -11,6 +11,7 @@ from pyqtgraph import (
     InfiniteLine,
     setConfigOptions,
 )
+import time
 import numpy as np
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
@@ -213,6 +214,8 @@ class Plot(_PlotWidget):
         self._plot_item.getAxis("bottom").setGrid(255)
 
         # cross hairs
+        self._update_time_limit = 0.05
+        self._last_update_time = None
         self._v_line = InfiniteLine(angle=90, movable=False)
         self._h_line = InfiniteLine(angle=0, movable=False)
         self._plot_item.addItem(self._v_line, ignoreBounds=True)
@@ -575,11 +578,19 @@ class Plot(_PlotWidget):
 
     @Slot(object)
     def _mouse_moved(self, pos):
+        if (
+            self._last_update_time is not None
+            and time.monotonic() - self._last_update_time < self._update_time_limit
+        ):
+            return
+
+        self._last_update_time = time.monotonic()
+
         if not self.data.df.is_empty() and self._plot_item.sceneBoundingRect().contains(pos):
             mousePoint = self._plot_item.vb.mapSceneToView(pos)
 
             idx = int(mousePoint.x())
-            if idx > min(self.data.date_timestamps) and idx < max(self.data.date_timestamps):
+            if min(self.data.date_timestamps) < idx < max(self.data.date_timestamps):
                 self.set_current_point_from_timestamp(idx)
                 pts = self._scatter_points_at_x(mousePoint, self.dataItem.scatter)
                 if len(pts) != 0:
