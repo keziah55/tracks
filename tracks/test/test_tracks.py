@@ -153,12 +153,14 @@ class TestTracks(TracksSetupTeardown):
             with qtbot.waitSignal(self.plotWidget.current_point_changed):
                 qtbot.mouseMove(self.plot, pos=pos, delay=variables.mouseDelay)
         qtbot.wait(variables.wait)
-        
+
         event = MockMouseEvent(scenePos)
         signals = [
             (self.plotWidget.point_selected, "point_selected"),
             (self.viewer.currentItemChanged, "currentItemChanged"),
         ]
+
+        qtbot.wait(50)
 
         with qtbot.waitSignals(signals):
             self.plotWidget._plot_clicked(event)
@@ -176,7 +178,10 @@ class TestTracks(TracksSetupTeardown):
             self.viewer.setCurrentItem(item.child(0))
         expectedIdx = self.size - 1
         assert self.plotWidget._current_point["index"] == expectedIdx
-        assert self.plotWidget._highlight_point_item == self.plotWidget.dataItem.scatter.points()[expectedIdx]
+        assert (
+            self.plotWidget._highlight_point_item
+            == self.plotWidget.dataItem.scatter.points()[expectedIdx]
+        )
 
     def test_pb_table_clicked(self, setup, qtbot):
         # similar to above, but for pb table
@@ -190,7 +195,10 @@ class TestTracks(TracksSetupTeardown):
 
         expectedIdx = self.data.formatted("date").index(item.text())
         assert self.plotWidget._current_point["index"] == expectedIdx
-        assert self.plotWidget._highlight_point_item == self.plotWidget.dataItem.scatter.points()[expectedIdx]
+        assert (
+            self.plotWidget._highlight_point_item
+            == self.plotWidget.dataItem.scatter.points()[expectedIdx]
+        )
 
     def test_plot_update(self, setup, qtbot):
         # test that, when new data added, the plot auto-rescales so the new points are visible
