@@ -160,7 +160,7 @@ class TestTracks(TracksSetupTeardown):
             (self.viewer.currentItemChanged, "currentItemChanged"),
         ]
 
-        qtbot.wait(50)
+        qtbot.wait(100)
 
         with qtbot.waitSignals(signals):
             self.plotWidget._plot_clicked(event)

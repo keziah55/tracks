@@ -13,7 +13,7 @@ from pyqtgraph import (
 )
 import time
 import numpy as np
-from qtpy.QtCore import Signal, Slot
+from qtpy.QtCore import Signal, Slot, QTimer
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
 from customQObjects.core import Settings
 
@@ -214,8 +214,12 @@ class Plot(_PlotWidget):
         self._plot_item.getAxis("bottom").setGrid(255)
 
         # cross hairs
-        self._update_time_limit = 0.025
-        self._last_update_time = None
+        self._mouse_move_timer = QTimer()
+        self._mouse_move_timer.setInterval(25)
+        self._mouse_move_timer.setSingleShot(True)
+        self._mouse_move_timer.timeout.connect(self._process_mouse_move)
+        self._last_pos = None
+
         self._v_line = InfiniteLine(angle=90, movable=False)
         self._h_line = InfiniteLine(angle=0, movable=False)
         self._plot_item.addItem(self._v_line, ignoreBounds=True)
@@ -578,16 +582,21 @@ class Plot(_PlotWidget):
 
     @Slot(object)
     def _mouse_moved(self, pos):
-        if (
-            self._last_update_time is not None
-            and time.monotonic() - self._last_update_time < self._update_time_limit
-        ):
+        # store pos
+        self._last_pos = pos
+        # if timer is not active, start it
+        # otherwise, do nothing
+        if not self._mouse_move_timer.isActive():
+            self._mouse_move_timer.start()
+
+    def _process_mouse_move(self):
+        if self._last_pos is None:
             return
 
-        self._last_update_time = time.monotonic()
-
-        if not self.data.df.is_empty() and self._plot_item.sceneBoundingRect().contains(pos):
-            mousePoint = self._plot_item.vb.mapSceneToView(pos)
+        if not self.data.df.is_empty() and self._plot_item.sceneBoundingRect().contains(
+            self._last_pos
+        ):
+            mousePoint = self._plot_item.vb.mapSceneToView(self._last_pos)
 
             idx = int(mousePoint.x())
             if min(self.data.date_timestamps) < idx < max(self.data.date_timestamps):
