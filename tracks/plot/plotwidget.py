@@ -214,7 +214,7 @@ class Plot(_PlotWidget):
         self._plot_item.getAxis("bottom").setGrid(255)
 
         # cross hairs
-        self._update_time_limit = 0.05
+        self._update_time_limit = 0.025
         self._last_update_time = None
         self._v_line = InfiniteLine(angle=90, movable=False)
         self._h_line = InfiniteLine(angle=0, movable=False)
