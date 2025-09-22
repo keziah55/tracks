@@ -11,7 +11,6 @@ from pyqtgraph import (
     InfiniteLine,
     setConfigOptions,
 )
-import time
 import numpy as np
 from qtpy.QtCore import Signal, Slot, QTimer
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
@@ -154,7 +153,7 @@ class PlotWidget(QWidget):
 
 
 class Plot(_PlotWidget):
-    """Sublcass of PyQtGraph.PlotWidget to display cycling data.
+    """Subclass of PyQtGraph.PlotWidget to display cycling data.
 
     Parameters
     ----------
@@ -163,7 +162,7 @@ class Plot(_PlotWidget):
     style : str
         Style name to use
     months : int, optional
-        Number of months to initally zoom x-axis to.
+        Number of months to initially zoom x-axis to.
         If `None`, show all (default behaviour)
     """
 
