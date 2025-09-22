@@ -2,6 +2,9 @@
 QTreeWidget showing data from Data.
 """
 
+import calendar
+from datetime import date
+
 from qtpy.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
@@ -14,7 +17,6 @@ from qtpy.QtWidgets import (
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtGui import QKeySequence, QFont
-import calendar
 from dataclasses import dataclass
 from .edititemdialog import EditItemDialog
 from tracks.util import (
@@ -32,26 +34,30 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
     the QTreeWidget can sort the items, where each column may contain
     a number, month and year, or time in HH:MM.ss.
 
-    This requires a `sortColumn` property to be added. This must be set
+    This requires a `sort_column` property to be added. This must be set
     to the desired sort column index on every instance of this object
     before calling `QTreeWidget.sortItems()`. As far as I can tell, the
     `idx` arg to `QTreeWidget.sortItems()` is ignored.
     """
 
-    def __init__(self, *args, row=[], **kwargs):
+    def __init__(self, *args, date: date = None, data: Data = None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sortColumn = 0
-        self.setRow(row)
+        self.sort_column = 0
+        self.set_item_data(date, data)
 
     def __lt__(self, other):
-        item0 = self.text(self.sortColumn)
-        item1 = other.text(self.sortColumn)
+        item0 = self.text(self.sort_column)
+        item1 = other.text(self.sort_column)
 
         cast = self._get_item_cast(item0, item1)
         if cast is not None:
             return cast(item0) < cast(item1)
         else:
             return item0 < item1
+
+    @staticmethod
+    def date_to_month_year(d: date) -> str:
+        return f"{calendar.month_name[d.month]} {d.year}"
 
     @staticmethod
     def _get_item_cast(item0, item1):
@@ -65,14 +71,26 @@ class CycleTreeWidgetItem(QTreeWidgetItem):
             return None
 
     @property
-    def sortColumn(self):
-        return self._sortColumn
+    def date(self) -> date:
+        return self._date
 
-    @sortColumn.setter
-    def sortColumn(self, value):
-        self._sortColumn = value
+    @property
+    def sort_column(self):
+        return self._sort_column
 
-    def setRow(self, row):
+    @sort_column.setter
+    def sort_column(self, value):
+        self._sort_column = value
+
+    def set_item_data(self, date, data: Data):
+        self._date = date
+        month_year = self.date_to_month_year(date)
+        summaries = list(data.make_summary().values())
+        row = [month_year] + summaries
+
+        self.set_row(row)
+
+    def set_row(self, row):
         self.row = row
         for idx, text in enumerate(row):
             self.setText(idx, text)
@@ -179,7 +197,7 @@ class DataViewer(QTreeWidget):
 
         self.make_tree()
 
-        self.sortColumn = None
+        self.sort_column = None
         self.sortDescending = [True for _ in range(len(self._activity.header))]
         self.header().setSectionsClickable(True)
         self.header().sectionClicked.connect(self.sort_tree)
@@ -231,14 +249,24 @@ class DataViewer(QTreeWidget):
         return QSize(width, height)
 
     @property
-    def top_level_items(self):
-        """List of top level QTreeWidgetItems."""
+    def top_level_items(self) -> list[CycleTreeWidgetItem]:
+        """List of top level CycleTreeWidgetItems."""
         items = [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
         return items
 
-    @property
-    def top_level_items_dict(self):
-        return {item.month_year: item for item in self.top_level_items}
+    def get_top_level_item(self, d: date) -> CycleTreeWidgetItem:
+        """
+        Find the top level item for the month represented by date `d`.
+
+        Raises ValueError if no such item could be found.
+        """
+
+        month_year = CycleTreeWidgetItem.date_to_month_year(d)
+        for item in self.top_level_items:
+            if item.month_year == month_year:
+                return item
+
+        raise ValueError(f"No top level item for {d} ({month_year})")
 
     @Slot(object)
     def new_data(self, indices=None):
@@ -272,36 +300,39 @@ class DataViewer(QTreeWidget):
         # update top level items of changed months
         for month, year in changed:
             data = self.data.get_month(month, year, return_type="Data")
-            summaries = list(data.make_summary().values())
-            month_year = f"{calendar.month_name[date.month]} {date.year}"
-            rootText = [month_year] + summaries
-            rootItem = self.top_level_items_dict[month_year]
-            rootItem.setRow(rootText)
+            root_item = self.get_top_level_item(date)
+            # root_item = self.top_level_items_dict[date]
+            root_item.set_item_data(date, data)
 
         # for remaining indices add new rows to tree
         for idx in indices:
             date = self.data[idx, "date"]
-            month_year = f"{calendar.month_name[date.month]} {date.year}"
             data = self.data.get_month(date.month, date.year, return_type="Data")
-            summaries = list(data.make_summary().values())
-            rootText = [month_year] + summaries
-            if month_year not in self.top_level_items_dict:
-                rootItem = CycleTreeWidgetItem(self, row=rootText)
+
+            try:
+                root_item = self.get_top_level_item(date)
+            except ValueError:
+                root_item = CycleTreeWidgetItem(self, date=date, data=data)
             else:
-                rootItem = self.top_level_items_dict[month_year]
-                rootItem.setRow(rootText)
+                root_item.set_item_data(date, data)
+
+            # if date not in self.top_level_items_dict:
+            #     root_item = CycleTreeWidgetItem(self, date=date, data=data)
+            # else:
+            #     root_item = self.top_level_items_dict[date]
+            #     root_item.set_item_data(date, data)
 
             item = IndexTreeWidgetItem(
-                rootItem,
+                root_item,
                 activity=self._activity,
                 index=idx,
                 headerLabels=self._activity.header,
                 row=self.data.row(idx, formatted=True),
             )
-            itemData = TreeItem(self.data["date"][idx], rootItem, item)
+            itemData = TreeItem(self.data["date"][idx], root_item, item)
             self.items.append(itemData)
 
-        self.sort_tree(self.sortColumn, switchOrder=False)
+        self.sort_tree(self.sort_column, switchOrder=False)
 
         self.viewer_updated.emit()
 
@@ -325,11 +356,9 @@ class DataViewer(QTreeWidget):
         for month_year, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            month_year = month_year.strftime("%B %Y")
-            summaries = list(data.make_summary().values())
-            rootText = [month_year] + summaries
-            rootItem = self.top_level_items_dict[month_year]
-            rootItem.setRow(rootText)
+            # root_item = self.top_level_items_dict[month_year]
+            root_item = self.get_top_level_item(month_year)
+            root_item.set_item_data(month_year, data)
         self.viewer_updated.emit()
 
     @Slot(int)
@@ -337,20 +366,20 @@ class DataViewer(QTreeWidget):
         """
         Sort the tree based on column `idx`.
 
-        If `idx` is the current `sortColumn` and `switchOrder` is True, the sort
+        If `idx` is the current `sort_column` and `switchOrder` is True, the sort
         order will be reversed. To re-apply the current sort, pass switchOrder=False.
         """
 
         # switch sort order if clicked column is already selected
-        if idx == self.sortColumn and switchOrder:
+        if idx == self.sort_column and switchOrder:
             self.sortDescending[idx] = not self.sortDescending[idx]
 
         order = Qt.DescendingOrder if self.sortDescending[idx] else Qt.AscendingOrder
 
         # set sort column index
-        for rootItem in self.top_level_items:
-            rootItem.sortColumn = idx
-        self.sortColumn = idx
+        for root_item in self.top_level_items:
+            root_item.sort_column = idx
+        self.sort_column = idx
 
         # make header label for sort column italic
         for i in range(self.header().count()):
@@ -377,20 +406,18 @@ class DataViewer(QTreeWidget):
         for month_year, data in reversed(dfs):
             # root item of tree: summary of month, with total time, distance
             # and calories (in bold)
-            summaries = list(data.make_summary().values())
-            rootText = [month_year.strftime("%B %Y")] + summaries
-            rootItem = CycleTreeWidgetItem(self, row=rootText)
+            root_item = CycleTreeWidgetItem(self, date=month_year, data=data)
 
             # make rows of data for tree
             for rowIdx in reversed(range(len(data))):
                 item = IndexTreeWidgetItem(
-                    rootItem,
+                    root_item,
                     activity=self._activity,
                     index=idx,
                     headerLabels=self._activity.header,
                     row=data.row(rowIdx, formatted=True),
                 )
-                itemData = TreeItem(data["date"][rowIdx], rootItem, item)
+                itemData = TreeItem(data["date"][rowIdx], root_item, item)
                 self.items.append(itemData)
                 idx -= 1
 
@@ -445,8 +472,10 @@ class DataViewer(QTreeWidget):
         If a top level item is selected, summarise it. Otherwise, summarise
         multiple selected items.
         """
+
         if len(self.selectedItems()) == 0:
             return
+
         s = ""
         if (
             len(self.selectedItems()) == 1
@@ -492,18 +521,22 @@ class DataViewer(QTreeWidget):
 
     def _summarise_months(self, items):
         """Return summary string from list of top-level items"""
+
         if any([item not in self.top_level_items for item in items]):
             raise ValueError("_summarise_months can only summarise top-level tree items")
-        selected_months = [item.text(0) for item in items]
+
+        selected_months = [item.date for item in items]
 
         months = self.data.split_months(return_type="Data")
 
-        months = map(
-            lambda tup: tup.data,
-            filter(lambda tup: tup.month_year in selected_months, months),
+        months = list(
+            map(
+                lambda tup: tup.data,
+                filter(lambda tup: tup.month_year in selected_months, months),
+            )
         )
 
-        if months := list(months):
+        if months:
 
             concat_data = Data.concat(months, self._activity)
 

@@ -8,6 +8,7 @@ The remaining three functions convert time or date strings into floats, so value
 can be sorted.
 """
 
+from typing import Union
 from datetime import date, datetime
 import calendar
 import re
@@ -25,9 +26,7 @@ def parse_month_range(s) -> int:
     |      "all"     |             None            |
     """
     if not isinstance(s, str):
-        raise TypeError(
-            f"parse_month_range requires type str, not '{type(s).__name__}'"
-        )
+        raise TypeError(f"parse_month_range requires type str, not '{type(s).__name__}'")
     s = s.lower()
     if s == "1 year":
         s = "12 months"

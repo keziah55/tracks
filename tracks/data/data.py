@@ -270,6 +270,7 @@ class Data(QObject):
         -------
         list of (`date`, DataFrame/Data) tuples
         """
+
         valid_return_types = ["DataFrame", "Data"]
         if return_type not in valid_return_types:
             msg = f"Invalid return_type '{return_type}'. "
