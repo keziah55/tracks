@@ -188,7 +188,7 @@ class Data(QObject):
             self.data_changed.emit(changed)
 
     @staticmethod
-    def _apply_relations(df, activity) -> pl.DataFrame():
+    def _apply_relations(df, activity) -> pl.DataFrame:
         """
         Check if relational measures in `activity` are present in `df`.
 
