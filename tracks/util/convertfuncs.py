@@ -8,7 +8,6 @@ The remaining three functions convert time or date strings into floats, so value
 can be sorted.
 """
 
-from typing import Union
 from datetime import date, datetime
 import calendar
 import re
