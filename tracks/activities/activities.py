@@ -8,7 +8,13 @@ import warnings
 import re
 import json
 from .operations import operator_dict
-from tracks.util import floatToHourMinSec, get_cast_func, get_reduce_func, get_reduce_func_key
+from tracks.util import (
+    floatToHourMinSec,
+    get_cast_func,
+    get_reduce_func,
+    get_reduce_func_key,
+    get_pl_type,
+)
 
 
 class Relation:
@@ -283,6 +289,10 @@ class Activity:
     def measure_slugs(self):
         return list(self._measures.keys())
 
+    @property
+    def schema(self) -> dict[str, type]:
+        return {key: get_pl_type(m.dtype) for key, m in self._measures.items()}
+
     def add_measure(self, *args, **kwargs):
         m = Measure(*args, **kwargs)
         self._measures[m.slug] = m
@@ -330,7 +340,9 @@ class Activity:
 
     @property
     def user_input_header(self):
-        header = [measure.full_name for measure in self._measures.values() if measure.relation is None]
+        header = [
+            measure.full_name for measure in self._measures.values() if measure.relation is None
+        ]
         return header
 
     def to_json(self):

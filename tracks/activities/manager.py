@@ -175,9 +175,7 @@ class ActivityManager(QObject):
         if isinstance(month_range, str):
             month_range = parse_month_range(month_range)
         y_series = plot_pref.get("current_series", "time")
-        plot = PlotWidget(
-            data, activity, style=plot_style, months=month_range, y_series=y_series
-        )
+        plot = PlotWidget(data, activity, style=plot_style, months=month_range, y_series=y_series)
 
         activity_objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
         activity_objects.status_message.connect(self.status_message)
@@ -195,12 +193,12 @@ class ActivityManager(QObject):
         filepath = self._activity_csv_file(activity)
 
         if not filepath.exists():
-            header = activity.header
+            header = activity.measure_slugs
             s = self.csv_sep.join(header) + "\n"
             with open(filepath, "w") as fileobj:
                 fileobj.write(s)
 
-        df = pl.read_csv(filepath, separator=self.csv_sep, try_parse_dates=True)
+        df = pl.read_csv(filepath, separator=self.csv_sep, schema=activity.schema)
 
         return df
 
