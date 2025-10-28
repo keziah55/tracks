@@ -198,7 +198,7 @@ class ActivityManager(QObject):
             with open(filepath, "w") as fileobj:
                 fileobj.write(s)
 
-        df = pl.read_csv(filepath, separator=self.csv_sep, schema=activity.schema)
+        df = pl.read_csv(filepath, separator=self.csv_sep, schema=activity.get_schema())
 
         return df
 

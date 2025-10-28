@@ -7,6 +7,7 @@ Define Activities
 import warnings
 import re
 import json
+from typing import Iterator
 from .operations import operator_dict
 from tracks.util import (
     floatToHourMinSec,
@@ -179,18 +180,19 @@ class Measure:
         return dct
 
     @property
-    def slug(self):
+    def slug(self) -> str:
         slug = self.name.lower()
         slug = re.sub(r"\s+", "_", slug)
         slug = re.escape(slug)
         return slug
 
     @property
-    def user(self):
+    def user(self) -> bool:
+        """True if this Measure is *not* a relation of two others."""
         return self._relation is None
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         name = self.name
         if self.show_unit and self.unit is not None:
             name = f"{name} ({self.unit})"
@@ -234,7 +236,7 @@ class Activity:
 
     def __init__(self, name):
         self._name = name
-        self._measures = {}
+        self._measures: dict[str, Measure] = {}
 
     def __getattr__(self, name):
         if (m := self._measures.get(name, None)) is not None:
@@ -242,7 +244,7 @@ class Activity:
         error_msg = f"'Activity' has no measure '{name}'\n"
         error_msg += "Note that you must use slugs if trying to access a measure via getattr\n"
         error_msg += "Available slugs are:"
-        for slug in self._measures.keys():
+        for slug in self.measure_slugs:
             error_msg += f"  {slug}"
         raise AttributeError(error_msg)
 
@@ -262,11 +264,15 @@ class Activity:
     def _measure_to_string(self, indent=0):
         s = ""
         indent = " " * indent
-        size = max([len(s) for s in self._measures.keys()])
-        for slug, measure in self._measures.items():
+        size = max([len(s) for s in self.measure_slugs])
+        for slug, measure in self._iter_measures():
             slug_str = f"{slug}:"
             s += f"{indent}{slug_str:<{size+2}} {measure}\n"
         return s
+
+    def _iter_measures(self) -> Iterator[tuple[str, Measure]]:
+        for key in self.measure_slugs:
+            yield key, self._measures[key]
 
     @property
     def name(self):
@@ -282,16 +288,28 @@ class Activity:
         # return f"{self._name.lower()}.json"
 
     @property
-    def measures(self):
+    def measures(self) -> dict[str, Measure]:
         return self._measures
 
     @property
-    def measure_slugs(self):
-        return list(self._measures.keys())
+    def measure_slugs(self) -> list[str]:
+        required = []
+        relative = []
 
-    @property
-    def schema(self) -> dict[str, type]:
-        return {key: get_pl_type(m.dtype) for key, m in self._measures.items()}
+        for key, measure in self._measures.items():
+            if measure.user:
+                required.append(key)
+            else:
+                relative.append(key)
+
+        return required + relative
+
+    def get_schema(self, include_relations=True) -> dict[str, type]:
+        return {
+            key: get_pl_type(m.dtype)
+            for key, m in self._iter_measures()
+            if include_relations or m.user
+        }
 
     def add_measure(self, *args, **kwargs):
         m = Measure(*args, **kwargs)
@@ -328,7 +346,7 @@ class Activity:
         funcs_attrs = list(zip(func, attr))
         measures = {
             key: measure
-            for key, measure in self._measures.items()
+            for key, measure in self._iter_measures()
             if all([f(getattr(measure, a)) for f, a in funcs_attrs])
         }
         return measures
@@ -346,7 +364,7 @@ class Activity:
         return header
 
     def to_json(self):
-        measures = {k: m.to_json() for k, m in self._measures.items()}
+        measures = {k: m.to_json() for k, m in self._iter_measures()}
         dct = {"name": self._name, "measures": measures}
         return dct
 

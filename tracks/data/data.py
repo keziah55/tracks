@@ -5,6 +5,7 @@ Object providing convenient access to the contents of a DataFrame.
 
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
+from tracks.activities import Activity
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
 from collections import namedtuple
 from datetime import date, datetime
@@ -43,15 +44,15 @@ class Data(QObject):
     Emitted when newly added data contains a new max value for a given column.
     """
 
-    def __init__(self, df, activity=None):
+    def __init__(self, df, activity: Activity):
         """
         Object providing convenience functions for accessing data from a given DataFrame.
         """
         super().__init__()
 
-        self.df = self._apply_relations(df, activity)
+        self.df: pl.DataFrame = self._apply_relations(df, activity)
 
-        self._activity = activity
+        self._activity: Activity = activity
 
     @staticmethod
     def concat(datas, activity):
@@ -147,13 +148,10 @@ class Data(QObject):
             msg = f"Can only append dict to Data, not {type(dct).__name__}"
             raise TypeError(msg)
 
-        schema = self.df.columns
-        for relation_name in self._activity.get_relations():
-            if relation_name not in dct:
-                schema.remove(relation_name)
+        tmp_df = pl.DataFrame(dct, schema=self._activity.get_schema(include_relations=False))
 
-        tmp_df = pl.DataFrame(dct, schema=schema)
         tmp_df = self._apply_relations(tmp_df, self._activity)
+
         self.df.extend(tmp_df)
         self.df = self.df.sort("date")
 
