@@ -40,7 +40,8 @@ class TestPreferences(TracksSetupTeardown):
             rng.append(default)
 
         signals = [
-            (vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged") for n, vb in enumerate(self.plot._plot_widget.view_boxes)
+            (vb.sigXRangeChanged, f"vb{n}.sigXRangeChanged")
+            for n, vb in enumerate(self.plot._plot_widget.view_boxes)
         ]
 
         lastDate = self.data.date[-1]
@@ -184,19 +185,27 @@ class TestPreferences(TracksSetupTeardown):
         df = self.data.df.sort("date")
         df = self.data.df.sort("speed", descending=True, maintain_order=True)
 
-        for row in range(self.pbTable.rowCount()):
-            for colNum, colName in enumerate(self.pbTable._activity.measure_slugs):
-                text = self.pbTable.item(row, colNum).text()
+        header_text = [
+            self.pbTable.horizontalHeaderItem(n).text() for n in range(self.pbTable.columnCount())
+        ]
 
-                expected = df[row, colName]
-                expected = self.pbTable._activity.get_measure(colName).formatted(expected)
+        for row in range(self.pbTable.rowCount()):
+            for measure_slug in self.pbTable._activity.measure_slugs:
+
+                measure = self.pb._activity.get_measure(measure_slug)
+                idx = header_text.index(measure.full_name)
+
+                text = self.pbTable.item(row, idx).text()
+
+                expected = df[row, measure_slug]
+                expected = measure.formatted(expected)
                 expected = str(expected)
 
                 if text != expected:
-                    p = Path(__file__).parent.joinpath("failed_test_data")
+                    p = Path.cwd().joinpath("failed_test_data")
                     p.mkdir(parents=True, exist_ok=True)
-                    df.to_csv(p.joinpath("test_num_pb_sessions_fail_sorted.csv"))
-                    self.data.df.to_csv(p.joinpath("test_num_pb_sessions_fail_unsorted.csv"))
+                    df.write_csv(p.joinpath("test_num_pb_sessions_fail_sorted.csv"))
+                    self.data.df.write_csv(p.joinpath("test_num_pb_sessions_fail_unsorted.csv"))
 
                     h = [re.sub(r"\n", " ", name) for name in self.pbTable._activity.header]
                     tmpText = ", ".join(h) + "\n"
@@ -208,7 +217,7 @@ class TestPreferences(TracksSetupTeardown):
                     with open(p.joinpath("test_num_pb_sessions_fail_pbtable.csv"), "w") as fileobj:
                         fileobj.write(tmpText)
 
-                assert text == expected, "see test_num_pb_sessions_fail_*.csv files"
+                assert text == expected, f"see {p}/test_num_pb_sessions_fail_*.csv files"
 
     def test_set_summary_criteria(self, setupKnownData, qtbot, variables):
         self.prefDialog.pagesWidget.setCurrentIndex(self.dataIdx)
@@ -238,7 +247,10 @@ class TestPreferences(TracksSetupTeardown):
 
             # known data is from April and May 2021
             ts = date(year=2021, month=5, day=1)
-            groups = [self.data.df.filter(pl.col("date") >= ts), self.data.df.filter(pl.col("date") < ts)]
+            groups = [
+                self.data.df.filter(pl.col("date") >= ts),
+                self.data.df.filter(pl.col("date") < ts),
+            ]
 
             qtbot.wait(variables.shortWait)
 
