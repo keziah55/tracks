@@ -120,9 +120,9 @@ def known_data():
         "distance": np.array(
             [30.1, 25.14, 25.08, 25.41, 25.1, 25.08, 25.13, 25.21, 25.08, 25.12]
         ),
-        "gear": [6] * 10,
     }
     dct["calories"] = dct["distance"] * 14.956
+    dct["gear"] = [6] * 10  # has to be after calories
     dct["speed"] = dct["distance"] / times
     return dct
 

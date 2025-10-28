@@ -5,7 +5,6 @@ Object providing convenient access to the contents of a DataFrame.
 
 from qtpy.QtCore import QObject
 from qtpy.QtCore import Signal, Slot
-from tracks.activities import Activity
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat, floatToHourMinSec
 from collections import namedtuple
 from datetime import date, datetime
@@ -44,7 +43,7 @@ class Data(QObject):
     Emitted when newly added data contains a new max value for a given column.
     """
 
-    def __init__(self, df, activity: Activity):
+    def __init__(self, df, activity):
         """
         Object providing convenience functions for accessing data from a given DataFrame.
         """
@@ -52,7 +51,7 @@ class Data(QObject):
 
         self.df: pl.DataFrame = self._apply_relations(df, activity)
 
-        self._activity: Activity = activity
+        self._activity = activity
 
     @staticmethod
     def concat(datas, activity):

@@ -3,6 +3,7 @@ from ..personalbests import NewPBDialog
 from tracks.util import parseDate, parseDuration, hourMinSecToFloat
 from tracks.test import MockParent
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QDialog
+from qtpy.QtCore import QPoint, Qt
 import pytest
 
 pytest_plugin = "pytest-qt"
@@ -11,7 +12,7 @@ pytest_plugin = "pytest-qt"
 # parameters for test_new_data
 def get_new_data(key):
     new_data_params = {
-        "best session": (
+        "best_session": (
             {
                 "date": [parseDate("6 April 2021")],
                 "time": [hourMinSecToFloat(parseDuration("00:42:15"))],
@@ -44,7 +45,7 @@ class TestPersonalBests:
         self.parent.data.data_changed.connect(self.pb.new_data)
         self.widget.show()
 
-    @pytest.mark.parametrize("key", ["best session"])
+    @pytest.mark.parametrize("key", ["best_session"])
     def test_new_data(self, setup, qtbot, key):
         new, expected_dialog, expected_label = get_new_data(key)
 
@@ -134,12 +135,18 @@ class TestPersonalBests:
             ],
         }
 
+        header_text = [self.pb.horizontalHeaderItem(n).text() for n in range(self.pb.columnCount())]
+
         for column, expected in columns.items():
-            idx = self.pb._activity.measure_slugs.index(column)
+
+            measure = self.pb._activity.get_measure(column)
+            idx = header_text.index(measure.full_name)
 
             self.pb.horizontalHeader().sectionClicked.emit(idx)
             qtbot.wait(variables.shortWait)
+
             items = [self.pb.item(idx, 0).text() for idx in range(self.pb.rowCount())]
+
             assert items == expected
 
     def test_get_best_sessions(self, setup, qtbot):
