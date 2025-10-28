@@ -231,13 +231,12 @@ class PersonalBests(QTableWidget):
         # TODO this calls _get_best_sessions but not _set_table?
         # is _get_best_sessions being called multiple times?
         pb = self._get_best_sessions(num=self.rowCount(), key=self.select_key)
-        newDates = [row["date"] for row in pb]
+        new_dates = [row["date"] for row in pb]
         dates = [row["date"] for row in self.items]
-        if newDates != dates:
-            i = 0
-            if len(dates) > 0:
-                while newDates[i] == dates[i]:
-                    i += 1
+        if new_dates != dates:
+            for i, date_str in enumerate(new_dates):
+                if date_str not in dates:
+                    break
             self.newIdx = i
             msg = self._make_message(self.select_key, i, pb[i][self.select_key])
             return msg
