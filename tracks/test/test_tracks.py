@@ -212,26 +212,28 @@ class TestTracks(TracksSetupTeardown):
         if month == 12:
             month = 0
             year += 1
-        newDate = date(year=year, month=month + 1, day=day)
+        new_date = date(year=year, month=month + 1, day=day)
 
         newData = {
-            "date": [newDate],
+            "date": [new_date],
             "time": [hourMinSecToFloat(parseDuration("40:20"))],
             "distance": [25.08],
             "calories": [375.1],
             "gear": [6],
         }
 
-        oldXRange = self.plot._plot_widget.plotItem.vb.xRange[1]
+        old_x_range = self.plot._plot_widget.plotItem.vb.xRange[1]
 
         with qtbot.waitSignal(self.data.data_changed):
             self.data.append(newData)
 
-        newXRange = self.plot._plot_widget.plotItem.vb.xRange[1]
+        new_x_range = self.plot._plot_widget.plotItem.vb.xRange[1]
 
-        assert oldXRange != newXRange
-        oldMonth = datetime.fromtimestamp(oldXRange).month
-        if oldMonth == 12:
-            oldMonth = 0
-        # check newDate is visible
-        assert newDate.month <= datetime.fromtimestamp(newXRange).month
+        assert old_x_range != new_x_range
+
+        # check new_date is visible
+        new_x_range_datetime = datetime.fromtimestamp(new_x_range)
+        if new_date.year == new_x_range_datetime.year:
+            assert new_date.month <= new_x_range_datetime.month
+        else:
+            assert new_date.year < new_x_range_datetime.year
