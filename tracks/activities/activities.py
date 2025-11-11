@@ -156,7 +156,7 @@ class Measure:
         ]
 
     def __getattr__(self, name):
-        if name in self._properties.keys():
+        if name in self._properties:
             return self.__getattribute__(f"_{name}")
 
     def __repr__(self):

@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtCore import Qt, Slot, QTimer
 from qtpy.QtGui import QIcon
-from .activities import ActivityManager
+from .activities import ActivityManager, ActivityEditor
 from .preferences import PreferencesDialog
 from .util import int_to_str
 from customQObjects.widgets import StackedWidget, ListSelector
@@ -171,6 +171,10 @@ class Tracks(QMainWindow):
         self.settings.setValue("window/geometry", geometry)
         self.settings.setValue("activity/current", self.current_activity.name)
 
+    def _show_activity_editor(self):
+        self._activity_editor = ActivityEditor(self._activity_manager)
+        self._activity_editor.show()
+
     def _create_actions(self):
         self._exit_act = QAction(
             "E&xit",
@@ -199,6 +203,13 @@ class Tracks(QMainWindow):
             icon=QIcon.fromTheme("preferences-system"),
         )
 
+        self._activity_editor_act = QAction(
+            "&Add or edit activities",
+            self,
+            statusTip="Add or edit activities",
+            triggered=self._show_activity_editor,
+        )
+
     def _create_menus(self):
         # return
         self._file_menu = self.menuBar().addMenu("&File")
@@ -207,6 +218,7 @@ class Tracks(QMainWindow):
         for activity in self._activity_manager.list_activities():
             callback = partial(self._load_activity, activity)
             self._activities_menu.addAction(activity.capitalize(), callback)
+        self._file_menu.addAction(self._activity_editor_act)
         self._file_menu.addSeparator()
         self._file_menu.addAction(self._exit_act)
 

@@ -7,6 +7,7 @@ Objects to manage creating/editing activities.
 import json
 from typing import NamedTuple
 from .activities import Activity, Measure
+from .manager import ActivityManager
 from qtpy.QtCore import QObject, Signal, Slot
 from qtpy.QtWidgets import (
     QDialog,
@@ -133,7 +134,7 @@ class MeasureEditor(QWidget):
             self._sig_figs_choices.setValue(measure.sig_figs)
 
         if measure.unit is not None:
-            self._summary_func_choices.setText(measure.unit)
+            self._unit_edit.setText(measure.unit)
             self._show_unit_choices.setCurrentText(str(measure.show_unit))
         else:
             self._show_unit_choices.setEnabled(False)
@@ -144,18 +145,27 @@ class MeasureEditor(QWidget):
             self._summary_func_choices.setCurrentText(measure.cmp_func_name)
 
         if measure.relation is not None:
-            self._is_relation.setCurrentIndex("True")
+            self._is_relation.setCurrentText("True")
         else:
-            self._is_relation.setCurrentIndex("False")
+            self._is_relation.setCurrentText("False")
 
 
 class ActivityEditor(QDialog):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, activity_manager: ActivityManager,  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         layout = QVBoxLayout()
         # layout.addWidget(scrollArea)
         # layout.addWidget(self.buttonBox)
         self.setLayout(layout)
+
+        activity = activity_manager.get_activity_objects("cycling").activity
+
+        editors = {}
+        for name, measure in activity.measures.items():
+            widget = MeasureEditor()
+            widget.set_values_from_measure(measure)
+            editors[name] = widget
+            layout.addWidget(widget)
 
         self.setWindowTitle("Create or edit activities")
