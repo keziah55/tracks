@@ -7,7 +7,7 @@ Define Activities
 import warnings
 import re
 import json
-from typing import Iterator
+from typing import Iterator, Callable, Optional
 from .operations import operator_dict
 from tracks.util import (
     floatToHourMinSec,
@@ -105,19 +105,19 @@ class Measure:
         dtype: str,
         summary: str,
         is_metadata: bool = False,
-        sig_figs: int = None,
-        unit: str = None,
+        sig_figs: Optional[int] = None,
+        unit: Optional[str] = None,
         show_unit: bool = True,
         plottable: bool = True,
-        cmp_func: callable = None,
-        relation: Relation = None,
+        cmp_func: Optional[Callable] = None,
+        relation: Optional[Relation] = None,
     ):
-        self._name = name
-        self._dtype = dtype
-        self._is_metadata = is_metadata
-        self._sig_figs = sig_figs
-        self._show_unit = show_unit
-        self._plottable = plottable
+        self._name: str = name
+        self._dtype: str = dtype
+        self._is_metadata: bool = is_metadata
+        self._sig_figs: int = sig_figs
+        self._show_unit: bool = show_unit
+        self._plottable: bool = plottable
 
         self.set_summary(summary)
 
@@ -143,6 +143,7 @@ class Measure:
             "name",
             "dtype",
             "summary",
+            "summary_func_name",
             "is_metadata",
             "sig_figs",
             "unit",
@@ -153,7 +154,7 @@ class Measure:
         ]
 
     def __getattr__(self, name):
-        if name in self._properties:
+        if name in self._properties.keys():
             return self.__getattribute__(f"_{name}")
 
     def __repr__(self):
@@ -199,6 +200,7 @@ class Measure:
         return name
 
     def set_summary(self, summary):
+        self._summary_func_name = summary
         if isinstance(summary, str):
             summary = get_reduce_func(summary)
         self._summary = summary
