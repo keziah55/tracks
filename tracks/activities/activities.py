@@ -121,6 +121,7 @@ class Measure:
 
         self.set_summary(summary)
 
+        self._cmp_func_name = cmp_func
         if isinstance(cmp_func, str):
             cmp_func = get_cast_func(cmp_func)
         self._cmp_func = cmp_func
@@ -150,6 +151,7 @@ class Measure:
             "show_unit",
             "plottable",
             "cmp_func",
+            "cmp_func_name",
             "relation",
         ]
 
