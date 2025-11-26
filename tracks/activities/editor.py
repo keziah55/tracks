@@ -8,9 +8,11 @@ import json
 from typing import NamedTuple
 from .activities import Activity, Measure
 from .manager import ActivityManager
-from qtpy.QtCore import QObject, Signal, Slot
+from qtpy.QtCore import Qt, QObject, Signal, Slot
 from qtpy.QtWidgets import (
     QDialog,
+    QDialogButtonBox,
+    QScrollArea,
     QWidget,
     QFormLayout,
     QVBoxLayout,
@@ -19,9 +21,10 @@ from qtpy.QtWidgets import (
     QPushButton,
     QLineEdit,
     QLabel,
+    QGroupBox,
     QSpinBox,
 )
-from customQObjects.widgets import ComboBox
+from customQObjects.widgets import ComboBox, GroupBox
 
 
 class BoolField(NamedTuple):
@@ -36,12 +39,9 @@ class BoolComboBox(ComboBox):
         )
 
 
-class MeasureEditor(QWidget):
+class MeasureEditor(GroupBox):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.layout = QFormLayout(parent=self)
-        self.setLayout(self.layout)
+        super().__init__(*args, layout="form", **kwargs)
 
         self._name_edit = QLineEdit()
         self._name_edit.setToolTip("Name of this measure")
@@ -151,21 +151,47 @@ class MeasureEditor(QWidget):
 
 
 class ActivityEditor(QDialog):
-    def __init__(self, activity_manager: ActivityManager,  *args, **kwargs):
+    def __init__(self, activity_manager: ActivityManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        layout = QVBoxLayout()
-        # layout.addWidget(scrollArea)
-        # layout.addWidget(self.buttonBox)
-        self.setLayout(layout)
+        self.activity_widget = QWidget(parent=self)
+
+        layout = QGridLayout()
+        self.activity_widget.setLayout(layout)
 
         activity = activity_manager.get_activity_objects("cycling").activity
 
+        num_cols = 5
+
+        row = 0
+        col = 0
         editors = {}
         for name, measure in activity.measures.items():
             widget = MeasureEditor()
             widget.set_values_from_measure(measure)
             editors[name] = widget
-            layout.addWidget(widget)
+            layout.addWidget(widget, row, col)
+
+            col += 1
+            if col >= num_cols:
+                col = 0
+                row += 1
+
+        scroll_area = QScrollArea()
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.activity_widget)
+
+        button_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+
+        self.save_button = button_box.button(QDialogButtonBox.Save)
+        self.save_button.clicked.connect(self.accept)
+        cancel_button = button_box.button(QDialogButtonBox.Cancel)
+        cancel_button.clicked.connect(self.reject)
+
+        layout = QVBoxLayout()
+        layout.addWidget(scroll_area)
+        layout.addWidget(button_box)
+        self.setLayout(layout)
 
         self.setWindowTitle("Create or edit activities")

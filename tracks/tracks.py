@@ -206,6 +206,7 @@ class Tracks(QMainWindow):
         self._activity_editor_act = QAction(
             "&Add or edit activities",
             self,
+            shortcut="Ctrl+A",
             statusTip="Add or edit activities",
             triggered=self._show_activity_editor,
         )
