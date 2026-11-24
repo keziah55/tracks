@@ -73,7 +73,9 @@ class Tracks(QMainWindow):
             self._create_dock_widget(*args)
         self.setCentralWidget(self._plot_stack)
 
-        pb = self._activity_manager.get_activity_objects(self.current_activity.name).personal_bests
+        pb = self._activity_manager.get_activity_objects(
+            self.current_activity.name
+        ).personal_bests
         state = pb.state()
         self._set_pb_sessions_dock_label(state["num_best_sessions"])
 

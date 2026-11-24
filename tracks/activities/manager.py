@@ -175,7 +175,9 @@ class ActivityManager(QObject):
         if isinstance(month_range, str):
             month_range = parse_month_range(month_range)
         y_series = plot_pref.get("current_series", "time")
-        plot = PlotWidget(data, activity, style=plot_style, months=month_range, y_series=y_series)
+        plot = PlotWidget(
+            data, activity, style=plot_style, months=month_range, y_series=y_series
+        )
 
         activity_objects = ActivityObjects(activity, data, viewer, add_data, pb, plot)
         activity_objects.status_message.connect(self.status_message)
