@@ -321,7 +321,7 @@ class Plot(_PlotWidget):
         self._update_highlight_PBs()
 
     @Slot(float, float)
-    def set_plot_range(self, x0, x1):
+    def set_plot_range(self, x0, x1, force_redraw: bool = False):
         """Set range of both view boxes to cover the points between the two
         given timestamps.
         """
@@ -329,7 +329,7 @@ class Plot(_PlotWidget):
         if not hasattr(self, "dataItem") or not hasattr(self, "backgroundItem"):
             return None
 
-        if (x0, x1) == self.view_boxes[0].xRange:
+        if not force_redraw and (x0, x1) == self.view_boxes[0].xRange:
             return None
 
         data = [
@@ -411,7 +411,9 @@ class Plot(_PlotWidget):
         an existing series.
         """
         series = self.data[key]
-        self._plot_item.getAxis("left").tickFormatter = floatToHourMinSec if key == "time" else None
+        self._plot_item.getAxis("left").tickFormatter = (
+            floatToHourMinSec if key == "time" else None
+        )
 
         # make style
         styleDict = self.style[key]
@@ -432,9 +434,9 @@ class Plot(_PlotWidget):
         self._plot_item.setLabel(
             "left", text=self._activity[key].full_name, color=styleDict["colour"]
         )
-        # retain plot range when switching series
+        # retain plot range when switching series, but force redraw to move y axis if required
         if self.view_boxes[0].xRange is not None:
-            self.set_plot_range(*self.view_boxes[0].xRange)
+            self.set_plot_range(*self.view_boxes[0].xRange, force_redraw=True)
         # if PBs were highlighted, highlight again
         self._update_highlight_PBs()
 

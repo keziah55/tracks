@@ -193,7 +193,7 @@ class Data(QObject):
         """
         relations = activity.get_relations()
         for name, relation in relations.items():
-            if name not in df.columns:
+            if name not in df.columns or any([value is None for value in df[name]]):
                 m0 = df[relation.m0.slug]
                 m1 = df[relation.m1.slug]
                 # df[name] = relation.op.call(m0, m1)
